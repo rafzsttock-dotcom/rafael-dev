@@ -5,8 +5,8 @@ Aplikasi misi + poin + reward dengan backend (Node.js + SQLite), login nomor HP 
 ## Pasang di VPS (Ubuntu/Debian)
 1. Upload folder ini ke VPS (git clone branch `claude/deploy-reward-promotion`, lalu `cd reward-promotion`).
 2. `sudo bash install.sh` — membuat `.env` dengan password admin acak lalu berhenti.
-3. Edit `.env`: isi `BOT_TOKEN` dan `BOT_USERNAME`. `DOMAIN` sudah `rewardex.site` (ganti `:80` + `SECURE_COOKIE=0` jika tanpa domain).
-4. `sudo bash install.sh` lagi — build dan jalan. Script mencetak URL landing, aplikasi, dan admin. Path aplikasi dan admin diacak otomatis (`APP_PATH`, `ADMIN_PATH` di `.env`); nama file asli tidak bisa diakses. Link referal tiap user berbentuk `/r/<kode>`.
+3. (Opsional) edit `.env`: `ADMIN_USERNAME` / `ADMIN_PASSWORD` untuk admin pertama (default `admin` + password acak), dan `DOMAIN` (sudah `rewardex.site`; ganti `:80` + `SECURE_COOKIE=0` jika tanpa domain). Token bot TIDAK di `.env`.
+4. `sudo bash install.sh` lagi — build dan jalan. Login admin dengan username + password, lalu isi **token bot Telegram di dashboard admin > Pengaturan** (dicek ke Telegram sebelum disimpan). Script mencetak URL landing, aplikasi, dan admin. Path aplikasi dan admin diacak otomatis (`APP_PATH`, `ADMIN_PATH` di `.env`); nama file asli tidak bisa diakses. Link referal tiap user berbentuk `/r/<kode>`.
 
 Data tersimpan di `./data/app.db` (backup folder ini secara berkala).
 

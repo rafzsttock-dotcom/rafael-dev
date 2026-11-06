@@ -25,7 +25,7 @@ table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{text-align:left;
 <div class="wrap">
 <h1>Admin KODO</h1>
 <div id="login" class="card" style="display:none">
-  <div class="row"><input id="pw" type="password" placeholder="Password admin" autocomplete="current-password"><button class="p" id="go">Masuk</button></div>
+  <div class="row"><input id="un" placeholder="Username" autocomplete="username"><input id="pw" type="password" placeholder="Password" autocomplete="current-password"><button class="p" id="go">Masuk</button></div>
 </div>
 <div id="main" style="display:none">
 <nav id="tabs"></nav>
@@ -65,12 +65,16 @@ var TABS={
    v.innerHTML='<div class="card"><b>Reward baru</b>'+form()+'</div><div class="card">'+l.map(form).join('')+'</div>';
    v.querySelectorAll('[data-f]').forEach(function(f){f.querySelector('button').onclick=function(){var g=function(n){return f.querySelector('[name='+n+']');};api('/rewards','POST',{id:g('id').value||undefined,title:g('title').value,cost:+g('cost').value,active:g('active').checked}).then(function(){say('Tersimpan');show('rw');}).catch(function(e){say(e.message);});};});});}],
  st:['Pengaturan',function(v){return api('/overview').then(function(o){var s=o.settings;
-   v.innerHTML='<div class="card"><div class="row">Minimal tarik (poin) <input id="s1" type="number" value="'+esc(s.min_withdraw)+'"></div><div class="row">Nilai 1 poin (Rp) <input id="s4" type="number" value="'+esc(s.point_value||1)+'"></div><div class="row">Channel wajib join (@username, kosong = tidak wajib) <input id="s2" value="'+esc(s.channel)+'"></div><div class="row">Metode (pisah koma) <input id="s3" value="'+esc(s.methods)+'" style="width:320px"></div><button class="p" id="sv">Simpan</button></div>';
+   v.innerHTML='<div class="card"><b>Bot Telegram</b><p>Status: '+(o.bot.configured?'aktif sebagai <b>@'+esc(o.bot.username)+'</b>':'<b>belum diatur</b> — OTP dan verifikasi channel tidak bisa jalan')+'</p><div class="row"><input id="bt" type="password" placeholder="Tempel token dari @BotFather" style="width:340px" autocomplete="off"><button class="p" id="bs">Simpan token</button><button id="bc">Hapus</button></div><p style="opacity:.7;font-size:.85rem">Token tidak ditampilkan lagi setelah disimpan. Bot akan dicek ke Telegram sebelum disimpan.</p></div><div class="card"><b>Ganti password admin</b><div class="row"><input id="po" type="password" placeholder="Password lama" autocomplete="current-password"><input id="pn" type="password" placeholder="Password baru (min 10)" autocomplete="new-password"><button class="p" id="pc">Ganti</button></div></div><div class="card"><div class="row">Minimal tarik (poin) <input id="s1" type="number" value="'+esc(s.min_withdraw)+'"></div><div class="row">Nilai 1 poin (Rp) <input id="s4" type="number" value="'+esc(s.point_value||1)+'"></div><div class="row">Channel wajib join (@username, kosong = tidak wajib) <input id="s2" value="'+esc(s.channel)+'"></div><div class="row">Metode (pisah koma) <input id="s3" value="'+esc(s.methods)+'" style="width:320px"></div><button class="p" id="sv">Simpan</button></div>';
+   $('#bs').onclick=function(){api('/bot','POST',{token:$('#bt').value}).then(function(r){say('Bot @'+r.username+' tersimpan');show('st');}).catch(function(e){say(e.message);});};
+   $('#bc').onclick=function(){if(confirm('Hapus token bot? OTP akan berhenti berfungsi.'))api('/bot','POST',{token:''}).then(function(){say('Dihapus');show('st');});};
+   $('#pc').onclick=function(){api('/password','POST',{old:$('#po').value,new:$('#pn').value}).then(function(){say('Password diganti');$('#po').value='';$('#pn').value='';}).catch(function(e){say(e.message);});};
    $('#sv').onclick=function(){api('/settings','POST',{min_withdraw:$('#s1').value,point_value:$('#s4').value,channel:$('#s2').value,methods:$('#s3').value}).then(function(){say('Tersimpan');});};});}]
 };
 function show(k){document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.k===k);});TABS[k][1]($('#view')).catch(function(){});}
 Object.keys(TABS).forEach(function(k){var b=document.createElement('button');b.textContent=TABS[k][0];b.dataset.k=k;b.onclick=function(){show(k);};$('#tabs').appendChild(b);});
-$('#go').onclick=function(){fetch('/api/admin/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:$('#pw').value}),credentials:'same-origin'}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Gagal');});}).then(start).catch(function(e){say(e.message);});};
+$('#go').onclick=function(){fetch('/api/admin/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:$('#un').value,password:$('#pw').value}),credentials:'same-origin'}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Gagal');});}).then(start).catch(function(e){say(e.message);});};
+$('#un').addEventListener('keydown',function(e){if(e.key==='Enter')$('#go').click();});
 $('#pw').addEventListener('keydown',function(e){if(e.key==='Enter')$('#go').click();});
 function start(){$('#login').style.display='none';$('#main').style.display='block';show('overview');}
 api('/overview').then(start).catch(function(){showLogin();});

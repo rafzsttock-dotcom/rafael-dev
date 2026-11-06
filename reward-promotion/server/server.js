@@ -6,9 +6,8 @@ const { DatabaseSync } = require("node:sqlite");
 
 const PORT = +process.env.PORT || 3000;
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, "data", "app.db");
-const BOT_TOKEN = process.env.BOT_TOKEN || "";
-const BOT_USERNAME = process.env.BOT_USERNAME || "";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
+const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || "admin").trim();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || ""; // hanya untuk membuat admin pertama; setelah itu dikelola di dashboard
 const SESSION_DAYS = +process.env.SESSION_DAYS || 90;
 const SECURE_COOKIE = process.env.SECURE_COOKIE === "1";
 const slug = (v, d) => (String(v || d).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || d);
@@ -16,10 +15,6 @@ const APP_PATH = slug(process.env.APP_PATH, "app");
 const ADMIN_PATH = slug(process.env.ADMIN_PATH, "admin");
 const STATIC_DIR = process.env.STATIC_DIR || path.join(__dirname, "..", "public");
 
-if (ADMIN_PASSWORD.length < 10) {
-  console.error("ADMIN_PASSWORD wajib diisi (min 10 karakter) di .env");
-  process.exit(1);
-}
 require("node:fs").mkdirSync(path.dirname(DB_PATH), { recursive: true });
 const db = new DatabaseSync(DB_PATH);
 db.exec(`
@@ -39,6 +34,7 @@ CREATE TABLE IF NOT EXISTS redemptions(id INTEGER PRIMARY KEY, user_id INTEGER, 
 CREATE TABLE IF NOT EXISTS withdrawals(id INTEGER PRIMARY KEY, user_id INTEGER, points INTEGER, method TEXT, account TEXT, status TEXT DEFAULT 'pending', note TEXT, ts INTEGER);
 CREATE TABLE IF NOT EXISTS ledger(id INTEGER PRIMARY KEY, user_id INTEGER, delta INTEGER, reason TEXT, ts INTEGER);
 CREATE TABLE IF NOT EXISTS settings(k TEXT PRIMARY KEY, v TEXT);
+CREATE TABLE IF NOT EXISTS admins(username TEXT PRIMARY KEY, pass_hash TEXT NOT NULL);
 `);
 if (!db.prepare("SELECT 1 FROM missions LIMIT 1").get()) {
   const m = db.prepare("INSERT INTO missions(title,descr,reward,type,link) VALUES(?,?,?,?,?)");
@@ -61,6 +57,11 @@ function checkPw(pw, st) {
   const [s, h] = st.split(":"); const x = crypto.scryptSync(pw, Buffer.from(s, "hex"), 64);
   return crypto.timingSafeEqual(x, Buffer.from(h, "hex"));
 }
+if (!db.prepare("SELECT 1 FROM admins LIMIT 1").get()) {
+  if (ADMIN_PASSWORD.length < 8) { console.error("Belum ada admin: isi ADMIN_USERNAME dan ADMIN_PASSWORD (min 8 karakter) di .env untuk membuat admin pertama"); process.exit(1); }
+  db.prepare("INSERT INTO admins VALUES(?,?)").run(ADMIN_USERNAME, hashPw(ADMIN_PASSWORD));
+  console.log("Admin pertama dibuat:", ADMIN_USERNAME);
+}
 function normPhone(p) {
   let d = String(p || "").replace(/[^\d]/g, "");
   if (d.startsWith("0")) d = "62" + d.slice(1); else if (d.startsWith("8")) d = "62" + d;
@@ -72,10 +73,13 @@ function addPoints(uid, delta, reason) {
 }
 
 /* ---- Telegram ---- */
-async function tg(method, body) {
-  if (!BOT_TOKEN) return { ok: false, description: "BOT_TOKEN kosong" };
+const botToken = () => setting("bot_token");
+const botName = () => setting("bot_username");
+async function tg(method, body, token) {
+  token = token || botToken();
+  if (!token) return { ok: false, description: "Token bot belum diatur di dashboard admin" };
   try {
-    const r = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
+    const r = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body || {}) });
     return await r.json();
   } catch (e) { return { ok: false, description: String(e) }; }
@@ -90,12 +94,15 @@ async function sendOtp(phone) {
   const r = await tg("sendMessage", { chat_id: u.tg_id, text: `Kode verifikasi kamu: ${code}\nBerlaku 5 menit. Jangan bagikan ke siapa pun.` });
   return !!r.ok;
 }
-let offset = 0;
+let offset = 0, lastTok = "";
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function poll() {
-  if (!BOT_TOKEN) return console.warn("BOT_TOKEN kosong: bot Telegram nonaktif");
   for (;;) {
+    const tok = botToken();
+    if (!tok) { await sleep(5000); continue; }
+    if (tok !== lastTok) { lastTok = tok; offset = 0; }
     const r = await tg("getUpdates", { offset, timeout: 25, allowed_updates: ["message"] });
-    if (!r.ok) { await new Promise((s) => setTimeout(s, 5000)); continue; }
+    if (!r.ok) { await sleep(5000); continue; }
     for (const up of r.result) {
       offset = up.update_id + 1;
       const m = up.message; if (!m) continue;
@@ -155,12 +162,12 @@ function auth(req, res, next) {
 const adminTokens = new Map();
 function adminAuth(req, res, next) {
   const t = cookies(req).adm; const e = t && adminTokens.get(sha(t));
-  if (!e || e < Date.now()) return res.status(401).json({ error: "admin" });
-  next();
+  if (!e || e.exp < Date.now()) return res.status(401).json({ error: "admin" });
+  req.admin = e; next();
 }
-const pub = (u) => ({ id: u.id, phone: u.phone, points: u.points, ref_code: u.ref_code, bot: BOT_USERNAME });
+const pub = (u) => ({ id: u.id, phone: u.phone, points: u.points, ref_code: u.ref_code, bot: botName() });
 
-app.get("/api/config", (_q, res) => res.json({ bot: BOT_USERNAME, min_withdraw: +setting("min_withdraw"), point_value: +(setting("point_value")||1), channel: setting("channel"), methods: setting("methods").split(",").filter(Boolean) }));
+app.get("/api/config", (_q, res) => res.json({ bot: botName(), min_withdraw: +setting("min_withdraw"), point_value: +(setting("point_value")||1), channel: setting("channel"), methods: setting("methods").split(",").filter(Boolean) }));
 
 app.post("/api/register", (req, res) => {
   const phone = normPhone(req.body.phone), pw = String(req.body.password || "");
@@ -173,14 +180,14 @@ app.post("/api/register", (req, res) => {
   if (req.body.ref) { const r = db.prepare("SELECT id FROM users WHERE ref_code=? AND verified=1").get(String(req.body.ref)); ref = r && r.id; }
   if (ex) db.prepare("UPDATE users SET pass_hash=? WHERE id=?").run(hashPw(pw), ex.id);
   else db.prepare("INSERT INTO users(phone,pass_hash,ref_code,referred_by,created) VALUES(?,?,?,?,?)").run(phone, hashPw(pw), crypto.randomBytes(4).toString("hex"), ref, now());
-  res.json({ ok: true, bot: BOT_USERNAME });
+  res.json({ ok: true, bot: botName() });
 });
 app.post("/api/otp/resend", async (req, res) => {
   const phone = normPhone(req.body.phone);
   if (!phone || !limit("otp:" + phone, 5, 3600)) return res.status(429).json({ error: "Terlalu banyak permintaan" });
   const u = db.prepare("SELECT tg_id FROM users WHERE phone=?").get(phone);
   if (!u) return res.status(404).json({ error: "Nomor belum terdaftar" });
-  if (!u.tg_id) return res.json({ ok: false, need_bot: true, bot: BOT_USERNAME });
+  if (!u.tg_id) return res.json({ ok: false, need_bot: true, bot: botName() });
   res.json({ ok: await sendOtp(phone) });
 });
 app.post("/api/verify", (req, res) => {
@@ -287,17 +294,38 @@ app.post("/api/withdraw", auth, (req, res) => {
 
 /* ---- admin ---- */
 app.post("/api/admin/login", (req, res) => {
-  if (!limit("adm:" + req.ip, 5, 900)) return res.status(429).json({ error: "Terlalu banyak percobaan" });
-  const a = Buffer.from(sha(String(req.body.password || ""))), b = Buffer.from(sha(ADMIN_PASSWORD));
-  if (!crypto.timingSafeEqual(a, b)) return res.status(401).json({ error: "Password salah" });
-  const t = crypto.randomBytes(32).toString("hex"); adminTokens.set(sha(t), Date.now() + 12 * 3600e3);
+  if (!limit("adm:" + req.ip, 8, 900)) return res.status(429).json({ error: "Terlalu banyak percobaan" });
+  const row = db.prepare("SELECT * FROM admins WHERE username=?").get(String(req.body.username || "").trim());
+  const ok = checkPw(String(req.body.password || ""), row ? row.pass_hash : hashPw("x"));
+  if (!row || !ok) return res.status(401).json({ error: "Username atau password salah" });
+  const t = crypto.randomBytes(32).toString("hex"); adminTokens.set(sha(t), { exp: Date.now() + 12 * 3600e3, user: row.username });
   setCookie(res, "adm", t, 0.5); res.json({ ok: true });
+});
+app.post("/api/admin/password", adminAuth, (req, res) => {
+  const np = String(req.body.new || "");
+  const row = db.prepare("SELECT * FROM admins WHERE username=?").get(req.admin.user);
+  if (!row || !checkPw(String(req.body.old || ""), row.pass_hash)) return res.status(400).json({ error: "Password lama salah" });
+  if (np.length < 10) return res.status(400).json({ error: "Password baru minimal 10 karakter" });
+  db.prepare("UPDATE admins SET pass_hash=? WHERE username=?").run(hashPw(np), row.username);
+  res.json({ ok: true });
+});
+app.post("/api/admin/bot", adminAuth, async (req, res) => {
+  const token = String(req.body.token || "").trim();
+  const set = (k, v) => db.prepare("INSERT INTO settings VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=?").run(k, v, v);
+  if (!token) { set("bot_token", ""); set("bot_username", ""); return res.json({ ok: true, username: "" }); }
+  if (!/^\d{5,}:[A-Za-z0-9_-]{30,}$/.test(token)) return res.status(400).json({ error: "Format token tidak valid" });
+  const r = await tg("getMe", {}, token);
+  if (!r.ok) return res.status(400).json({ error: "Token ditolak Telegram: " + (r.description || "tidak valid") });
+  await tg("deleteWebhook", {}, token);
+  set("bot_token", token); set("bot_username", r.result.username || "");
+  res.json({ ok: true, username: r.result.username });
 });
 app.get("/api/admin/overview", adminAuth, (_q, res) => res.json({
   users: db.prepare("SELECT COUNT(*) c FROM users WHERE verified=1").get().c,
   points_outstanding: db.prepare("SELECT COALESCE(SUM(points),0) s FROM users").get().s,
   pending_withdrawals: db.prepare("SELECT COUNT(*) c FROM withdrawals WHERE status='pending'").get().c,
-  settings: Object.fromEntries(db.prepare("SELECT k,v FROM settings").all().map((r) => [r.k, r.v])) }));
+  bot: { configured: !!botToken(), username: botName() },
+  settings: Object.fromEntries(db.prepare("SELECT k,v FROM settings WHERE k NOT IN ('bot_token')").all().map((r) => [r.k, r.v])) }));
 app.get("/api/admin/users", adminAuth, (_q, res) => res.json(db.prepare("SELECT id,phone,tg_name,points,banned,created FROM users WHERE verified=1 ORDER BY id DESC LIMIT 500").all()));
 app.post("/api/admin/users/:id/ban", adminAuth, (req, res) => { db.prepare("UPDATE users SET banned=? WHERE id=?").run(req.body.banned ? 1 : 0, +req.params.id); res.json({ ok: true }); });
 app.get("/api/admin/withdrawals", adminAuth, (_q, res) => res.json(db.prepare("SELECT w.*,u.phone FROM withdrawals w JOIN users u ON u.id=w.user_id ORDER BY (w.status='pending') DESC, w.id DESC LIMIT 300").all()));
