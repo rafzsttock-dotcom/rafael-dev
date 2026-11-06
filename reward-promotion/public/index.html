@@ -3,40 +3,373 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KODO Rewards</title>
-<meta name="description" content="Selesaikan misi, kumpulkan poin, tukar reward atau ajukan penarikan.">
+<title>KODO Rewards — Selesaikan misi, kumpulkan poin, tukar reward</title>
+<meta name="description" content="Masuk lewat Telegram, kerjakan misi harian, kumpulkan poin, lalu tukar jadi reward atau tarik saldo. Gratis, aman, dan gampang.">
+<meta name="theme-color" content="#8b6cff">
+<meta property="og:title" content="KODO Rewards">
+<meta property="og:description" content="Selesaikan misi, kumpulkan poin, tukar jadi reward. Masuk cukup lewat Telegram.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#fff8e7;--ink:#1b1630;--violet:#8b6cff;--yellow:#ffd23f;--mint:#20d0b2;--line:#1b1630}
-@media(prefers-color-scheme:dark){:root{--bg:#171326;--ink:#f4efff;--line:#f4efff}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55}
-.wrap{max-width:760px;margin:0 auto;padding:0 16px}
-header{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
-.logo{font-weight:800;font-size:1.3rem}
-.btn{display:inline-block;background:var(--violet);color:#fff;font-weight:700;text-decoration:none;padding:12px 20px;border:3px solid var(--line);border-radius:13px;box-shadow:4px 4px 0 var(--line)}
-.btn.y{background:var(--yellow);color:#1b1630}
-h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.1;margin:28px 0 12px}
-.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:32px 0}
-.card{border:3px solid var(--line);border-radius:16px;padding:18px;box-shadow:4px 4px 0 var(--line)}
-.card h3{margin:0 0 6px}details{border:3px solid var(--line);border-radius:13px;padding:12px 16px;margin:10px 0}summary{font-weight:700;cursor:pointer}
-footer{padding:32px 0;opacity:.7;font-size:.85rem}
+  :root{
+    --ink:#120f1f; --paper:#f6f1e7; --card:#ffffff;
+    --violet:#8b6cff; --violet-deep:#6c4bff; --yellow:#ffd23f; --mint:#20d0b2; --pink:#ff8fb1; --sky:#5bc0ff;
+    --tg:#2aabee; --tg-deep:#229ed9;
+    --line:#120f1f;
+    --shadow:5px 5px 0 var(--line); --shadow-lg:8px 8px 0 var(--line);
+    --radius:20px;
+    --font-head:'Space Grotesk',system-ui,sans-serif;
+    --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --ink:#f6f1e7; --paper:#17131f; --card:#241d33; --line:#000; --shadow:5px 5px 0 #000; --shadow-lg:8px 8px 0 #000; }
+  }
+  :root[data-theme="dark"]{ --ink:#f6f1e7; --paper:#17131f; --card:#241d33; --line:#000; --shadow:5px 5px 0 #000; --shadow-lg:8px 8px 0 #000; }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--font-body);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.55;min-height:100vh}
+  body::before{content:"";position:fixed;inset:0;z-index:-2;opacity:.5;background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+  /* aurora glow behind hero */
+  .aura{position:fixed;z-index:-1;filter:blur(70px);opacity:.5;pointer-events:none;border-radius:50%}
+  .aura.a1{top:-120px;left:-80px;width:360px;height:360px;background:var(--violet);animation:drift1 16s ease-in-out infinite}
+  .aura.a2{top:40px;right:-120px;width:340px;height:340px;background:var(--mint);animation:drift2 19s ease-in-out infinite}
+  @keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(60px,40px)}}
+  @keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-50px,30px)}}
+
+  a{color:inherit}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+  section{position:relative}
+
+  /* buttons */
+  .btn{font-family:var(--font-head);font-weight:600;font-size:.96rem;cursor:pointer;border:3px solid var(--line);border-radius:13px;padding:13px 22px;background:var(--card);color:var(--ink);box-shadow:4px 4px 0 var(--line);transition:transform .12s,box-shadow .12s;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:9px}
+  .btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--line)}
+  .btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--line)}
+  .btn-violet{background:var(--violet);color:#fff}
+  .btn-yellow{background:var(--yellow);color:#120f1f}
+  .btn.sm{padding:10px 16px;font-size:.85rem;border-radius:11px;box-shadow:3px 3px 0 var(--line)}
+  .btn.big{padding:16px 28px;font-size:1.05rem;border-radius:15px}
+  .icon-btn{width:46px;height:46px;padding:0}
+
+  /* nav */
+  .lnav{position:sticky;top:0;z-index:40;backdrop-filter:blur(8px);background:color-mix(in srgb,var(--paper) 78%,transparent);border-bottom:3px solid transparent;transition:border-color .2s}
+  .lnav.stuck{border-color:var(--line)}
+  .lnav .inner{display:flex;align-items:center;justify-content:space-between;max-width:1040px;margin:0 auto;padding:14px 20px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--font-head);font-weight:700;font-size:1.3rem;text-decoration:none;color:inherit}
+  .brand .mark{width:40px;height:40px;background:var(--yellow);border:3px solid var(--line);border-radius:12px;display:grid;place-items:center;font-size:1.3rem;box-shadow:3px 3px 0 var(--line);transform:rotate(-6deg);transition:transform .25s}
+  .brand:hover .mark{transform:rotate(6deg) scale(1.05)}
+  .nav-actions{display:flex;align-items:center;gap:10px}
+
+  /* hero */
+  .hero{max-width:1040px;margin:0 auto;padding:54px 20px 34px;display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
+  .tagpill{display:inline-flex;gap:8px;align-items:center;background:var(--card);border:3px solid var(--line);border-radius:999px;padding:7px 15px;font-weight:700;font-size:.78rem;box-shadow:3px 3px 0 var(--line);margin-bottom:22px}
+  .tagpill .ping{width:9px;height:9px;border-radius:50%;background:var(--mint);border:2px solid var(--line);position:relative}
+  .tagpill .ping::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--mint);animation:pingring 1.8s ease-out infinite}
+  @keyframes pingring{0%{transform:scale(1);opacity:.8}100%{transform:scale(2.4);opacity:0}}
+  .hero h1{font-family:var(--font-head);font-size:3.1rem;line-height:1.04;font-weight:700;letter-spacing:-.015em}
+  .hero h1 em{font-style:normal;position:relative;white-space:nowrap}
+  .hero h1 em::after{content:"";position:absolute;left:-3px;right:-3px;bottom:4px;height:36%;background:var(--yellow);z-index:-1;border-radius:4px;transform:rotate(-1deg)}
+  .hero .lead{font-size:1.12rem;line-height:1.6;opacity:.82;margin:20px 0 28px;max-width:46ch}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+  .hnote{font-size:.82rem;opacity:.7;margin-top:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .hnote b{color:var(--violet-deep)}
+  .dot{width:5px;height:5px;border-radius:50%;background:var(--line);opacity:.4}
+
+  .heroart{background:linear-gradient(150deg,var(--violet),var(--violet-deep));border:4px solid var(--line);border-radius:26px;box-shadow:var(--shadow-lg);padding:24px;color:#fff;position:relative}
+  .heroart .ha-head{display:flex;align-items:center;gap:11px;margin-bottom:16px}
+  .heroart .av{width:44px;height:44px;border-radius:12px;background:#fff;color:var(--violet-deep);border:3px solid var(--line);display:grid;place-items:center;font-family:var(--font-head);font-weight:700;font-size:1.1rem;box-shadow:3px 3px 0 var(--line)}
+  .heroart .ha-head small{display:block;opacity:.85;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+  .heroart .ha-head b{font-family:var(--font-head);font-size:1.05rem}
+  .heroart .float{position:absolute;background:var(--card);color:var(--ink);border:3px solid var(--line);border-radius:14px;box-shadow:3px 3px 0 var(--line);padding:10px 13px;font-weight:700;font-size:.82rem;display:flex;gap:8px;align-items:center;z-index:2}
+  .heroart .f1{top:-16px;right:18px;animation:bob 3s ease-in-out infinite}
+  .heroart .f2{bottom:-18px;left:-12px;animation:bob 3.6s ease-in-out infinite .4s}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .mock{background:var(--card);color:var(--ink);border:3px solid var(--line);border-radius:18px;padding:14px}
+  .mock .mrow{display:flex;align-items:center;gap:11px;padding:11px;border:2.5px solid var(--line);border-radius:12px;margin-bottom:9px;background:var(--paper)}
+  .mock .mrow:last-child{margin-bottom:0}
+  .mock .mic{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;border:2px solid var(--line);font-size:1.05rem;flex-shrink:0}
+  .mock small{display:block;opacity:.6;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .mock b{font-family:var(--font-head);font-size:.98rem}
+  .mock .amt{margin-left:auto;font-family:var(--font-head);font-weight:700;color:var(--violet-deep)}
+  .mock .chk{margin-left:auto;width:26px;height:26px;border-radius:50%;background:var(--mint);border:2px solid var(--line);display:grid;place-items:center;font-size:.8rem;font-weight:800}
+
+  /* marquee */
+  .marquee{border-top:3px solid var(--line);border-bottom:3px solid var(--line);background:var(--ink);color:var(--paper);overflow:hidden;white-space:nowrap;margin-top:18px}
+  .marquee .track{display:inline-flex;gap:40px;padding:12px 0;animation:scrollx 22s linear infinite;font-family:var(--font-head);font-weight:600;font-size:.92rem}
+  .marquee .track span{display:inline-flex;align-items:center;gap:10px}
+  @keyframes scrollx{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* stats */
+  .stats{max-width:1040px;margin:0 auto;padding:40px 20px 10px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .stat{background:var(--card);border:3px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px;text-align:center}
+  .stat .num{font-family:var(--font-head);font-weight:700;font-size:2.1rem;line-height:1;color:var(--violet-deep)}
+  .stat .lab{opacity:.72;font-size:.86rem;margin-top:7px}
+
+  /* section heading */
+  .shead{text-align:center;max-width:620px;margin:0 auto 34px}
+  .shead .kicker{display:inline-block;font-family:var(--font-head);font-weight:700;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;background:var(--card);border:2.5px solid var(--line);border-radius:999px;padding:6px 14px;box-shadow:3px 3px 0 var(--line);margin-bottom:16px}
+  .shead h2{font-family:var(--font-head);font-size:2.1rem;line-height:1.1;letter-spacing:-.01em}
+  .shead p{opacity:.8;margin-top:12px;font-size:1.02rem}
+
+  /* features */
+  .block{padding:56px 0}
+  .lfeatures{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .lfeat{background:var(--card);border:3px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px;transition:transform .15s,box-shadow .15s}
+  .lfeat:hover{transform:translate(-3px,-3px);box-shadow:8px 8px 0 var(--line)}
+  .lfeat .ib{width:48px;height:48px;border-radius:12px;border:3px solid var(--line);display:grid;place-items:center;font-size:1.4rem;box-shadow:2px 2px 0 var(--line);margin-bottom:14px}
+  .lfeat h3{font-family:var(--font-head);font-size:1.08rem;margin-bottom:6px}
+  .lfeat p{opacity:.78;font-size:.9rem;line-height:1.55}
+
+  /* steps */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:st}
+  .step{position:relative;background:var(--card);border:3px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:26px 22px 22px}
+  .step::before{counter-increment:st;content:counter(st);position:absolute;top:-18px;left:20px;width:40px;height:40px;background:var(--yellow);border:3px solid var(--line);border-radius:12px;display:grid;place-items:center;font-family:var(--font-head);font-weight:700;font-size:1.15rem;box-shadow:3px 3px 0 var(--line)}
+  .step h3{font-family:var(--font-head);font-size:1.1rem;margin:10px 0 6px}
+  .step p{opacity:.78;font-size:.92rem;line-height:1.55}
+
+  /* reward chips */
+  .rewards-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+  .rchip{display:inline-flex;align-items:center;gap:9px;background:var(--card);border:3px solid var(--line);border-radius:14px;box-shadow:3px 3px 0 var(--line);padding:12px 16px;font-weight:700;font-family:var(--font-head);font-size:.95rem}
+  .rchip .em{font-size:1.2rem}
+  .rchip .cost{margin-left:4px;font-size:.78rem;font-weight:600;opacity:.7;font-family:var(--font-body)}
+
+  /* FAQ */
+  .faq{max-width:720px;margin:0 auto;display:grid;gap:12px}
+  details{background:var(--card);border:3px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  summary{font-family:var(--font-head);font-weight:600;cursor:pointer;list-style:none;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  summary::-webkit-details-marker{display:none}
+  summary .tog{width:28px;height:28px;flex-shrink:0;border:2.5px solid var(--line);border-radius:8px;display:grid;place-items:center;font-size:1.1rem;transition:transform .2s;background:var(--paper)}
+  details[open] summary .tog{transform:rotate(45deg);background:var(--violet);color:#fff}
+  details .body{padding:0 18px 16px;opacity:.82;font-size:.95rem;line-height:1.6}
+
+  /* CTA band */
+  .ctaband{background:linear-gradient(140deg,var(--violet),var(--violet-deep));border:4px solid var(--line);border-radius:26px;box-shadow:var(--shadow-lg);padding:44px 30px;text-align:center;color:#fff;position:relative;overflow:hidden}
+  .ctaband::after{content:"";position:absolute;inset:0;background-image:radial-gradient(#fff 1px,transparent 1px);background-size:22px 22px;opacity:.12;pointer-events:none}
+  .ctaband h2{font-family:var(--font-head);font-size:2rem;line-height:1.1;position:relative}
+  .ctaband p{opacity:.9;margin:12px auto 24px;max-width:46ch;position:relative}
+
+  footer{border-top:3px solid var(--line);margin-top:56px;padding:28px 0}
+  footer .inner{max-width:1040px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;opacity:.85;font-size:.88rem}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(max-width:860px){
+    .hero{grid-template-columns:1fr;padding-top:34px}
+    .hero h1{font-size:2.4rem}
+    .heroart{order:-1}
+    .stats,.lfeatures,.steps{grid-template-columns:1fr}
+    .shead h2{font-size:1.7rem}
+    .ctaband h2{font-size:1.6rem}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+    .reveal{opacity:1;transform:none}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header><span class="logo">KODO Rewards</span><a class="btn" href="app.html">Masuk / Daftar</a></header>
-  <h1>Selesaikan misi, kumpulkan poin.</h1>
-  <p>Daftar dengan nomor HP, verifikasi lewat bot Telegram, lalu kerjakan misi untuk mendapat poin. Poin bisa ditukar reward atau diajukan penarikan.</p>
-  <p><a class="btn y" href="app.html">Mulai →</a></p>
-  <div class="grid">
-    <div class="card"><h3>Misi</h3><p>Check-in harian, gabung channel, start bot, dan tugas lain dari admin.</p></div>
-    <div class="card"><h3>Reward</h3><p>Tukar poin dengan reward yang diproses admin.</p></div>
-    <div class="card"><h3>Referal</h3><p>Ajak teman: kamu dapat 10.000 poin, teman dapat 2.000 poin setelah terverifikasi.</p></div>
+<div class="aura a1"></div>
+<div class="aura a2"></div>
+
+<!-- NAV -->
+<nav class="lnav" id="nav">
+  <div class="inner">
+    <a class="brand" href="#top"><span class="mark">🎁</span> KODO <span style="color:var(--violet-deep)">Rewards</span></a>
+    <div class="nav-actions">
+      <button class="btn icon-btn sm" id="themeBtn" aria-label="Ganti tema" title="Ganti tema">🌙</button>
+      <a class="btn btn-violet sm" href="app.html">Masuk / Daftar</a>
+    </div>
   </div>
-  <h2>Pertanyaan umum</h2>
-  <details><summary>Bagaimana penarikan diproses?</summary><p>Kamu mengajukan penarikan di aplikasi. Admin memeriksa lalu mentransfer secara manual. Jika ditolak, poin dikembalikan ke akunmu.</p></details>
-  <details><summary>Apakah poin hilang kalau saya keluar (logout)?</summary><p>Tidak. Poin tersimpan di akunmu. Keluar hanya mengakhiri sesi di perangkat itu, dan kamu bisa masuk lagi dengan nomor HP dan password.</p></details>
-  <details><summary>Dari mana kode verifikasi?</summary><p>Dikirim oleh bot Telegram kami setelah kamu menekan Start dan membagikan nomor HP-mu. Jangan bagikan kode itu ke siapa pun.</p></details>
-  <footer>© 2026 KODO Rewards</footer>
+</nav>
+
+<span id="top"></span>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="reveal">
+    <span class="tagpill"><span class="ping"></span> Gratis • Login cukup lewat Telegram</span>
+    <h1>Kerjakan misi, kumpulkan poin, tukar jadi <em>reward</em>.</h1>
+    <p class="lead">Masuk cukup dengan Telegram, verifikasi dengan kode OTP, lalu selesaikan misi harian untuk mengumpulkan poin. Tukar poin jadi reward nyata atau ajukan penarikan saldo — semua dalam satu aplikasi yang simpel.</p>
+    <div class="hero-cta">
+      <a class="btn btn-violet big" href="app.html">Mulai sekarang →</a>
+      <a class="btn big" href="#cara">Lihat cara kerja</a>
+    </div>
+    <div class="hnote">
+      <span>✅ Tanpa biaya</span><span class="dot"></span>
+      <span>🔒 Verifikasi aman via <b>Telegram</b></span><span class="dot"></span>
+      <span>⚡ Daftar &lt; 1 menit</span>
+    </div>
+  </div>
+
+  <div class="reveal heroart" style="transition-delay:.1s">
+    <div class="float f1">🏆 <span>Level up!</span></div>
+    <div class="float f2">💸 <span>+2.000 poin</span></div>
+    <div class="ha-head">
+      <span class="av">K</span>
+      <div>
+        <small>Saldo poin</small>
+        <b id="balCount">0</b> poin
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mrow"><span class="mic" style="background:color-mix(in srgb,var(--mint) 24%,#fff)">📅</span><div><small>Misi harian</small><b>Check-in hari ini</b></div><span class="amt">+500</span></div>
+      <div class="mrow"><span class="mic" style="background:color-mix(in srgb,var(--sky) 24%,#fff)">📣</span><div><small>Sosial</small><b>Gabung channel</b></div><span class="amt">+1.500</span></div>
+      <div class="mrow"><span class="mic" style="background:color-mix(in srgb,var(--yellow) 40%,#fff)">👥</span><div><small>Ajak teman</small><b>Referral terverifikasi</b></div><span class="chk">✓</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- MARQUEE -->
+<div class="marquee" aria-hidden="true">
+  <div class="track" id="mqTrack">
+    <span>🎁 Reward nyata</span><span>⚡ Misi harian</span><span>👥 Bonus referral</span><span>🔒 Login via Telegram</span><span>💸 Tarik saldo</span><span>🏆 Naik level</span>
+    <span>🎁 Reward nyata</span><span>⚡ Misi harian</span><span>👥 Bonus referral</span><span>🔒 Login via Telegram</span><span>💸 Tarik saldo</span><span>🏆 Naik level</span>
+  </div>
 </div>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="stat reveal"><div class="num" data-count="4" data-suffix="+">0</div><div class="lab">Jenis misi untuk dikerjakan</div></div>
+  <div class="stat reveal" style="transition-delay:.08s"><div class="num" data-count="10000" data-sep>0</div><div class="lab">Bonus poin per referral</div></div>
+  <div class="stat reveal" style="transition-delay:.16s"><div class="num" data-count="100" data-suffix="%">0</div><div class="lab">Poin tersimpan aman di akunmu</div></div>
+</section>
+
+<!-- FEATURES -->
+<section class="block wrap" id="fitur">
+  <div class="shead reveal">
+    <span class="kicker">Kenapa KODO</span>
+    <h2>Semua yang kamu butuh, tanpa ribet</h2>
+    <p>Dibuat simpel supaya siapa pun bisa langsung paham dan mulai mengumpulkan poin.</p>
+  </div>
+  <div class="lfeatures">
+    <div class="lfeat reveal"><div class="ib" style="background:color-mix(in srgb,var(--mint) 22%,#fff)">⚡</div><h3>Misi harian</h3><p>Check-in, gabung channel, start bot, dan tugas lain dari admin. Setiap misi menambah poinmu.</p></div>
+    <div class="lfeat reveal" style="transition-delay:.06s"><div class="ib" style="background:color-mix(in srgb,var(--violet) 24%,#fff)">🎁</div><h3>Reward nyata</h3><p>Tukar poin dengan reward pilihan. Permintaan diproses langsung oleh admin.</p></div>
+    <div class="lfeat reveal" style="transition-delay:.12s"><div class="ib" style="background:color-mix(in srgb,var(--yellow) 42%,#fff)">👥</div><h3>Referral cuan</h3><p>Ajak teman: kamu dapat 10.000 poin, teman dapat 2.000 poin setelah terverifikasi.</p></div>
+    <div class="lfeat reveal"><div class="ib" style="background:color-mix(in srgb,var(--sky) 26%,#fff)">🔒</div><h3>Login aman</h3><p>Masuk cukup lewat Telegram dengan kode OTP. Tanpa password ribet, tanpa data berlebih.</p></div>
+    <div class="lfeat reveal" style="transition-delay:.06s"><div class="ib" style="background:color-mix(in srgb,var(--pink) 32%,#fff)">💸</div><h3>Penarikan jelas</h3><p>Ajukan penarikan, admin cek lalu transfer manual. Ditolak? Poin otomatis kembali.</p></div>
+    <div class="lfeat reveal" style="transition-delay:.12s"><div class="ib" style="background:color-mix(in srgb,var(--mint) 30%,#fff)">🛡️</div><h3>Poin aman</h3><p>Logout hanya mengakhiri sesi di perangkat itu — poinmu tetap tersimpan di akun.</p></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="block wrap" id="cara">
+  <div class="shead reveal">
+    <span class="kicker">Cara kerja</span>
+    <h2>Mulai dalam 3 langkah</h2>
+    <p>Dari daftar sampai dapat poin, prosesnya kurang dari satu menit.</p>
+  </div>
+  <div class="steps">
+    <div class="step reveal"><h3>Masuk via Telegram</h3><p>Masukkan username Telegram-mu, terima kode OTP, selesai. Akun langsung jadi.</p></div>
+    <div class="step reveal" style="transition-delay:.08s"><h3>Kerjakan misi</h3><p>Selesaikan misi harian dan tugas dari admin untuk menambah poin ke saldomu.</p></div>
+    <div class="step reveal" style="transition-delay:.16s"><h3>Tukar atau tarik</h3><p>Tukar poin jadi reward, atau ajukan penarikan saldo. Diproses oleh admin.</p></div>
+  </div>
+</section>
+
+<!-- REWARDS SHOWCASE -->
+<section class="block wrap">
+  <div class="shead reveal">
+    <span class="kicker">Reward</span>
+    <h2>Poinmu, hadiahmu</h2>
+    <p>Beberapa contoh reward yang bisa ditukar dengan poin.</p>
+  </div>
+  <div class="rewards-row reveal">
+    <span class="rchip"><span class="em">☕</span> Voucher kopi <span class="cost">8.000 poin</span></span>
+    <span class="rchip"><span class="em">🛍️</span> Diskon belanja 25% <span class="cost">15.000 poin</span></span>
+    <span class="rchip"><span class="em">💳</span> Saldo belanja Rp50rb <span class="cost">60.000 poin</span></span>
+    <span class="rchip"><span class="em">🎧</span> & lainnya <span class="cost">dari admin</span></span>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="block wrap" id="faq">
+  <div class="shead reveal">
+    <span class="kicker">FAQ</span>
+    <h2>Pertanyaan umum</h2>
+  </div>
+  <div class="faq">
+    <details class="reveal" open><summary>Bagaimana cara masuk? <span class="tog">+</span></summary><div class="body">Cukup masukkan username (atau nomor) Telegram-mu. Kode verifikasi 6 digit dikirim ke Telegram, masukkan kodenya, dan kamu langsung masuk. Tidak perlu password di awal.</div></details>
+    <details class="reveal"><summary>Bagaimana penarikan diproses? <span class="tog">+</span></summary><div class="body">Kamu mengajukan penarikan di aplikasi. Admin memeriksa lalu mentransfer secara manual. Jika ditolak, poin dikembalikan penuh ke akunmu.</div></details>
+    <details class="reveal"><summary>Apakah poin hilang kalau saya logout? <span class="tog">+</span></summary><div class="body">Tidak. Poin tersimpan di akunmu. Logout hanya mengakhiri sesi di perangkat itu, dan kamu bisa masuk lagi kapan saja lewat Telegram.</div></details>
+    <details class="reveal"><summary>Dari mana kode verifikasi datang? <span class="tog">+</span></summary><div class="body">Dikirim langsung ke akun Telegram-mu. Jangan pernah membagikan kode itu ke siapa pun, termasuk yang mengaku admin.</div></details>
+    <details class="reveal"><summary>Apakah ada biaya? <span class="tog">+</span></summary><div class="body">Tidak ada. Mendaftar dan mengerjakan misi sepenuhnya gratis.</div></details>
+  </div>
+</section>
+
+<!-- CTA BAND -->
+<section class="block wrap">
+  <div class="ctaband reveal">
+    <h2>Siap kumpulkan poin pertamamu?</h2>
+    <p>Gabung sekarang, kerjakan misi hari ini, dan mulai tukar poin jadi reward.</p>
+    <a class="btn btn-yellow big" href="app.html" style="position:relative">Buat akun gratis →</a>
+  </div>
+</section>
+
+<footer>
+  <div class="inner">
+    <a class="brand" href="#top" style="font-size:1.1rem"><span class="mark" style="width:32px;height:32px;font-size:1.05rem">🎁</span> KODO Rewards</a>
+    <span>© <span id="yr"></span> KODO Rewards · Dibuat dengan ❤️</span>
+  </div>
+</footer>
+
+<script>
+  var $=function(s,r){return (r||document).querySelector(s);};
+  var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+  document.getElementById('yr').textContent=new Date().getFullYear();
+
+  /* theme toggle (sinkron gaya app) */
+  (function(){
+    var btn=$('#themeBtn'); var saved=null;
+    try{saved=localStorage.getItem('kodo-theme');}catch(e){}
+    function sysDark(){return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;}
+    function cur(){var t=document.documentElement.getAttribute('data-theme');return t?t:(sysDark()?'dark':'light');}
+    function apply(t){document.documentElement.setAttribute('data-theme',t);btn.textContent=t==='dark'?'☀️':'🌙';try{localStorage.setItem('kodo-theme',t);}catch(e){}}
+    if(saved) apply(saved); else btn.textContent=sysDark()?'☀️':'🌙';
+    btn.addEventListener('click',function(){apply(cur()==='dark'?'light':'dark');});
+  })();
+
+  /* sticky nav border */
+  var nav=$('#nav');
+  var onScroll=function(){nav.classList.toggle('stuck',window.scrollY>8);};
+  onScroll(); window.addEventListener('scroll',onScroll,{passive:true});
+
+  /* reveal on scroll */
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){ $$('.reveal').forEach(function(el){el.classList.add('in');}); }
+  else{
+    var io=new IntersectionObserver(function(ents){
+      ents.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    },{threshold:.12,rootMargin:'0px 0px -40px 0px'});
+    $$('.reveal').forEach(function(el){io.observe(el);});
+  }
+
+  /* count-up (stats + hero balance) */
+  function countUp(el){
+    var target=+el.getAttribute('data-count'); var suffix=el.getAttribute('data-suffix')||'';
+    var sep=el.hasAttribute('data-sep'); var dur=1200, t0=null;
+    function fmt(n){ return sep? Number(n).toLocaleString('id-ID') : String(n); }
+    function tick(t){ if(!t0)t0=t; var p=Math.min((t-t0)/dur,1); var e=1-Math.pow(1-p,3);
+      el.textContent=fmt(Math.round(e*target))+suffix; if(p<1) requestAnimationFrame(tick); }
+    requestAnimationFrame(tick);
+  }
+  var seen=new WeakSet();
+  if(!reduce){
+    var io2=new IntersectionObserver(function(ents){
+      ents.forEach(function(e){ if(e.isIntersecting&&!seen.has(e.target)){ seen.add(e.target); countUp(e.target); io2.unobserve(e.target);} });
+    },{threshold:.5});
+    $$('[data-count]').forEach(function(el){io2.observe(el);});
+    // hero balance climbs once
+    (function(){ var el=$('#balCount'); var t0=null,dur=1600;
+      function tick(t){if(!t0)t0=t;var p=Math.min((t-t0)/dur,1);var e=1-Math.pow(1-p,3);
+        el.textContent=Number(Math.round(e*12450)).toLocaleString('id-ID');if(p<1)requestAnimationFrame(tick);}
+      requestAnimationFrame(tick); })();
+  } else {
+    $$('[data-count]').forEach(function(el){ var s=el.getAttribute('data-suffix')||''; el.textContent=(el.hasAttribute('data-sep')?Number(el.getAttribute('data-count')).toLocaleString('id-ID'):el.getAttribute('data-count'))+s; });
+    $('#balCount').textContent='12.450';
+  }
+</script>
 </body>
 </html>
