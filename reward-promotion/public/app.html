@@ -835,7 +835,7 @@
   });
 
   /* ---- referral ---- */
-  function refLink(){ return location.origin+'/app.html?ref='+ME.user.ref_code; }
+  function refLink(){ return location.origin+'/r/'+ME.user.ref_code; }
   $('#copyRef').addEventListener('click',function(){
     var v=refLink();
     try{navigator.clipboard.writeText(v);}catch(e){ $('#refCode').select(); try{document.execCommand('copy');}catch(e2){} }

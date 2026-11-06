@@ -11,6 +11,9 @@ const BOT_USERNAME = process.env.BOT_USERNAME || "";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const SESSION_DAYS = +process.env.SESSION_DAYS || 90;
 const SECURE_COOKIE = process.env.SECURE_COOKIE === "1";
+const slug = (v, d) => (String(v || d).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || d);
+const APP_PATH = slug(process.env.APP_PATH, "app");
+const ADMIN_PATH = slug(process.env.ADMIN_PATH, "admin");
 const STATIC_DIR = process.env.STATIC_DIR || path.join(__dirname, "..", "public");
 
 if (ADMIN_PASSWORD.length < 10) {
@@ -334,8 +337,21 @@ app.post("/api/admin/settings", adminAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-/* ---- static ---- */
-app.use(express.static(STATIC_DIR, { extensions: ["html"], index: "index.html", dotfiles: "ignore" }));
+/* ---- halaman: path acak dari .env, nama file asli tidak diekspos ---- */
+const fs = require("node:fs");
+const page = (f) => fs.readFileSync(path.join(STATIC_DIR, f), "utf8");
+const HTML = {
+  index: page("index.html").replace(/href="app\.html"/g, `href="/${APP_PATH}"`),
+  app: page("app.html"),
+  admin: page("admin.html"),
+};
+const send = (html, extra) => (_q, res) => { res.set({ "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", ...(extra || {}) }); res.send(html); };
+app.get("/", send(HTML.index));
+app.get("/" + APP_PATH, send(HTML.app));
+app.get("/" + ADMIN_PATH, send(HTML.admin, { "X-Robots-Tag": "noindex, nofollow" }));
+app.get("/r/:code", (req, res) => res.redirect(302, /^[a-f0-9]{8}$/.test(req.params.code) ? `/${APP_PATH}?ref=${req.params.code}` : "/"));
+app.get("/robots.txt", (_q, res) => res.type("text/plain").send("User-agent: *\nDisallow: /api/\nDisallow: /" + ADMIN_PATH + "\n"));
+app.use((_q, res) => res.status(404).type("text/plain").send("Not found"));
 app.use((e, _q, res, _n) => { console.error(e); res.status(500).json({ error: "server" }); });
 
 app.listen(PORT, () => console.log("listening", PORT));
