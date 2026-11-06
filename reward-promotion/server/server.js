@@ -325,6 +325,10 @@ app.post("/api/admin/login", (req, res) => {
   const t = crypto.randomBytes(32).toString("hex"); adminTokens.set(sha(t), { exp: Date.now() + 12 * 3600e3, user: row.username });
   setCookie(res, "adm", t, 0.5); res.json({ ok: true });
 });
+app.post("/api/admin/logout", (req, res) => {
+  const t = cookies(req).adm; if (t) adminTokens.delete(sha(t));
+  res.append("Set-Cookie", "adm=; Path=/; Max-Age=0"); res.json({ ok: true });
+});
 app.post("/api/admin/password", adminAuth, (req, res) => {
   const np = String(req.body.new || "");
   const row = db.prepare("SELECT * FROM admins WHERE username=?").get(req.admin.user);
