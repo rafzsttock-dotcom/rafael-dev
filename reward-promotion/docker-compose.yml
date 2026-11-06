@@ -3,6 +3,7 @@ services:
     build: .
     restart: unless-stopped
     env_file: .env
+    dns: [1.1.1.1, 8.8.8.8]
     environment:
       SECURE_COOKIE: "${SECURE_COOKIE:-1}"
     volumes:
@@ -11,6 +12,7 @@ services:
     image: caddy:2
     restart: unless-stopped
     ports: ["80:80", "443:443"]
+    dns: [1.1.1.1, 8.8.8.8]
     environment:
       DOMAIN: "${DOMAIN:-:80}"
     volumes:
