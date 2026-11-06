@@ -63,9 +63,10 @@ if (!db.prepare("SELECT 1 FROM admins LIMIT 1").get()) {
   console.log("Admin pertama dibuat:", ADMIN_USERNAME);
 }
 function normPhone(p) {
+  // Terima E.164: kode negara + nomor lokal, 8-14 digit total. Front-end mengirim gabungan "<kodenegara><nomor>".
   let d = String(p || "").replace(/[^\d]/g, "");
-  if (d.startsWith("0")) d = "62" + d.slice(1); else if (d.startsWith("8")) d = "62" + d;
-  return /^62\d{8,13}$/.test(d) ? d : null;
+  if (d.startsWith("0")) d = d.slice(1); // jaga-jaga kalau user ketik 0 di depan nomor lokal
+  return /^\d{8,15}$/.test(d) ? d : null;
 }
 function addPoints(uid, delta, reason) {
   db.prepare("UPDATE users SET points=points+? WHERE id=?").run(delta, uid);

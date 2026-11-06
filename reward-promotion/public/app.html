@@ -104,7 +104,7 @@
   .lfield{text-align:left;margin-bottom:18px}
   .lfield label{display:block;font-weight:700;font-size:.82rem;margin-bottom:8px}
   .phone-input{display:flex;border:3px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:4px 4px 0 var(--line);background:var(--card)}
-  .phone-input .cc{display:flex;align-items:center;gap:6px;padding:0 13px;background:color-mix(in srgb,var(--yellow) 80%,var(--card));border-right:3px solid var(--line);font-weight:700;font-family:var(--font-head);color:#120f1f;white-space:nowrap}
+  .cc-select{border:0;outline:0;padding:0 8px;background:color-mix(in srgb,var(--yellow) 80%,var(--card));color:var(--ink);font-weight:700;font-size:.95rem;font-family:var(--font-body);max-width:118px}
   .phone-input input{flex:1;border:0;outline:0;padding:14px;font-size:1.05rem;font-family:var(--font-body);background:transparent;color:var(--ink)}
   .phone-input:focus-within{box-shadow:4px 4px 0 var(--violet)}
   .otp-boxes{display:flex;gap:9px;justify-content:space-between;margin:8px 0 10px}
@@ -204,7 +204,7 @@
   .tab.active .list .item:nth-child(4),.tab.active .friend:nth-child(4){animation-delay:.15s}
   .tab.active .list .item:nth-child(5){animation-delay:.2s}
   .tab.active .list .item:nth-child(6){animation-delay:.25s}
-  .flag-id{width:22px;height:15px;border-radius:3px;border:2px solid var(--line);background:linear-gradient(#e0484d 0 50%,#fff 50% 100%);display:inline-block;flex-shrink:0}
+  
   .balance .p .cic{width:15px;height:15px;color:#fff}
   .verified .cic{color:var(--tg);display:inline-block;vertical-align:-3px}
   .toast{align-items:center}
@@ -428,8 +428,8 @@
       <div class="lfield">
         <label for="loginPhone">Nomor HP</label>
         <div class="phone-input">
-          <span class="cc"><span class="flag-id"></span> +62</span>
-          <input type="tel" id="loginPhone" inputmode="numeric" placeholder="812 3456 7890" autocomplete="tel">
+          <select id="loginCC" class="cc-select" aria-label="Kode negara"></select>
+          <input type="tel" id="loginPhone" inputmode="numeric" placeholder="Nomor HP tanpa 0 di depan" autocomplete="tel">
         </div>
       </div>
       <div class="lfield">
@@ -753,8 +753,28 @@
     box.addEventListener('keydown',function(e){if(e.key==='Backspace'&&!this.value&&idx>0)lboxes[idx-1].focus();});
     box.addEventListener('paste',function(e){e.preventDefault();var t=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);t.split('').forEach(function(ch,i){if(lboxes[i]){lboxes[i].value=ch;lboxes[i].classList.add('filled');}});var nx=lboxes[Math.min(t.length,5)];if(nx)nx.focus();});
   });
+  var COUNTRIES=[
+    ['62','Indonesia'],['60','Malaysia'],['65','Singapura'],['63','Filipina'],['66','Thailand'],['84','Vietnam'],
+    ['673','Brunei'],['855','Kamboja'],['856','Laos'],['95','Myanmar'],['91','India'],['92','Pakistan'],['880','Bangladesh'],
+    ['86','Tiongkok'],['852','Hong Kong'],['886','Taiwan'],['81','Jepang'],['82','Korea Selatan'],
+    ['966','Arab Saudi'],['971','UEA'],['974','Qatar'],['968','Oman'],['965','Kuwait'],['973','Bahrain'],['20','Mesir'],
+    ['44','Inggris'],['49','Jerman'],['33','Prancis'],['31','Belanda'],['34','Spanyol'],['39','Italia'],['41','Swiss'],['46','Swedia'],
+    ['1','AS/Kanada'],['61','Australia'],['64','Selandia Baru'],
+    ['55','Brasil'],['52','Meksiko'],['27','Afrika Selatan'],['234','Nigeria'],['254','Kenya']
+  ];
+  (function(){
+    var sel=$('#loginCC'); if(!sel)return;
+    sel.innerHTML=COUNTRIES.map(function(c){return '<option value="'+c[0]+'">+'+c[0]+' '+c[1]+'</option>';}).join('');
+    try{var saved=localStorage.getItem('kodo-cc');if(saved)sel.value=saved;}catch(e){}
+    sel.addEventListener('change',function(){try{localStorage.setItem('kodo-cc',sel.value);}catch(e){}});
+  })();
   var phone='';
-  function creds(){ phone=$('#loginPhone').value.replace(/[^\d]/g,''); return {phone:phone,password:$('#loginPass').value}; }
+  function creds(){
+    var cc=($('#loginCC')&&$('#loginCC').value)||'62';
+    var local=$('#loginPhone').value.replace(/[^\d]/g,'').replace(/^0+/,'');
+    phone=cc+local;
+    return {phone:phone,password:$('#loginPass').value};
+  }
   function afterAuth(){
     return reload().then(function(){ return api('/channel/status'); }).then(function(c){
       if(c.required&&!c.member){ renderJoinGate(); show('join'); } else { show('app'); }
