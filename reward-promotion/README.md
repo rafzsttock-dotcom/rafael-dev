@@ -1,34 +1,21 @@
-# KODO Rewards — Demo UI
+# KODO Rewards
 
-Front-end demo (HTML/CSS/JS murni). Tidak ada backend, semua data simulasi di browser.
+Aplikasi misi + poin + reward dengan backend (Node.js + SQLite), login nomor HP + password + OTP via bot Telegram, dan admin panel. Penarikan poin diproses manual oleh admin.
 
-## File
-- `index.html` — Landing page
-- `app.html` — Aplikasi user
-- `admin.html` — Dashboard admin
-- `daftar.html` — Halaman daftar
+## Pasang di VPS (Ubuntu/Debian)
+1. Upload folder ini ke VPS (git clone branch `claude/deploy-reward-promotion`, lalu `cd reward-promotion`).
+2. `sudo bash install.sh` — membuat `.env` dengan password admin acak lalu berhenti.
+3. Edit `.env`: isi `BOT_TOKEN`, `BOT_USERNAME`, `DOMAIN` (kosongkan + `SECURE_COOKIE=0` jika belum ada domain).
+4. `sudo bash install.sh` lagi — build dan jalan. Admin di `/admin.html`.
 
-## Deploy Live (pilih salah satu)
+Data tersimpan di `./data/app.db` (backup folder ini secara berkala).
 
-### 1. Netlify Drop (paling gampang, 30 detik)
-1. Buka https://app.netlify.com/drop
-2. Drag folder `kodo-demo` ke sana
-3. Dapat URL langsung (contoh: `https://random-name.netlify.app`)
+## Perilaku penting
+- Logout hanya mengakhiri sesi di perangkat itu; poin tetap di akun. Sesi berlaku 90 hari.
+- Verifikasi OTP: user menekan Start di bot lalu membagikan kontak miliknya; kode 6 digit dikirim bot.
+- Join channel dan start bot diverifikasi server (getChatMember); misi lain mengikuti tipe yang diatur admin.
+- Semua angka di UI (bonus, nilai poin, minimal tarik) berasal dari database/pengaturan admin.
 
-### 2. GitHub Pages
-1. Buat repo baru di GitHub
-2. Upload semua file di folder ini
-3. Settings → Pages → Deploy from branch `main` → root
-4. URL: `https://username.github.io/repo-name`
-
-### 3. Vercel
-1. Buka https://vercel.com/new
-2. Import folder / repo
-3. Deploy
-
-### 4. Cloudflare Pages
-Sama seperti Netlify, drag & drop di dashboard Cloudflare Pages.
-
-## Catatan
-- Ini demo tampilan saja.
-- Jangan simpan bot token asli di front-end.
+## Keamanan
+- Token bot dan password admin hanya di `.env` (jangan commit). Ganti password VPS/SSH yang pernah dibagikan lewat chat.
+- Pasang firewall (ufw allow 22,80,443) dan gunakan SSH key.
