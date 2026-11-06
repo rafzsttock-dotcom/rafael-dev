@@ -4,8 +4,49 @@ import {
   Database,
   Cloud,
   Workflow,
+  Award,
+  Target,
+  Rocket,
+  Github,
+  Twitter,
+  Linkedin,
   type LucideIcon,
 } from "lucide-react";
+
+/* ------------------------------------------------------------------ */
+/* Site-wide profile — edit these once, every section picks them up.   */
+/* ------------------------------------------------------------------ */
+export const profile = {
+  name: "Cogil",
+  initial: "C",
+  location: "Jakarta, Indonesia",
+  email: "hello@cogil.dev",
+  available: true,
+  roles: ["Software Engineer", "Full Stack Developer", "Automation Builder"],
+  tagline:
+    "I design and build premium, high-performance digital products — from elegant interfaces to powerful automation systems.",
+  coreSkills: ["Next.js", "TypeScript", "Python", "Automation"],
+};
+
+export const navLinks = [
+  { label: "About", href: "#about" },
+  { label: "Skills", href: "#skills" },
+  { label: "Projects", href: "#projects" },
+  { label: "Experience", href: "#experience" },
+  { label: "Contact", href: "#contact" },
+];
+
+export const socials: { icon: LucideIcon; href: string; label: string }[] = [
+  { icon: Github, href: "https://github.com", label: "GitHub" },
+  { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
+  { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
+];
+
+export const highlights: { icon: LucideIcon; label: string; text: string }[] = [
+  { icon: Award, label: "Experience", text: "5+ years shipping production software" },
+  { icon: Target, label: "Focus", text: "Full stack, automation & system design" },
+  { icon: Rocket, label: "Goal", text: "Building products people love to use" },
+];
 
 export const stats = [
   { label: "Projects Completed", value: 150, suffix: "+" },
@@ -61,7 +102,9 @@ export interface Project {
   github: string;
   demo: string;
   gradient: string;
+  /** Grid placement on md+ screens (3-column bento grid). */
   span: string;
+  featured?: boolean;
 }
 
 export const projects: Project[] = [
@@ -74,6 +117,7 @@ export const projects: Project[] = [
     demo: "https://example.com",
     gradient: "from-purple-600/30 to-blue-600/20",
     span: "md:col-span-2 md:row-span-2",
+    featured: true,
   },
   {
     title: "Telegram Star Engine",
@@ -102,7 +146,7 @@ export const projects: Project[] = [
     github: "https://github.com",
     demo: "https://example.com",
     gradient: "from-blue-600/30 to-indigo-600/20",
-    span: "md:col-span-2",
+    span: "md:col-span-3",
   },
 ];
 

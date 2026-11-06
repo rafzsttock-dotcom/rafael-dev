@@ -14,6 +14,18 @@
 
 html {
   scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+::selection {
+  background: rgba(168, 85, 247, 0.35);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid #a855f7;
+  outline-offset: 3px;
+  border-radius: 6px;
 }
 
 body {

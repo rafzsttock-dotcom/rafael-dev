@@ -2,14 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { MapPin, Sparkles } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { MagneticButton } from "@/components/ui/MagneticButton";
-
-const roles = [
-  "Software Engineer",
-  "Full Stack Developer",
-  "Automation Builder",
-];
+import { profile } from "@/lib/data";
 
 function useTypewriter(words: string[]) {
   const [text, setText] = useState("");
@@ -18,22 +13,20 @@ function useTypewriter(words: string[]) {
 
   useEffect(() => {
     const current = words[wordIndex];
-    const speed = deleting ? 45 : 90;
+    const finishedTyping = !deleting && text === current;
+    const finishedDeleting = deleting && text === "";
 
+    // One timeout per step, always cleaned up — no stray nested timers.
+    const delay = finishedTyping ? 1400 : deleting ? 45 : 90;
     const timeout = setTimeout(() => {
-      if (!deleting) {
-        setText(current.slice(0, text.length + 1));
-        if (text.length + 1 === current.length) {
-          setTimeout(() => setDeleting(true), 1400);
-        }
+      if (finishedTyping) setDeleting(true);
+      else if (finishedDeleting) {
+        setDeleting(false);
+        setWordIndex((i) => (i + 1) % words.length);
       } else {
-        setText(current.slice(0, text.length - 1));
-        if (text.length === 0) {
-          setDeleting(false);
-          setWordIndex((i) => (i + 1) % words.length);
-        }
+        setText(current.slice(0, text.length + (deleting ? -1 : 1)));
       }
-    }, speed);
+    }, delay);
 
     return () => clearTimeout(timeout);
   }, [text, deleting, wordIndex, words]);
@@ -43,7 +36,7 @@ function useTypewriter(words: string[]) {
 
 export function Hero() {
   const ref = useRef<HTMLDivElement>(null);
-  const typed = useTypewriter(roles);
+  const typed = useTypewriter(profile.roles);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -55,7 +48,7 @@ export function Hero() {
   return (
     <section
       ref={ref}
-      className="relative flex min-h-screen items-center px-6 pt-32 md:pt-24"
+      className="relative flex min-h-[100svh] items-center px-5 pb-16 pt-28 sm:px-6 md:pt-24"
     >
       <motion.div
         style={{ opacity, scale, y }}
@@ -69,8 +62,11 @@ export function Hero() {
             transition={{ duration: 0.6 }}
             className="mb-6 inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs text-white/70"
           >
-            <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-            Available for new projects
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+            </span>
+            {profile.available ? "Available for new projects" : "Currently booked"}
           </motion.div>
 
           <motion.h1
@@ -80,7 +76,7 @@ export function Hero() {
             className="font-display text-6xl font-extrabold leading-none tracking-tight sm:text-7xl md:text-8xl"
           >
             <span className="neon-text bg-gradient-to-br from-white via-purple-200 to-blue-300 bg-clip-text text-transparent">
-              COGIL
+              {profile.name.toUpperCase()}
             </span>
           </motion.h1>
 
@@ -89,19 +85,19 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.25 }}
             className="mt-4 h-9 font-display text-xl font-medium text-white/80 sm:text-2xl"
+            aria-label={profile.roles.join(", ")}
           >
-            {typed}
-            <span className="ml-0.5 inline-block h-6 w-[2px] animate-pulse bg-purple-400 align-middle" />
+            <span aria-hidden>{typed}</span>
+            <span aria-hidden className="ml-0.5 inline-block h-6 w-[2px] animate-pulse bg-purple-400 align-middle" />
           </motion.div>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.35 }}
-            className="mt-6 max-w-md text-white/60"
+            className="mt-6 max-w-md text-base leading-relaxed text-white/60 sm:text-lg"
           >
-            I design and build premium, high-performance digital products —
-            from elegant interfaces to powerful automation systems.
+            {profile.tagline}
           </motion.p>
 
           <motion.div
@@ -130,22 +126,19 @@ export function Hero() {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-blue-500 font-display text-2xl font-bold">
-                  I
+                  {profile.initial}
                 </div>
                 <span className="absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-navy-900 bg-emerald-400" />
               </div>
               <div>
-                <p className="font-display font-semibold">Cogil</p>
-                <p className="flex items-center gap-1 text-sm text-emerald-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  Online
-                </p>
+                <p className="font-display font-semibold">{profile.name}</p>
+                <p className="text-xs text-white/50">{profile.roles[0]}</p>
               </div>
             </div>
 
             <div className="mt-6 flex items-center gap-2 text-sm text-white/60">
               <MapPin className="h-4 w-4 text-blue-400" />
-              Jakarta, Indonesia
+              {profile.location}
             </div>
 
             <div className="mt-6">
@@ -153,7 +146,7 @@ export function Hero() {
                 Core Skills
               </p>
               <div className="flex flex-wrap gap-2">
-                {["Next.js", "TypeScript", "Python", "Automation"].map((s) => (
+                {profile.coreSkills.map((s) => (
                   <span
                     key={s}
                     className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/80"

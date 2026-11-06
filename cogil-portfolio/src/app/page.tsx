@@ -15,7 +15,7 @@ export default function Home() {
     <>
       <Background />
       <Navbar />
-      <main className="relative">
+      <main id="main" className="relative">
         <Hero />
         <Stats />
         <About />
