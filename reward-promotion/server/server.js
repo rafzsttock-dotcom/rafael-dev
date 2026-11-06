@@ -192,7 +192,69 @@ function adminAuth(req, res, next) {
   if (!e || e.exp < Date.now()) return res.status(401).json({ error: "admin" });
   req.admin = e; next();
 }
-const pub = (u) => ({ id: u.id, phone: u.phone, username: u.username || "", points: u.points, ref_code: u.ref_code, bot: botName() });
+const pub = (u) => ({ id: u.id, phone: u.phone, username: u.username || "", tg_id: u.tg_id || "", tg_name: u.tg_name || "", has_password: !!(u.pass_hash && u.pass_hash.length), points: u.points, ref_code: u.ref_code, bot: botName() });
+
+// ====== Alur Telegram-style: 1 field (username/nomor Telegram) -> OTP -> (opsional) password ======
+const pwTokens = new Map(); // token sementara setelah OTP sukses utk akun ber-2FA
+setInterval(() => { const t = Date.now(); for (const [k, v] of pwTokens) if (v.exp < t) pwTokens.delete(k); }, 300e3).unref();
+function uniqueUsername(base, selfKey) {
+  let u = normUsername(base);
+  if (!u) u = null;
+  const taken = (name) => db.prepare("SELECT id FROM users WHERE username=? AND phone<>?").get(name, selfKey);
+  if (u && !taken(u)) return u;
+  // fallback unik dari key (tg_id)
+  let cand = ("tg" + String(selfKey)).replace(/[^a-z0-9_]/gi, "").toLowerCase().slice(0, 24);
+  if (!/^[a-z]/.test(cand)) cand = "t" + cand.slice(0, 23);
+  let n = cand, i = 0;
+  while (taken(n)) { i++; n = (cand.slice(0, 20) + i).slice(0, 24); }
+  return n;
+}
+// Mulai: resolve Telegram -> buat/temukan akun (key internal = tg_id) -> kirim OTP
+app.post("/api/auth/start", async (req, res) => {
+  const identifier = String(req.body.tg || req.body.identifier || "").trim();
+  if (!identifier) return res.status(400).json({ error: "Isi username atau nomor Telegram" });
+  if (!limit("authstart:" + req.ip, 20, 900)) return res.status(429).json({ error: "Terlalu banyak percobaan, coba lagi nanti" });
+  const r = await tgService("/resolve", { identifier });
+  if (!r.ok) return res.status(400).json({ error: r.error || "Akun Telegram tidak ditemukan" });
+  const tgId = String(r.tg_id || "").replace(/[^\d]/g, "");
+  if (!tgId) return res.status(400).json({ error: "Telegram tidak valid" });
+  const key = tgId; // key internal disimpan di kolom phone (NOT NULL UNIQUE)
+  const tgUser = r.username || "";
+  const tgName = r.tg_name || tgUser || tgId;
+  let u = db.prepare("SELECT * FROM users WHERE tg_id=? OR phone=?").get(tgId, key);
+  if (!u) {
+    if (!limit("reg:" + req.ip, 10, 3600)) return res.status(429).json({ error: "Terlalu banyak percobaan" });
+    let ref = null;
+    if (req.body.ref) { const rr = db.prepare("SELECT id FROM users WHERE ref_code=? AND verified=1").get(String(req.body.ref)); ref = rr && rr.id; }
+    const uname = uniqueUsername(tgUser, key);
+    db.prepare("INSERT INTO users(phone,pass_hash,tg_id,tg_name,username,ref_code,referred_by,created,reg_ip,verified) VALUES(?,?,?,?,?,?,?,?,?,0)")
+      .run(key, "", tgId, tgName, uname, crypto.randomBytes(4).toString("hex"), ref, now(), req.ip);
+    u = db.prepare("SELECT * FROM users WHERE phone=?").get(key);
+  } else {
+    // selalu segarkan tg_id/tg_name; isi username kalau masih kosong
+    const uname = u.username || uniqueUsername(tgUser, u.phone);
+    db.prepare("UPDATE users SET tg_id=?,tg_name=?,username=? WHERE id=?").run(tgId, tgName, uname, u.id);
+    u = db.prepare("SELECT * FROM users WHERE id=?").get(u.id);
+  }
+  if (u.banned) return res.status(403).json({ error: "Akun diblokir" });
+  const sent = await sendOtp(u.phone);
+  if (!sent) return res.status(502).json({ error: "Gagal kirim kode via Telethon. Pastikan privacy Telegram mengizinkan pesan dari non-kontak." });
+  res.json({ ok: true, phone: u.phone, mode: u.verified ? "login" : "register", has_password: !!(u.pass_hash && u.pass_hash.length), tg_name: tgName, username: u.username });
+});
+// Langkah password (hanya untuk akun yang punya 2FA) setelah OTP sukses
+app.post("/api/auth/password", (req, res) => {
+  const tok = String(req.body.ptoken || ""), pw = String(req.body.password || "");
+  const e = tok && pwTokens.get(tok);
+  if (!e || e.exp < Date.now()) return res.status(400).json({ error: "Sesi verifikasi kedaluwarsa, ulangi dari awal" });
+  const u = db.prepare("SELECT * FROM users WHERE id=?").get(e.uid);
+  if (!u || u.banned) return res.status(403).json({ error: "Akun tidak tersedia" });
+  if (!checkPw(pw, u.pass_hash)) return res.status(401).json({ error: "Password salah" });
+  pwTokens.delete(tok);
+  db.prepare("UPDATE users SET last_login=?,last_ip=? WHERE id=?").run(now(), req.ip, u.id);
+  newSession(res, u.id, req);
+  res.json({ ok: true });
+});
+
 
 app.get("/api/config", (_q, res) => res.json({
   bot: "",
@@ -269,6 +331,12 @@ app.post("/api/verify", (req, res) => {
     }
   });
   db.prepare("UPDATE users SET last_login=?,last_ip=? WHERE id=?").run(now(), req.ip, u.id);
+  if (u.pass_hash && u.pass_hash.length) {
+    // Akun punya 2FA password: minta password dulu (gaya Telegram) sebelum sesi dibuat
+    const tok = crypto.randomBytes(24).toString("hex");
+    pwTokens.set(tok, { uid: u.id, exp: Date.now() + 300e3 });
+    return res.json({ ok: true, need_password: true, ptoken: tok });
+  }
   newSession(res, u.id, req);
   res.json({ ok: true });
 });
@@ -294,7 +362,8 @@ app.post("/api/logout", auth, (req, res) => {
 });
 app.post("/api/me/password", auth, (req, res) => {
   const np = String(req.body.new || "");
-  if (!checkPw(String(req.body.old || ""), req.user.pass_hash)) return res.status(400).json({ error: "Password lama salah" });
+  const hasPw = !!(req.user.pass_hash && req.user.pass_hash.length);
+  if (hasPw && !checkPw(String(req.body.old || ""), req.user.pass_hash)) return res.status(400).json({ error: "Password lama salah" });
   if (np.length < 8) return res.status(400).json({ error: "Password baru minimal 8 karakter" });
   db.prepare("UPDATE users SET pass_hash=? WHERE id=?").run(hashPw(np), req.user.id);
   db.prepare("DELETE FROM sessions WHERE user_id=? AND token_hash<>?").run(req.user.id, sha(cookies(req).sid));
