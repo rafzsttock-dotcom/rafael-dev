@@ -429,12 +429,16 @@
   <div class="login-card">
     <div class="tg-badge" style="background:var(--violet)"><svg class="cic"><use href="#ic-lock"></use></svg></div>
 
-    <!-- step 1: nomor -->
+    <!-- step 1: login / daftar -->
     <div class="lstep active" id="lstep1">
       <h2>Masuk / Daftar</h2>
-      <p class="sub">Masukkan nomor HP dan password. Akun baru diverifikasi dengan kode OTP yang dikirim bot Telegram.</p>
+      <p class="sub">Login pakai <b>username</b> atau <b>nomor HP</b> + password, lalu kode 2FA dari bot Telegram. Daftar wajib isi username + nomor HP.</p>
       <div class="lfield">
-        <label for="loginPhone">Nomor HP</label>
+        <label for="loginUser">Username <span style="opacity:.6;font-weight:400">(wajib saat daftar)</span></label>
+        <input class="fi" type="text" id="loginUser" placeholder="huruf kecil, min 3 karakter" autocomplete="username" style="width:100%;border:3px solid var(--line);border-radius:13px;padding:14px;font-size:1.05rem;background:var(--paper);color:var(--ink)">
+      </div>
+      <div class="lfield">
+        <label for="loginPhone">Nomor HP <span style="opacity:.6;font-weight:400">(atau isi username di atas untuk login)</span></label>
         <div class="phone-input">
           <button type="button" id="ccBtn" class="cc-select"></button>
           <input type="tel" id="loginPhone" inputmode="numeric" placeholder="Nomor HP tanpa 0 di depan" autocomplete="tel">
@@ -448,10 +452,15 @@
       <button class="btn full" id="doRegister" style="margin-top:10px">Daftar akun baru</button>
     </div>
 
-    <!-- step 2: kode -->
+    <!-- step 2: hubungkan Telegram + kode 2FA (Telethon) -->
     <div class="lstep" id="lstep2">
-      <h2>Masukkan kode</h2>
-      <p class="sub">Buka bot <a id="botLink" target="_blank" rel="noopener"><b id="botName">@bot</b></a>, tekan <b>Start</b>, lalu bagikan nomor HP-mu. Kode 6 digit dikirim di sana untuk <b id="shownNum">+62 …</b>.</p>
+      <h2>Verifikasi 2FA</h2>
+      <p class="sub">Kode 6 digit dikirim ke Telegram kamu (via Telethon) untuk <b id="shownNum">+62 …</b>. Jika belum terhubung, isi <b>@username</b> Telegram di bawah.</p>
+      <div class="lfield" id="tgLinkField">
+        <label for="tgUser">Username Telegram</label>
+        <input class="fi" type="text" id="tgUser" placeholder="@username" autocomplete="off" style="width:100%;border:3px solid var(--line);border-radius:13px;padding:14px;font-size:1.05rem;background:var(--paper);color:var(--ink)">
+        <button class="btn full" id="linkTg" style="margin-top:10px">Hubungkan &amp; kirim kode</button>
+      </div>
       <div class="otp-boxes">
         <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 1">
         <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 2">
@@ -462,7 +471,7 @@
       </div>
       <div class="resend"><a id="resend" role="button">Kirim ulang kode</a></div>
       <button class="btn btn-violet full" id="verifyCode" style="margin-top:16px">Verifikasi &amp; masuk →</button>
-      <div class="lback"><button class="btn ghost sm" id="editNum">← Ubah nomor</button></div>
+      <div class="lback"><button class="btn ghost sm" id="editNum">← Kembali</button></div>
     </div>
 
     <div class="safenote">
@@ -740,8 +749,9 @@
     $('#rewardList').innerHTML=ME.rewards.map(rewardCard).join('')||'<p class="sub">Belum ada reward.</p>';
     $('#homeRewards').innerHTML=ME.rewards.slice(0,3).map(rewardCard).join('');
     $('#rewardCount').textContent=ME.rewards.filter(function(r){return u.points>=r.cost;}).length;
-    $('#userName').firstChild.textContent='+'+u.phone+' ';
-    $('#userAv').textContent=String(u.phone).slice(-2);
+    var uname=u.username?('@'+u.username+' · '):'';
+    $('#userName').firstChild.textContent=uname+'+'+u.phone+' ';
+    $('#userAv').textContent=(u.username||String(u.phone)).slice(0,2).toUpperCase();
     $('#refCode').value=u.ref_code; $('#refP').textContent=ME.referrals; $('#refInvited').textContent=ME.referrals;
     $('#friendList').innerHTML=ME.friends.map(function(f){return '<div class="friend"><div class="fav" style="background:var(--mint)">✓</div><div><b>'+esc(f)+'</b><small>Aktif</small></div></div>';}).join('')||'<p class="sub">Belum ada teman yang bergabung.</p>';
     $('#refEarned').textContent=fmt(ME.history.filter(function(h){return /^referral:/.test(h.reason);}).reduce(function(a,h){return a+h.delta;},0));
@@ -1017,33 +1027,79 @@
     $('#ccSearch').addEventListener('input',function(){ renderCCList(this.value); });
   }
   var phone='';
-  function creds(){
+  function phoneFromInput(){
     var local=$('#loginPhone').value.replace(/[^\d]/g,'').replace(/^0+/,'');
-    phone=curCC.code+local;
-    return {phone:phone,password:$('#loginPass').value};
+    if(!local) return '';
+    return curCC.code+local;
+  }
+  function creds(){
+    phone=phoneFromInput();
+    return {
+      username: ($('#loginUser').value||'').trim().toLowerCase(),
+      phone: phone,
+      password: $('#loginPass').value
+    };
   }
   function afterAuth(){
     return reload().then(function(){ return api('/channel/status'); }).then(function(c){
       if(c.required&&!c.member){ renderJoinGate(); show('join'); } else { show('app'); }
     });
   }
+  function goOtpStep(ph, needLink){
+    if(ph) phone=String(ph).replace(/[^\d]/g,'');
+    $('#shownNum').textContent='+'+phone;
+    var field=$('#tgLinkField');
+    if(field) field.style.display=needLink?'block':'none';
+    lboxes.forEach(function(x){x.value='';x.classList.remove('filled');});
+    lshow(2);
+  }
   $('#doLogin').addEventListener('click',function(){
     var b=this; b.disabled=true;
-    api('/login','POST',creds()).then(afterAuth).catch(function(e){toast(e.message,'close');}).then(function(){b.disabled=false;});
+    var c=creds();
+    var loginId=c.username || c.phone;
+    if(!loginId){ toast('Isi username atau nomor HP','close'); b.disabled=false; return; }
+    if(!c.password){ toast('Isi password','close'); b.disabled=false; return; }
+    api('/login','POST',{login:loginId,password:c.password}).then(function(r){
+      if(r && r.need_otp){
+        goOtpStep(r.phone, !!r.need_tg);
+        if(r.need_tg) toast('Hubungkan @username Telegram dulu','send');
+        else toast('Kode 2FA dikirim ke Telegram','send');
+        return;
+      }
+      return afterAuth();
+    }).catch(function(e){toast(e.message,'close');}).then(function(){b.disabled=false;});
   });
   $('#doRegister').addEventListener('click',function(){
     var b=this, c=creds(); b.disabled=true;
+    if(!c.username){ toast('Username wajib saat daftar','close'); b.disabled=false; return; }
+    if(!c.phone){ toast('Nomor HP wajib saat daftar','close'); b.disabled=false; return; }
     var ref=''; try{ref=new URLSearchParams(location.search).get('ref')||'';}catch(e){}
-    api('/register','POST',{phone:c.phone,password:c.password,ref:ref}).then(function(r){
-      $('#shownNum').textContent='+'+phone; $('#botLink').href='https://t.me/'+(r.bot||CFG.bot);
-      $('#botName').textContent='@'+(r.bot||CFG.bot);
-      lboxes.forEach(function(x){x.value='';x.classList.remove('filled');}); lshow(2);
+    api('/register','POST',{username:c.username,phone:c.phone,password:c.password,ref:ref}).then(function(r){
+      goOtpStep(r.phone||c.phone, true);
+      toast('Akun dibuat. Hubungkan @username Telegram','send');
     }).catch(function(e){toast(e.message,'close');}).then(function(){b.disabled=false;});
   });
   $('#loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')$('#doLogin').click();});
+  $('#loginUser').addEventListener('keydown',function(e){if(e.key==='Enter')$('#doLogin').click();});
   $('#editNum').addEventListener('click',function(){ lshow(1); });
+  function tgIdent(){ return ($('#tgUser').value||'').trim(); }
+  $('#linkTg').addEventListener('click',function(){
+    var b=this, tg=tgIdent();
+    if(!tg){ toast('Isi @username Telegram','close'); return; }
+    if(!phone){ toast('Nomor HP belum ada — daftar/login dulu','close'); return; }
+    b.disabled=true;
+    api('/tg/link','POST',{phone:phone,tg:tg}).then(function(r){
+      toast(r.sent?'Terhubung. Kode dikirim ke Telegram':'Terhubung, tapi gagal kirim kode — coba kirim ulang','send');
+      if($('#tgLinkField')) $('#tgLinkField').style.display='none';
+    }).catch(function(e){toast(e.message,'close');}).then(function(){b.disabled=false;});
+  });
   $('#resend').addEventListener('click',function(){
-    api('/otp/resend','POST',{phone:phone}).then(function(r){ toast(r.ok?'Kode dikirim ke Telegram':'Buka bot, tekan Start, lalu bagikan nomor HP','send'); }).catch(function(e){toast(e.message,'close');});
+    var body={phone:phone};
+    var tg=tgIdent(); if(tg) body.tg=tg;
+    api('/otp/resend','POST',body).then(function(r){
+      if(r.need_tg) toast('Isi @username Telegram lalu Hubungkan','send');
+      else toast(r.ok?'Kode dikirim ke Telegram':'Gagal kirim kode','send');
+    }).catch(function(e){toast(e.message,'close');});
   });
   $('#verifyCode').addEventListener('click',function(){
     var code=lboxes.map(function(b){return b.value;}).join(''), b=this;
@@ -1103,7 +1159,9 @@
 
   /* ---- pengaturan: ganti password & keluar dari semua perangkat ---- */
   $('#settingsBtn').addEventListener('click',function(){
-    $('#setPhone').textContent='+'+(ME&&ME.user?ME.user.phone:'');
+    var u=ME&&ME.user, label='';
+    if(u) label=(u.username?'@'+u.username+' · ':'')+'+'+u.phone;
+    $('#setPhone').textContent=label||'—';
     $('#setOld').value=''; $('#setNew').value='';
     $('#setSheet').classList.add('open');
   });
@@ -1136,11 +1194,14 @@
     else { try{navigator.clipboard.writeText(txt);}catch(e){} toast('Teks undangan disalin','send'); }
   });
 
-  /* ---- init: sesi tersimpan 90 hari, langsung masuk jika masih valid ---- */
+  /* ---- init: sesi 90 hari — langsung masuk jika cookie masih valid ---- */
   api('/config').then(function(c){CFG=c;}).then(function(){
     var q=''; try{q=new URLSearchParams(location.search).get('ref');}catch(e){}
-    return afterAuth().catch(function(){ if(q){ show('login'); } });
-  }).catch(function(){});
+    return afterAuth().catch(function(){
+      // belum login → landing, atau form login jika datang dari link referal
+      show(q ? 'login' : 'landing');
+    });
+  }).catch(function(){ show('landing'); });
 })();
 </script>
 

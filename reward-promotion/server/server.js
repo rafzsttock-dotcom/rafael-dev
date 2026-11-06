@@ -40,7 +40,13 @@ for (const stmt of [
   "ALTER TABLE users ADD COLUMN reg_ip TEXT",
   "ALTER TABLE users ADD COLUMN last_login INTEGER",
   "ALTER TABLE users ADD COLUMN last_ip TEXT",
+  "ALTER TABLE users ADD COLUMN username TEXT",
+  "ALTER TABLE sessions ADD COLUMN created INTEGER",
+  "ALTER TABLE sessions ADD COLUMN ip TEXT",
+  "ALTER TABLE sessions ADD COLUMN ua TEXT",
+  "ALTER TABLE sessions ADD COLUMN tg_name TEXT",
 ]) { try { db.exec(stmt); } catch (e) { if (!/duplicate column/i.test(e.message)) throw e; } }
+try { db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_username_uq ON users(username) WHERE username IS NOT NULL AND username <> ''"); } catch (_) {}
 if (!db.prepare("SELECT 1 FROM missions LIMIT 1").get()) {
   const m = db.prepare("INSERT INTO missions(title,descr,reward,type,link) VALUES(?,?,?,?,?)");
   [["Check-in harian", "Buka aplikasi hari ini", 500, "daily", ""],
@@ -73,22 +79,57 @@ function normPhone(p) {
   if (d.startsWith("0")) d = d.slice(1); // jaga-jaga kalau user ketik 0 di depan nomor lokal
   return /^\d{8,15}$/.test(d) ? d : null;
 }
+// Username: 3–24 karakter, huruf/angka/underscore, case-insensitive disimpan lowercase
+function normUsername(u) {
+  const s = String(u || "").trim().toLowerCase();
+  if (!/^[a-z][a-z0-9_]{2,23}$/.test(s)) return null;
+  return s;
+}
+// Cari user terverifikasi dari identifier: username ATAU nomor HP
+function findUserByLogin(id) {
+  const raw = String(id || "").trim();
+  if (!raw) return null;
+  const un = normUsername(raw);
+  if (un) {
+    const byUn = db.prepare("SELECT * FROM users WHERE username=? AND verified=1").get(un);
+    if (byUn) return byUn;
+  }
+  // coba sebagai nomor: full digit, atau 0… lokal Indonesia → 62…
+  let phone = normPhone(raw);
+  if (!phone && /^0\d{8,13}$/.test(raw.replace(/[^\d]/g, ""))) phone = normPhone("62" + raw.replace(/[^\d]/g, "").slice(1));
+  if (phone) return db.prepare("SELECT * FROM users WHERE phone=? AND verified=1").get(phone) || null;
+  return null;
+}
 function addPoints(uid, delta, reason) {
   db.prepare("UPDATE users SET points=points+? WHERE id=?").run(delta, uid);
   db.prepare("INSERT INTO ledger(user_id,delta,reason,ts) VALUES(?,?,?,?)").run(uid, delta, reason, now());
 }
 
-/* ---- Telegram ---- */
-const botToken = () => setting("bot_token");
-const botName = () => setting("bot_username");
-async function tg(method, body, token) {
-  token = token || botToken();
-  if (!token) return { ok: false, description: "Token bot belum diatur di dashboard admin" };
+/* ---- Telegram via Telethon sidecar (bukan Bot API) ---- */
+const TG_URL = (process.env.TELEGRAM_SERVICE_URL || "http://telethon:8090").replace(/\/$/, "");
+const TG_SECRET = process.env.TELEGRAM_SERVICE_SECRET || "kodo-internal";
+async function tgService(path, body, method = "POST") {
   try {
-    const r = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
-      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body || {}) });
-    return await r.json();
-  } catch (e) { return { ok: false, description: String(e) }; }
+    const r = await fetch(TG_URL + path, {
+      method,
+      headers: { "content-type": "application/json", "X-Service-Secret": TG_SECRET },
+      body: method === "GET" ? undefined : JSON.stringify(body || {}),
+    });
+    const j = await r.json().catch(() => ({}));
+    return { status: r.status, ...j };
+  } catch (e) {
+    return { ok: false, error: "Telethon service offline: " + String(e.message || e) };
+  }
+}
+async function tgStatus() {
+  return tgService("/status", null, "GET");
+}
+/** Link akun: resolve @username / nomor TG → simpan tg_id, kirim OTP */
+async function linkTelegram(phone, identifier) {
+  const r = await tgService("/resolve", { identifier });
+  if (!r.ok) return { ok: false, error: r.error || "Gagal resolve Telegram" };
+  db.prepare("UPDATE users SET tg_id=?,tg_name=? WHERE phone=?").run(String(r.tg_id), r.tg_name || r.username || "", phone);
+  return { ok: true, tg_id: r.tg_id, tg_name: r.tg_name };
 }
 async function sendOtp(phone) {
   const u = db.prepare("SELECT tg_id FROM users WHERE phone=?").get(phone);
@@ -97,39 +138,15 @@ async function sendOtp(phone) {
   const code = String(crypto.randomInt(100000, 1000000));
   db.prepare("INSERT INTO otps(phone,code_hash,expires,attempts,sent) VALUES(?,?,?,0,?) ON CONFLICT(phone) DO UPDATE SET code_hash=?,expires=?,attempts=0,sent=?")
     .run(phone, sha(code), now() + 300, 1, sha(code), now() + 300, ((row && row.sent) || 0) + 1);
-  const r = await tg("sendMessage", { chat_id: u.tg_id, text: `Kode verifikasi kamu: ${code}\nBerlaku 5 menit. Jangan bagikan ke siapa pun.` });
+  const r = await tgService("/send", {
+    tg_id: +u.tg_id,
+    text: `Kode verifikasi KODO Rewards: ${code}\nBerlaku 5 menit. Jangan bagikan ke siapa pun.`,
+  });
   return !!r.ok;
 }
-let offset = 0, lastTok = "";
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-async function poll() {
-  for (;;) {
-    const tok = botToken();
-    if (!tok) { await sleep(5000); continue; }
-    if (tok !== lastTok) { lastTok = tok; offset = 0; }
-    const r = await tg("getUpdates", { offset, timeout: 25, allowed_updates: ["message"] });
-    if (!r.ok) { await sleep(5000); continue; }
-    for (const up of r.result) {
-      offset = up.update_id + 1;
-      const m = up.message; if (!m) continue;
-      try {
-        if (m.contact) {
-          // hanya terima kontak milik pengirim sendiri
-          if (m.contact.user_id !== m.from.id) { await tg("sendMessage", { chat_id: m.chat.id, text: "Bagikan kontak milikmu sendiri lewat tombol." }); continue; }
-          const phone = normPhone(m.contact.phone_number);
-          const u = phone && db.prepare("SELECT id FROM users WHERE phone=?").get(phone);
-          if (!u) { await tg("sendMessage", { chat_id: m.chat.id, text: "Nomor ini belum terdaftar. Daftar dulu di website.", reply_markup: { remove_keyboard: true } }); continue; }
-          db.prepare("UPDATE users SET tg_id=?,tg_name=? WHERE id=?").run(String(m.from.id), m.from.username || m.from.first_name || "", u.id);
-          const ok = await sendOtp(phone);
-          if (!ok) await tg("sendMessage", { chat_id: m.chat.id, text: "Gagal mengirim kode, coba lagi." });
-        } else if (m.text && m.text.startsWith("/start")) {
-          await tg("sendMessage", { chat_id: m.chat.id, text: "Halo! Tekan tombol di bawah untuk membagikan nomor HP-mu dan terima kode verifikasi.",
-            reply_markup: { keyboard: [[{ text: "Bagikan nomor HP", request_contact: true }]], resize_keyboard: true, one_time_keyboard: true } });
-        }
-      } catch (e) { console.error("bot error", e); }
-    }
-  }
-}
+// kompatibilitas nama lama di UI/admin
+const botName = () => "telethon";
+const botToken = () => "";
 
 /* ---- rate limit ---- */
 const hits = new Map();
@@ -154,9 +171,13 @@ const cookies = (req) => Object.fromEntries((req.headers.cookie || "").split(";"
 function setCookie(res, name, val, days) {
   res.append("Set-Cookie", `${name}=${encodeURIComponent(val)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${days * 86400}${SECURE_COOKIE ? "; Secure" : ""}`);
 }
-function newSession(res, uid) {
+function newSession(res, uid, req) {
   const tok = crypto.randomBytes(32).toString("hex");
-  db.prepare("INSERT INTO sessions VALUES(?,?,?)").run(sha(tok), uid, now() + SESSION_DAYS * 86400);
+  const u = db.prepare("SELECT tg_name FROM users WHERE id=?").get(uid);
+  const ua = String((req && req.headers["user-agent"]) || "").slice(0, 240);
+  const ip = req ? String(req.ip || "") : "";
+  db.prepare("INSERT INTO sessions(token_hash,user_id,expires,created,ip,ua,tg_name) VALUES(?,?,?,?,?,?,?)")
+    .run(sha(tok), uid, now() + SESSION_DAYS * 86400, now(), ip, ua, (u && u.tg_name) || "");
   setCookie(res, "sid", tok, SESSION_DAYS);
 }
 function auth(req, res, next) {
@@ -171,33 +192,63 @@ function adminAuth(req, res, next) {
   if (!e || e.exp < Date.now()) return res.status(401).json({ error: "admin" });
   req.admin = e; next();
 }
-const pub = (u) => ({ id: u.id, phone: u.phone, points: u.points, ref_code: u.ref_code, bot: botName() });
+const pub = (u) => ({ id: u.id, phone: u.phone, username: u.username || "", points: u.points, ref_code: u.ref_code, bot: botName() });
 
-app.get("/api/config", (_q, res) => res.json({ bot: botName(), min_withdraw: +setting("min_withdraw"), point_value: +(setting("point_value")||1), channel: setting("channel"), methods: setting("methods").split(",").filter(Boolean) }));
+app.get("/api/config", (_q, res) => res.json({
+  bot: "",
+  telethon: true,
+  min_withdraw: +setting("min_withdraw"),
+  point_value: +(setting("point_value") || 1),
+  channel: setting("channel"),
+  methods: setting("methods").split(",").filter(Boolean),
+}));
 
 app.post("/api/register", (req, res) => {
   const phone = normPhone(req.body.phone), pw = String(req.body.password || "");
+  const username = normUsername(req.body.username);
+  if (!username) return res.status(400).json({ error: "Username 3–24 karakter, mulai huruf, hanya a-z 0-9 _" });
   if (!phone) return res.status(400).json({ error: "Nomor HP tidak valid" });
   if (pw.length < 8) return res.status(400).json({ error: "Password minimal 8 karakter" });
   if (!limit("reg:" + req.ip, 10, 3600)) return res.status(429).json({ error: "Terlalu banyak percobaan" });
   // anti multi-akun kasar: batasi berapa akun terverifikasi boleh lahir dari satu IP per hari
   const verifiedFromIp = db.prepare("SELECT COUNT(*) c FROM users WHERE reg_ip=? AND verified=1 AND created>?").get(req.ip, now() - 86400).c;
   if (verifiedFromIp >= 5) return res.status(429).json({ error: "Terlalu banyak pendaftaran dari jaringan ini hari ini, coba lagi besok" });
+  const takenUn = db.prepare("SELECT id FROM users WHERE username=? AND phone<>?").get(username, phone);
+  if (takenUn) return res.status(409).json({ error: "Username sudah dipakai" });
   const ex = db.prepare("SELECT id,verified FROM users WHERE phone=?").get(phone);
   if (ex && ex.verified) return res.status(409).json({ error: "Nomor sudah terdaftar, silakan login" });
   let ref = null;
   if (req.body.ref) { const r = db.prepare("SELECT id FROM users WHERE ref_code=? AND verified=1").get(String(req.body.ref)); ref = r && r.id; }
-  if (ex) db.prepare("UPDATE users SET pass_hash=?,reg_ip=? WHERE id=?").run(hashPw(pw), req.ip, ex.id);
-  else db.prepare("INSERT INTO users(phone,pass_hash,ref_code,referred_by,created,reg_ip) VALUES(?,?,?,?,?,?)").run(phone, hashPw(pw), crypto.randomBytes(4).toString("hex"), ref, now(), req.ip);
-  res.json({ ok: true, bot: botName() });
+  if (ex) db.prepare("UPDATE users SET pass_hash=?,reg_ip=?,username=? WHERE id=?").run(hashPw(pw), req.ip, username, ex.id);
+  else db.prepare("INSERT INTO users(phone,pass_hash,ref_code,referred_by,created,reg_ip,username) VALUES(?,?,?,?,?,?,?)").run(phone, hashPw(pw), crypto.randomBytes(4).toString("hex"), ref, now(), req.ip, username);
+  res.json({ ok: true, bot: botName(), phone });
 });
 app.post("/api/otp/resend", async (req, res) => {
   const phone = normPhone(req.body.phone);
   if (!phone || !limit("otp:" + phone, 5, 3600)) return res.status(429).json({ error: "Terlalu banyak permintaan" });
   const u = db.prepare("SELECT tg_id FROM users WHERE phone=?").get(phone);
   if (!u) return res.status(404).json({ error: "Nomor belum terdaftar" });
-  if (!u.tg_id) return res.json({ ok: false, need_bot: true, bot: botName() });
+  // opsional: hubungkan Telegram via username/nomor saat kirim ulang
+  if (!u.tg_id && req.body.tg) {
+    const link = await linkTelegram(phone, String(req.body.tg));
+    if (!link.ok) return res.status(400).json({ error: link.error || "Gagal hubungkan Telegram" });
+  }
+  const u2 = db.prepare("SELECT tg_id FROM users WHERE phone=?").get(phone);
+  if (!u2 || !u2.tg_id) return res.json({ ok: false, need_tg: true, error: "Isi username Telegram (@user) dulu" });
   res.json({ ok: await sendOtp(phone) });
+});
+// Hubungkan akun Telegram (Telethon resolve) lalu kirim OTP
+app.post("/api/tg/link", async (req, res) => {
+  const phone = normPhone(req.body.phone);
+  const tg = String(req.body.tg || req.body.username || "").trim();
+  if (!phone || !tg) return res.status(400).json({ error: "phone dan username/nomor Telegram wajib" });
+  if (!limit("tglink:" + phone, 8, 3600)) return res.status(429).json({ error: "Terlalu banyak percobaan" });
+  const u = db.prepare("SELECT id FROM users WHERE phone=?").get(phone);
+  if (!u) return res.status(404).json({ error: "Nomor belum terdaftar" });
+  const link = await linkTelegram(phone, tg);
+  if (!link.ok) return res.status(400).json({ error: link.error });
+  const sent = await sendOtp(phone);
+  res.json({ ok: true, sent, tg_name: link.tg_name });
 });
 app.post("/api/verify", (req, res) => {
   const phone = normPhone(req.body.phone), code = String(req.body.code || "");
@@ -206,9 +257,11 @@ app.post("/api/verify", (req, res) => {
   if (!o || o.expires < now() || o.attempts >= 5) return res.status(400).json({ error: "Kode kedaluwarsa, minta kode baru" });
   db.prepare("UPDATE otps SET attempts=attempts+1 WHERE phone=?").run(phone);
   const a = Buffer.from(sha(code)), b = Buffer.from(o.code_hash);
-  if (!crypto.timingSafeEqual(a, b)) return res.status(400).json({ error: "Kode salah" });
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return res.status(400).json({ error: "Kode salah" });
   db.prepare("DELETE FROM otps WHERE phone=?").run(phone);
   const u = db.prepare("SELECT * FROM users WHERE phone=?").get(phone);
+  if (!u) return res.status(404).json({ error: "Akun tidak ditemukan" });
+  if (u.banned) return res.status(403).json({ error: "Akun diblokir" });
   tx(() => {
     if (!u.verified) {
       db.prepare("UPDATE users SET verified=1 WHERE id=?").run(u.id);
@@ -216,16 +269,23 @@ app.post("/api/verify", (req, res) => {
     }
   });
   db.prepare("UPDATE users SET last_login=?,last_ip=? WHERE id=?").run(now(), req.ip, u.id);
-  newSession(res, u.id);
+  newSession(res, u.id, req);
   res.json({ ok: true });
 });
-app.post("/api/login", (req, res) => {
-  const phone = normPhone(req.body.phone), pw = String(req.body.password || "");
-  if (!limit("login:" + req.ip, 20, 900) || (phone && !limit("loginp:" + phone, 8, 900))) return res.status(429).json({ error: "Terlalu banyak percobaan, coba lagi nanti" });
-  const u = phone && db.prepare("SELECT * FROM users WHERE phone=? AND verified=1").get(phone);
-  if (!u || !checkPw(pw, u.pass_hash) || u.banned) return res.status(401).json({ error: "Nomor atau password salah" });
-  db.prepare("UPDATE users SET last_login=?,last_ip=? WHERE id=?").run(now(), req.ip, u.id);
-  newSession(res, u.id); res.json({ ok: true });
+// Login: identifier = username ATAU nomor HP + password, lalu WAJIB 2FA kode Telegram
+app.post("/api/login", async (req, res) => {
+  const id = String(req.body.login || req.body.username || req.body.phone || "").trim();
+  const pw = String(req.body.password || "");
+  if (!limit("login:" + req.ip, 20, 900)) return res.status(429).json({ error: "Terlalu banyak percobaan, coba lagi nanti" });
+  if (!id || !pw) return res.status(400).json({ error: "Isi username/nomor HP dan password" });
+  const key = "loginp:" + id.toLowerCase();
+  if (!limit(key, 8, 900)) return res.status(429).json({ error: "Terlalu banyak percobaan, coba lagi nanti" });
+  const u = findUserByLogin(id);
+  if (!u || !checkPw(pw, u.pass_hash) || u.banned) return res.status(401).json({ error: "Username/nomor atau password salah" });
+  if (!u.tg_id) return res.json({ ok: false, need_otp: true, need_tg: true, phone: u.phone, username: u.username || "" });
+  const sent = await sendOtp(u.phone);
+  if (!sent) return res.status(502).json({ error: "Gagal kirim kode via Telethon. Pastikan privacy Telegram mengizinkan pesan, atau hubungkan ulang @username." });
+  res.json({ ok: true, need_otp: true, phone: u.phone, username: u.username || "" });
 });
 app.post("/api/logout", auth, (req, res) => {
   // Logout hanya menghapus sesi di perangkat ini. Poin TIDAK dihapus.
@@ -262,8 +322,8 @@ app.get("/api/me", auth, (req, res) => {
 async function isMember(u) {
   const ch = setting("channel"); if (!ch) return true;
   if (!u.tg_id) return false;
-  const r = await tg("getChatMember", { chat_id: ch.startsWith("@") ? ch : "@" + ch.replace(/^https?:\/\/t\.me\//, ""), user_id: u.tg_id });
-  return !!(r.ok && ["member", "administrator", "creator"].includes(r.result.status));
+  const r = await tgService("/member", { tg_id: +u.tg_id, channel: ch });
+  return !!(r.ok && r.member);
 }
 app.get("/api/channel/status", auth, async (req, res) => res.json({ required: !!setting("channel"), member: await isMember(req.user) }));
 app.post("/api/missions/:id/tap", auth, (req, res) => {
@@ -274,10 +334,12 @@ app.post("/api/missions/:id/claim", auth, async (req, res) => {
   if (!m) return res.status(404).json({ error: "Misi tidak ada" });
   if (m.type === "join_channel") {
     const ch = m.link || setting("channel");
-    const r = u.tg_id && ch ? await tg("getChatMember", { chat_id: ch.startsWith("@") ? ch : "@" + ch.replace(/^https?:\/\/t\.me\//, ""), user_id: u.tg_id }) : null;
-    if (!r || !r.ok || !["member", "administrator", "creator"].includes(r.result.status)) return res.status(400).json({ error: "Kamu belum bergabung ke channel" });
+    if (!u.tg_id) return res.status(400).json({ error: "Akun Telegram belum terhubung" });
+    const r = ch ? await tgService("/member", { tg_id: +u.tg_id, channel: ch }) : { ok: true, member: true };
+    if (!r.ok || !r.member) return res.status(400).json({ error: "Kamu belum bergabung ke channel" });
   } else if (m.type === "start_bot") {
-    if (!u.tg_id) return res.status(400).json({ error: "Bot belum di-start" });
+    // legacy tipe misi: cukup punya tg_id terhubung via Telethon
+    if (!u.tg_id) return res.status(400).json({ error: "Akun Telegram belum terhubung" });
   } else if (m.type === "tap_link") {
     const t = db.prepare("SELECT ts FROM taps WHERE user_id=? AND mission_id=?").get(u.id, m.id);
     if (!t || now() - t.ts < 5) return res.status(400).json({ error: "Buka tautannya dulu" });
@@ -337,30 +399,94 @@ app.post("/api/admin/password", adminAuth, (req, res) => {
   db.prepare("UPDATE admins SET pass_hash=? WHERE username=?").run(hashPw(np), row.username);
   res.json({ ok: true });
 });
-app.post("/api/admin/bot", adminAuth, async (req, res) => {
-  const token = String(req.body.token || "").trim();
-  const set = (k, v) => db.prepare("INSERT INTO settings VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=?").run(k, v, v);
-  if (!token) { set("bot_token", ""); set("bot_username", ""); return res.json({ ok: true, username: "" }); }
-  if (!/^\d{5,}:[A-Za-z0-9_-]{30,}$/.test(token)) return res.status(400).json({ error: "Format token tidak valid" });
-  const r = await tg("getMe", {}, token);
-  if (!r.ok) return res.status(400).json({ error: "Token ditolak Telegram: " + (r.description || "tidak valid") });
-  await tg("deleteWebhook", {}, token);
-  set("bot_token", token); set("bot_username", r.result.username || "");
-  res.json({ ok: true, username: r.result.username });
+app.get("/api/admin/telethon", adminAuth, async (_q, res) => {
+  const st = await tgStatus();
+  res.json({
+    configured: !!st.configured,
+    ok: !!st.ok,
+    me: st.me || null,
+    error: st.error || null,
+    service: TG_URL,
+  });
 });
-app.get("/api/admin/overview", adminAuth, (_q, res) => res.json({
-  users: db.prepare("SELECT COUNT(*) c FROM users WHERE verified=1").get().c,
-  points_outstanding: db.prepare("SELECT COALESCE(SUM(points),0) s FROM users").get().s,
-  pending_withdrawals: db.prepare("SELECT COUNT(*) c FROM withdrawals WHERE status='pending'").get().c,
-  bot: { configured: !!botToken(), username: botName() },
-  settings: Object.fromEntries(db.prepare("SELECT k,v FROM settings WHERE k NOT IN ('bot_token')").all().map((r) => [r.k, r.v])) }));
+// endpoint lama /bot diganti status Telethon (kompat admin UI)
+app.post("/api/admin/bot", adminAuth, async (_q, res) => {
+  const st = await tgStatus();
+  if (!st.ok) return res.status(400).json({ error: st.error || "Telethon belum siap — cek .env API_ID/HASH/SESSION" });
+  res.json({ ok: true, username: (st.me && (st.me.username || st.me.first_name)) || "telethon" });
+});
+app.get("/api/admin/overview", adminAuth, async (_q, res) => {
+  const st = await tgStatus();
+  res.json({
+    users: db.prepare("SELECT COUNT(*) c FROM users WHERE verified=1").get().c,
+    points_outstanding: db.prepare("SELECT COALESCE(SUM(points),0) s FROM users").get().s,
+    pending_withdrawals: db.prepare("SELECT COUNT(*) c FROM withdrawals WHERE status='pending'").get().c,
+    bot: {
+      configured: !!st.configured && !!st.ok,
+      username: (st.me && st.me.username) || (st.ok ? "telethon" : ""),
+      telethon: true,
+      me: st.me || null,
+      error: st.error || null,
+    },
+    settings: Object.fromEntries(db.prepare("SELECT k,v FROM settings WHERE k NOT IN ('bot_token')").all().map((r) => [r.k, r.v])),
+  });
+});
 app.get("/api/admin/users", adminAuth, (_q, res) => {
-  const rows = db.prepare("SELECT id,phone,tg_name,points,banned,created,reg_ip,last_ip,last_login FROM users WHERE verified=1 ORDER BY id DESC LIMIT 500").all();
+  const rows = db.prepare("SELECT id,phone,username,tg_name,points,banned,created,reg_ip,last_ip,last_login FROM users WHERE verified=1 ORDER BY id DESC LIMIT 500").all();
   const ipCounts = {};
   for (const r of rows) if (r.reg_ip) ipCounts[r.reg_ip] = (ipCounts[r.reg_ip] || 0) + 1;
   res.json(rows.map((r) => ({ ...r, same_ip_count: r.reg_ip ? ipCounts[r.reg_ip] : 1 })));
 });
 app.post("/api/admin/users/:id/ban", adminAuth, (req, res) => { db.prepare("UPDATE users SET banned=? WHERE id=?").run(req.body.banned ? 1 : 0, +req.params.id); res.json({ ok: true }); });
+app.get("/api/admin/sessions", adminAuth, (_q, res) => {
+  // bersihkan sesi kedaluwarsa dulu
+  db.prepare("DELETE FROM sessions WHERE expires<?").run(now());
+  const rows = db.prepare(`
+    SELECT s.token_hash, s.user_id, s.expires, s.created, s.ip, s.ua, s.tg_name AS sess_tg,
+           u.phone, u.username, u.tg_id, u.tg_name AS user_tg, u.banned, u.last_login
+    FROM sessions s JOIN users u ON u.id = s.user_id
+    WHERE s.expires > ?
+    ORDER BY COALESCE(s.created,0) DESC LIMIT 1000
+  `).all(now());
+  const list = rows.map((r) => {
+    const tgName = r.sess_tg || r.user_tg || "";
+    return {
+      token_hash: r.token_hash,
+      session_id: r.token_hash.slice(0, 16),
+      session_string: r.token_hash, // hash sesi web (bukan Telethon session akun server)
+      user_id: r.user_id,
+      phone: r.phone,
+      username: r.username || "",
+      tg: tgName,
+      tg_username: tgName ? (tgName.startsWith("@") ? tgName : "@" + tgName) : "",
+      tg_id: r.tg_id || "",
+      ip: r.ip || "",
+      ua: r.ua || "",
+      banned: !!r.banned,
+      created: r.created || null,
+      expires: r.expires,
+      last_login: r.last_login || null,
+    };
+  });
+  res.json({
+    live: true,
+    count: list.length,
+    users_online: new Set(list.map((x) => x.user_id)).size,
+    sessions: list,
+  });
+});
+app.post("/api/admin/sessions/revoke", adminAuth, (req, res) => {
+  const th = String(req.body.token_hash || "");
+  if (!th) return res.status(400).json({ error: "token_hash diperlukan" });
+  const n = db.prepare("DELETE FROM sessions WHERE token_hash=?").run(th).changes;
+  res.json({ ok: true, removed: n });
+});
+app.post("/api/admin/sessions/revoke-user", adminAuth, (req, res) => {
+  const uid = +req.body.user_id;
+  if (!uid) return res.status(400).json({ error: "user_id diperlukan" });
+  const n = db.prepare("DELETE FROM sessions WHERE user_id=?").run(uid).changes;
+  res.json({ ok: true, removed: n });
+});
 app.get("/api/admin/withdrawals", adminAuth, (_q, res) => {
   const rows = db.prepare("SELECT w.*,u.phone,u.created AS acc_created,u.reg_ip FROM withdrawals w JOIN users u ON u.id=w.user_id ORDER BY (w.status='pending') DESC, w.id DESC LIMIT 300").all();
   const ipCounts = {};
@@ -420,5 +546,4 @@ app.get("/robots.txt", (_q, res) => res.type("text/plain").send("User-agent: *\n
 app.use((_q, res) => res.status(404).type("text/plain").send("Not found"));
 app.use((e, _q, res, _n) => { console.error(e); res.status(500).json({ error: "server" }); });
 
-app.listen(PORT, () => console.log("listening", PORT));
-poll();
+app.listen(PORT, () => console.log("listening", PORT, "telethon→", TG_URL));

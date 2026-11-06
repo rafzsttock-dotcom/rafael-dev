@@ -1,24 +1,40 @@
 # KODO Rewards
 
-Aplikasi misi + poin + reward dengan backend (Node.js + SQLite), login nomor HP + password + OTP via bot Telegram, dan admin panel. Penarikan poin diproses manual oleh admin.
+Aplikasi misi + poin + reward (Node.js + SQLite + **Telethon**).
 
-## Pasang di VPS (Ubuntu/Debian)
-1. Upload folder ini ke VPS (git clone branch `claude/deploy-reward-promotion`, lalu `cd reward-promotion`).
-2. `sudo bash install.sh` — membuat `.env` dengan password admin acak lalu berhenti.
-3. (Opsional) edit `.env`: `ADMIN_USERNAME` / `ADMIN_PASSWORD` untuk admin pertama (default `admin` + password acak), dan `DOMAIN` (sudah `rewardex.site`; ganti `:80` + `SECURE_COOKIE=0` jika tanpa domain). Token bot TIDAK di `.env`.
-4. `sudo bash install.sh` lagi — build dan jalan. Login admin dengan username + password, lalu isi **token bot Telegram di dashboard admin > Pengaturan** (dicek ke Telegram sebelum disimpan). Script mencetak URL landing, aplikasi, dan admin. Path aplikasi dan admin diacak otomatis (`APP_PATH`, `ADMIN_PATH` di `.env`); nama file asli tidak bisa diakses. Link referal tiap user berbentuk `/r/<kode>`.
+- Login: username **atau** nomor HP + password + **2FA kode Telegram** (dikirim via Telethon)
+- Admin panel: pengguna, sessions, penarikan, misi, reward
+- OTP & cek channel memakai akun Telegram user (Telethon), bukan BotFather token
 
-Data tersimpan di `./data/app.db` (backup folder ini secara berkala).
+## Setup Telethon (wajib)
 
-## DNS
-Di registrar `rewardex.site`: buat record **A** `@` → IP VPS (dan `www` → IP yang sama, opsional). Tunggu propagasi, pastikan port 80 dan 443 terbuka; Caddy mengurus sertifikat HTTPS otomatis.
+1. Buka https://my.telegram.org → API development tools → catat `api_id` + `api_hash`
+2. Buat string session (sekali, interaktif):
+   ```bash
+   pip install telethon
+   python telegram-service/make_session.py
+   ```
+3. Isi `.env`:
+   ```
+   TELEGRAM_API_ID=...
+   TELEGRAM_API_HASH=...
+   TELEGRAM_SESSION=...
+   TELEGRAM_SERVICE_SECRET=ganti-rahasia
+   ```
+4. Deploy:
+   ```bash
+   sudo docker compose up -d --build
+   ```
 
-## Perilaku penting
-- Logout hanya mengakhiri sesi di perangkat itu; poin tetap di akun. Sesi berlaku 90 hari.
-- Verifikasi OTP: user menekan Start di bot lalu membagikan kontak miliknya; kode 6 digit dikirim bot.
-- Join channel dan start bot diverifikasi server (getChatMember); misi lain mengikuti tipe yang diatur admin.
-- Semua angka di UI (bonus, nilai poin, minimal tarik) berasal dari database/pengaturan admin.
+Akun yang login di Telethon **harus bisa mengirim pesan** ke user (privacy Telegram user boleh memblokir pesan dari non-kontak). Untuk cek join channel, akun Telethon idealnya **admin** di channel tersebut.
 
-## Keamanan
-- Token bot dan password admin hanya di `.env` (jangan commit). Ganti password VPS/SSH yang pernah dibagikan lewat chat.
-- Pasang firewall (ufw allow 22,80,443) dan gunakan SSH key.
+## Alur user
+
+1. Daftar: username + nomor HP + password
+2. Hubungkan `@username` Telegram → Telethon resolve + kirim kode
+3. Masukkan kode 6 digit
+4. Login berikutnya: username/HP + password + kode lagi
+
+## Deploy VPS
+
+Lihat `DEPLOY.txt`. Path app/admin acak di `.env` (`APP_PATH`, `ADMIN_PATH`).

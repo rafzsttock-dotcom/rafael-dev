@@ -220,6 +220,7 @@
     <div class="brand"><span class="mark"><svg class="cic"><use href="#ic-dash"></use></svg></span><div>KODO <small>Admin Panel</small></div></div>
     <button class="nav-i" data-page="overview"><svg class="cic"><use href="#ic-dash"></use></svg> Ringkasan</button>
     <button class="nav-i" data-page="users"><svg class="cic"><use href="#ic-users"></use></svg> Pengguna</button>
+    <button class="nav-i" data-page="sessions"><svg class="cic"><use href="#ic-lock"></use></svg> Sessions</button>
     <button class="nav-i" data-page="withdraw"><svg class="cic"><use href="#ic-wallet"></use></svg> Penarikan <span id="wdPendBadge" class="badge pend" style="margin-left:auto;box-shadow:none;display:none">0</span></button>
     <button class="nav-i" data-page="redeem"><svg class="cic"><use href="#ic-gift"></use></svg> Penukaran</button>
     <button class="nav-i" data-page="missions"><svg class="cic"><use href="#ic-target"></use></svg> Misi</button>
@@ -231,7 +232,7 @@
     <header class="topbar">
       <button class="btn icon-btn ghost burger" id="burger" aria-label="Menu"><svg class="cic"><use href="#ic-menu"></use></svg></button>
       <h1 id="pageTitle">Ringkasan</h1>
-      <div class="search"><svg class="cic"><use href="#ic-search"></use></svg><input id="searchInput" placeholder="Cari nomor HP…" aria-label="Cari pengguna"></div>
+      <div class="search"><svg class="cic"><use href="#ic-search"></use></svg><input id="searchInput" placeholder="Cari HP / username…" aria-label="Cari pengguna"></div>
       <button class="btn icon-btn ghost" id="themeBtn" aria-label="Tema"><svg class="cic"><use href="#ic-theme"></use></svg></button>
       <div class="admin-av" id="adminAv">A</div>
     </header>
@@ -253,7 +254,23 @@
         <div class="sec-h"><svg class="cic" style="width:22px;height:22px"><use href="#ic-users"></use></svg> Daftar Pengguna <span class="badge gray" id="usersCount">0</span></div>
         <p class="sub" style="margin:-8px 0 14px">Kolom "IP sama" &gt;1 berarti ada akun lain yang daftar dari jaringan yang sama — cek sebelum approve penarikan.</p>
         <div class="toolbar"><button class="btn sm btn-yellow" id="exportBtn" style="margin-left:auto"><svg class="cic" style="width:16px;height:16px"><use href="#ic-download"></use></svg> Export CSV</button></div>
-        <div class="panel table-wrap"><table class="table"><thead><tr><th>Pengguna</th><th>Telegram</th><th>Poin</th><th>Daftar</th><th>IP sama</th><th>Status</th></tr></thead><tbody id="usersTable"></tbody></table></div>
+        <div class="panel table-wrap"><table class="table"><thead><tr><th>Pengguna</th><th>Username</th><th>Telegram</th><th>Poin</th><th>Daftar</th><th>IP sama</th><th>Status</th></tr></thead><tbody id="usersTable"></tbody></table></div>
+      </section>
+
+      <section class="page" id="page-sessions">
+        <div class="sec-h"><svg class="cic" style="width:22px;height:22px"><use href="#ic-lock"></use></svg> Live Sessions <span class="badge pend" id="sessLiveBadge" style="margin-left:6px">LIVE</span> <span class="badge gray" id="sessCount">0</span></div>
+        <p class="sub" style="margin:-8px 0 14px">Semua sesi login aktif. Menampilkan username app, username Telegram, TG ID, dan <b>session string</b> (hash sesi web). Auto-refresh 15 detik saat halaman ini dibuka.</p>
+        <div class="kpis" style="margin-bottom:16px" id="sessKpis">
+          <div class="kpi"><div class="top"><div class="ic-wrap" style="background:var(--mint)"><svg class="cic"><use href="#ic-users"></use></svg></div></div><small>User online</small><b id="sessOnline">0</b></div>
+          <div class="kpi"><div class="top"><div class="ic-wrap" style="background:var(--violet)"><svg class="cic"><use href="#ic-lock"></use></svg></div></div><small>Total sesi aktif</small><b id="sessTotal">0</b></div>
+          <div class="kpi"><div class="top"><div class="ic-wrap" style="background:var(--sky)"><svg class="cic"><use href="#ic-bot"></use></svg></div></div><small>Update terakhir</small><b id="sessUpdated" style="font-size:1rem">—</b></div>
+        </div>
+        <div class="toolbar">
+          <input class="fi" id="sessSearch" placeholder="Cari HP / username / TG ID…" style="max-width:280px;padding:9px 12px;box-shadow:2px 2px 0 var(--line)">
+          <button class="btn sm" id="sessCopyAll">Copy semua session string</button>
+          <button class="btn sm btn-violet" id="sessRefresh" style="margin-left:auto">Muat ulang</button>
+        </div>
+        <div class="panel table-wrap"><table class="table"><thead><tr><th>User</th><th>Username TG</th><th>TG ID</th><th>Session string</th><th>IP</th><th>Login</th><th>Aksi</th></tr></thead><tbody id="sessTable"></tbody></table></div>
       </section>
 
       <section class="page" id="page-withdraw">
@@ -282,16 +299,11 @@
       </section>
 
       <section class="page" id="page-settings">
-        <div class="sec-h"><svg class="cic" style="width:22px;height:22px"><use href="#ic-bot"></use></svg> Bot Telegram</div>
+        <div class="sec-h"><svg class="cic" style="width:22px;height:22px"><use href="#ic-bot"></use></svg> Telethon (Telegram)</div>
         <div class="panel">
           <p class="sub" id="botStatus" style="margin-bottom:12px">Memuat…</p>
-          <div class="dr-label">Token bot (dari @BotFather)</div>
-          <div style="display:flex;gap:8px"><input class="fi" id="bt" type="password" placeholder="123456789:ABCdef-GhIjKlmNoPQ..." autocomplete="off" style="flex:1"><button class="btn" id="btShow" aria-label="Lihat/sembunyikan"><svg class="cic" style="width:18px;height:18px"><use href="#ic-search"></use></svg></button></div>
-          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
-            <button class="btn btn-violet" id="bs"><svg class="cic" style="width:17px;height:17px"><use href="#ic-check"></use></svg> Simpan token</button>
-            <button class="btn btn-red" id="bc">Hapus token</button>
-          </div>
-          <div class="note">Token dicek langsung ke Telegram sebelum disimpan, lalu disimpan di server — tidak pernah dikirim balik ke browser.</div>
+          <div class="note">OTP &amp; cek channel memakai <b>Telethon</b> (api_id + api_hash + session). Atur di file <code>.env</code> VPS, bukan di sini. Setelah ubah .env: <code>docker compose up -d --build telethon</code>.</div>
+          <button class="btn" id="bs" style="margin-top:12px">Cek status Telethon</button>
         </div>
 
         <div class="sec-h" style="margin-top:28px"><svg class="cic" style="width:22px;height:22px"><use href="#ic-lock"></use></svg> Ganti Password Admin</div>
@@ -351,8 +363,13 @@
   $('#logoutBtn').addEventListener('click',function(){fetch('/api/admin/logout',{method:'POST',credentials:'same-origin'}).catch(function(){}).then(function(){location.reload();});});
 
   /* ---- data cache ---- */
-  var D={overview:null,users:[],withdrawals:[],redemptions:[]};
-  function loadAll(){return Promise.all([api('/overview'),api('/users'),api('/withdrawals'),api('/redemptions')]).then(function(r){D.overview=r[0];D.users=r[1];D.withdrawals=r[2];D.redemptions=r[3];});}
+  var D={overview:null,users:[],withdrawals:[],redemptions:[],sessions:[],sessMeta:{count:0,users_online:0}};
+  function normalizeSessions(payload){
+    if(Array.isArray(payload)){ D.sessions=payload; D.sessMeta={count:payload.length,users_online:0}; return; }
+    D.sessions=payload.sessions||[];
+    D.sessMeta={count:payload.count||D.sessions.length, users_online:payload.users_online||0};
+  }
+  function loadAll(){return Promise.all([api('/overview'),api('/users'),api('/withdrawals'),api('/redemptions'),api('/sessions')]).then(function(r){D.overview=r[0];D.users=r[1];D.withdrawals=r[2];D.redemptions=r[3];normalizeSessions(r[4]);});}
 
   /* ---- overview ---- */
   function renderOverview(){
@@ -361,7 +378,7 @@
       {t:'Pengguna terverifikasi',v:o.users,ic:'users',feat:true},
       {t:'Poin beredar',v:o.points_outstanding,ic:'coins',bg:'var(--yellow)'},
       {t:'Penarikan menunggu',v:o.pending_withdrawals,ic:'wallet',bg:'var(--pink)'},
-      {t:'Bot Telegram',v:o.bot.configured?('@'+o.bot.username):'belum diatur',ic:'bot',bg:o.bot.configured?'var(--mint)':'var(--red)',raw:true}
+      {t:'Telethon',v:o.bot.configured?('@'+(o.bot.username||'ok')):(o.bot.error||'belum siap'),ic:'bot',bg:o.bot.configured?'var(--mint)':'var(--red)',raw:true}
     ];
     $('#kpis').innerHTML=kpis.map(function(k){
       var icWrap=k.feat?'<div class="ic-wrap"><svg class="cic"><use href="#ic-'+k.ic+'"></use></svg></div>':'<div class="ic-wrap" style="background:'+k.bg+'"><svg class="cic"><use href="#ic-'+k.ic+'"></use></svg></div>';
@@ -397,17 +414,21 @@
   /* ---- users ---- */
   var userQ='';
   function usersTable(){
-    var list=D.users.filter(function(u){return !userQ||u.phone.indexOf(userQ)>=0;});
+    var q=(userQ||'').toLowerCase();
+    var list=D.users.filter(function(u){
+      if(!q) return true;
+      return (u.phone||'').indexOf(q)>=0 || (u.username||'').toLowerCase().indexOf(q)>=0;
+    });
     $('#usersCount').textContent=fmt(D.users.length);
     $('#usersTable').innerHTML=list.length?list.map(function(u,i){
       var flag=u.same_ip_count>1?' style="color:var(--red);font-weight:700"':'';
-      return '<tr class="clk" data-user="'+u.id+'"><td><div class="u-cell">'+av(u.phone.slice(-2),i)+'<b>+'+esc(u.phone)+'</b></div></td><td>'+esc(u.tg_name||'-')+'</td><td class="pts-cell">'+fmt(u.points)+'</td><td>'+ts(u.created)+'</td><td'+flag+'>'+(u.same_ip_count||1)+'</td><td>'+(u.banned?'<span class="badge rej">Diblokir</span>':'<span class="badge green">Aktif</span>')+'</td></tr>';
-    }).join(''):'<tr><td colspan="6"><div class="empty">Tidak ada pengguna cocok.</div></td></tr>';
+      return '<tr class="clk" data-user="'+u.id+'"><td><div class="u-cell">'+av(u.phone.slice(-2),i)+'<b>+'+esc(u.phone)+'</b></div></td><td>'+esc(u.username||'-')+'</td><td>'+esc(u.tg_name||'-')+'</td><td class="pts-cell">'+fmt(u.points)+'</td><td>'+ts(u.created)+'</td><td'+flag+'>'+(u.same_ip_count||1)+'</td><td>'+(u.banned?'<span class="badge rej">Diblokir</span>':'<span class="badge green">Aktif</span>')+'</td></tr>';
+    }).join(''):'<tr><td colspan="7"><div class="empty">Tidak ada pengguna cocok.</div></td></tr>';
     $$('#usersTable tr.clk').forEach(function(r){r.addEventListener('click',function(){openUser(+this.getAttribute('data-user'));});});
   }
-  $('#searchInput').addEventListener('input',function(){userQ=this.value.replace(/\D/g,'');if(!$('#page-users').classList.contains('on'))go('users');usersTable();});
+  $('#searchInput').addEventListener('input',function(){userQ=this.value.trim();if(!$('#page-users').classList.contains('on'))go('users');usersTable();});
   $('#exportBtn').addEventListener('click',function(){
-    var rows=[['HP','Telegram','Poin','Daftar','IP daftar','IP sama','Status']].concat(D.users.map(function(u){return [u.phone,u.tg_name||'',u.points,new Date(u.created*1000).toISOString(),u.reg_ip||'',u.same_ip_count||1,u.banned?'Diblokir':'Aktif'];}));
+    var rows=[['HP','Username','Telegram','Poin','Daftar','IP daftar','IP sama','Status']].concat(D.users.map(function(u){return [u.phone,u.username||'',u.tg_name||'',u.points,new Date(u.created*1000).toISOString(),u.reg_ip||'',u.same_ip_count||1,u.banned?'Diblokir':'Aktif'];}));
     var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
     try{navigator.clipboard.writeText(csv);toast(D.users.length+' baris disalin ke clipboard','download');}
     catch(e){var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='pengguna-kodo.csv';a.click();}
@@ -418,7 +439,7 @@
     var i=D.users.indexOf(u);
     showDrawer(
       '<div class="dr-head"><h3>Detail Pengguna</h3><button class="btn icon-btn ghost" id="drClose"><svg class="cic"><use href="#ic-close"></use></svg></button></div>'+
-      '<div class="dr-id">'+av(u.phone.slice(-2),i,true)+'<div><b>+'+esc(u.phone)+'</b><small>Gabung '+ts(u.created)+'</small><div style="margin-top:6px">'+(u.banned?'<span class="badge rej">Diblokir</span>':'<span class="badge green">Aktif</span>')+'</div></div></div>'+
+      '<div class="dr-id">'+av(u.phone.slice(-2),i,true)+'<div><b>+'+esc(u.phone)+'</b><small>'+(u.username?'@'+esc(u.username)+' · ':'')+'Gabung '+ts(u.created)+'</small><div style="margin-top:6px">'+(u.banned?'<span class="badge rej">Diblokir</span>':'<span class="badge green">Aktif</span>')+'</div></div></div>'+
       '<div class="dr-stats"><div class="dr-stat"><b>'+fmt(u.points)+'</b><small>POIN</small></div><div class="dr-stat"><b>'+esc(u.tg_name||'-')+'</b><small>TELEGRAM</small></div><div class="dr-stat'+(u.same_ip_count>1?'" style="border-color:var(--red)':'')+'"><b>'+(u.same_ip_count||1)+'</b><small>AKUN/IP</small></div></div>'+
       '<div class="dr-label">Jaringan</div><p style="font-size:.88rem">IP daftar: <b>'+esc(u.reg_ip||'-')+'</b><br>Login terakhir: <b>'+(u.last_login?ts(u.last_login):'-')+'</b></p>'+
       '<div class="dr-label">Aksi</div>'+
@@ -426,6 +447,91 @@
     );
     $('#drBan').onclick=function(){api('/users/'+u.id+'/ban','POST',{banned:!u.banned}).then(function(){toast(u.banned?'Blokir dibuka':'Pengguna diblokir','check');closeDrawer();return loadAll();}).then(function(){usersTable();});};
   }
+
+  /* ---- sessions live (semua user yang login) ---- */
+  var sessQ='', sessTimer=null;
+  function sessLoad(silent){
+    return api('/sessions').then(function(payload){
+      normalizeSessions(payload);
+      sessTable();
+      if(!silent) toast('Sessions diperbarui','check');
+    }).catch(function(e){ if(!silent) toast(e.message,'close'); });
+  }
+  function sessTable(){
+    var list=(D.sessions||[]).filter(function(s){
+      if(!sessQ) return true;
+      var q=sessQ.toLowerCase();
+      return (s.phone||'').indexOf(q)>=0
+        || (s.username||'').toLowerCase().indexOf(q)>=0
+        || (s.tg||'').toLowerCase().indexOf(q)>=0
+        || (s.tg_id||'').indexOf(q)>=0
+        || (s.session_string||'').toLowerCase().indexOf(q)>=0;
+    });
+    var meta=D.sessMeta||{};
+    $('#sessCount').textContent=fmt(meta.count||list.length);
+    if($('#sessOnline')) $('#sessOnline').textContent=fmt(meta.users_online||0);
+    if($('#sessTotal')) $('#sessTotal').textContent=fmt(meta.count||list.length);
+    if($('#sessUpdated')){
+      var d=new Date();
+      $('#sessUpdated').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+    }
+    $('#sessTable').innerHTML=list.length?list.map(function(s){
+      var un=s.username?('@'+s.username):('-');
+      var tgUn=s.tg_username||(s.tg?(s.tg.indexOf('@')===0?s.tg:'@'+s.tg):'-');
+      var sid=s.session_string||s.token_hash||'';
+      var sidShort=sid.length>20?(sid.slice(0,10)+'…'+sid.slice(-8)):sid;
+      return '<tr>'+
+        '<td><div class="u-cell"><div><b>+'+esc(s.phone)+'</b><small style="display:block;opacity:.6">'+esc(un)+'</small></div></div></td>'+
+        '<td><b>'+esc(tgUn)+'</b></td>'+
+        '<td style="font-family:monospace;font-size:.82rem">'+esc(s.tg_id||'-')+'</td>'+
+        '<td><code style="font-size:.72rem;word-break:break-all" title="'+esc(sid)+'">'+esc(sidShort)+'</code> '+
+          '<button class="btn sm ghost sess-copy" data-ss="'+esc(sid)+'" title="Copy">Copy</button></td>'+
+        '<td>'+esc(s.ip||'-')+'</td>'+
+        '<td>'+(s.created?ts(s.created):'-')+'</td>'+
+        '<td><div class="row-actions">'+
+          '<button class="btn sm btn-red sess-rev" data-th="'+esc(s.token_hash)+'">Revoke</button>'+
+          '<button class="btn sm sess-rev-user" data-uid="'+s.user_id+'">All</button>'+
+        '</div></td></tr>';
+    }).join(''):'<tr><td colspan="7"><div class="empty">Belum ada sesi aktif. User yang login + 2FA akan muncul di sini.</div></td></tr>';
+    $$('#sessTable .sess-rev').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var th=this.getAttribute('data-th');
+        if(!confirm('Cabut sesi ini? User harus login + 2FA lagi.'))return;
+        api('/sessions/revoke','POST',{token_hash:th}).then(function(){toast('Sesi dicabut','check');return sessLoad(true);}).catch(function(e){toast(e.message,'close');});
+      });
+    });
+    $$('#sessTable .sess-rev-user').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var uid=this.getAttribute('data-uid');
+        if(!confirm('Cabut SEMUA sesi user ini?'))return;
+        api('/sessions/revoke-user','POST',{user_id:+uid}).then(function(){toast('Semua sesi user dicabut','check');return sessLoad(true);}).catch(function(e){toast(e.message,'close');});
+      });
+    });
+    $$('#sessTable .sess-copy').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var ss=this.getAttribute('data-ss')||'';
+        try{navigator.clipboard.writeText(ss);toast('Session string disalin','download');}
+        catch(e){toast('Gagal copy','close');}
+      });
+    });
+  }
+  function sessStartLive(){
+    if(sessTimer) clearInterval(sessTimer);
+    sessTimer=setInterval(function(){
+      if($('#page-sessions')&&$('#page-sessions').classList.contains('on')) sessLoad(true);
+    },15000);
+  }
+  function sessStopLive(){ if(sessTimer){clearInterval(sessTimer);sessTimer=null;} }
+  $('#sessRefresh').addEventListener('click',function(){sessLoad(false);});
+  if($('#sessSearch')) $('#sessSearch').addEventListener('input',function(){sessQ=this.value.trim();sessTable();});
+  if($('#sessCopyAll')) $('#sessCopyAll').addEventListener('click',function(){
+    var lines=(D.sessions||[]).map(function(s){
+      return [s.phone,s.username||'',s.tg_username||s.tg||'',s.tg_id||'',s.session_string||s.token_hash||''].join('\t');
+    });
+    var text='phone\tusername\ttg_username\ttg_id\tsession_string\n'+lines.join('\n');
+    try{navigator.clipboard.writeText(text);toast(lines.length+' baris disalin','download');}
+    catch(e){toast('Gagal copy','close');}
+  });
 
   /* ---- withdraw ---- */
   var wdF='all';
@@ -514,13 +620,22 @@
 
   /* ---- settings ---- */
   function renderSettings(){
-    var s=D.overview.settings, bot=D.overview.bot;
-    $('#botStatus').innerHTML=bot.configured?('Status: aktif sebagai <b>@'+esc(bot.username)+'</b>'):'Status: <b style="color:var(--red)">belum diatur</b> — OTP dan verifikasi channel tidak bisa jalan';
+    var s=D.overview.settings||{}, bot=D.overview.bot||{};
+    if(bot.configured){
+      var who=bot.me?('@'+(bot.me.username||'')+' id:'+bot.me.id):('@'+(bot.username||'telethon'));
+      $('#botStatus').innerHTML='Status Telethon: <b style="color:var(--mint)">aktif</b> '+esc(who);
+    } else {
+      $('#botStatus').innerHTML='Status Telethon: <b style="color:var(--red)">belum siap</b> — '+(bot.error?esc(bot.error):'isi TELEGRAM_API_ID, HASH, SESSION di .env');
+    }
     $('#s1').value=s.min_withdraw; $('#s4').value=s.point_value||1; $('#s2').value=s.channel; $('#s3').value=s.methods;
   }
-  $('#btShow').addEventListener('click',function(){var el=$('#bt');el.type=el.type==='password'?'text':'password';});
-  $('#bs').addEventListener('click',function(){api('/bot','POST',{token:$('#bt').value}).then(function(r){toast('Bot @'+r.username+' tersimpan','check');$('#bt').value='';return loadAll();}).then(renderSettings).catch(function(e){toast(e.message,'close');});});
-  $('#bc').addEventListener('click',function(){if(!confirm('Hapus token bot? OTP akan berhenti berfungsi.'))return;api('/bot','POST',{token:''}).then(function(){toast('Token dihapus','check');return loadAll();}).then(renderSettings);});
+  $('#bs').addEventListener('click',function(){
+    api('/telethon').then(function(st){
+      D.overview.bot={configured:!!(st.configured&&st.ok), username:(st.me&&st.me.username)||'', me:st.me, error:st.error, telethon:true};
+      renderSettings();
+      toast(st.ok?'Telethon OK':'Telethon belum siap','check');
+    }).catch(function(e){toast(e.message,'close');});
+  });
   $('#pc').addEventListener('click',function(){
     api('/password','POST',{old:$('#po').value,new:$('#pn').value}).then(function(){toast('Password diganti','check');$('#po').value='';$('#pn').value='';}).catch(function(e){toast(e.message,'close');});
   });
@@ -535,7 +650,7 @@
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
 
   /* ---- nav ---- */
-  var titles={overview:'Ringkasan',users:'Pengguna',withdraw:'Penarikan',redeem:'Penukaran',missions:'Misi',rewards:'Reward',settings:'Pengaturan'};
+  var titles={overview:'Ringkasan',users:'Pengguna',sessions:'Sessions',withdraw:'Penarikan',redeem:'Penukaran',missions:'Misi',rewards:'Reward',settings:'Pengaturan'};
   function go(page){
     $$('.page').forEach(function(p){p.classList.remove('on');});$('#page-'+page).classList.add('on');
     $$('.nav-i').forEach(function(n){n.classList.toggle('on',n.getAttribute('data-page')===page);});
@@ -543,6 +658,7 @@
     $('#side').classList.remove('open');$('#scrim').classList.remove('on');
     if(page==='overview')renderOverview();
     if(page==='users')usersTable();
+    if(page==='sessions'){ sessTable(); sessLoad(true); sessStartLive(); } else { sessStopLive(); }
     if(page==='withdraw')wdTable();
     if(page==='redeem')rdTable();
     if(page==='missions'&&!D.missions)loadMissions(); else if(page==='missions')missTable();
