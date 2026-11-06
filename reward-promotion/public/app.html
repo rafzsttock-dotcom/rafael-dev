@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KODO Rewards — App Demo</title>
+<title>KODO Rewards</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -374,7 +374,6 @@
   <symbol id="ic-link" viewBox="0 0 24 24"><path d="M9.5 14.5l5-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M8.2 12.2l-2 2a3 3 0 004.3 4.2l2-2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.8 11.8l2-2a3 3 0 00-4.3-4.2l-2 2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </defs></svg>
 
-<div class="demo-flag">● Demo UI — tampilan saja · tidak ada login/data nyata · tidak terhubung ke Telegram</div>
 
 <!-- ===================== LANDING ===================== -->
 <section class="screen active" id="screen-landing">
@@ -388,41 +387,28 @@
 
   <div class="hero">
     <div>
-      <span class="tagpill"><i class="ping"></i> Bonus 50.000 poin untuk anggota baru</span>
+      <span class="tagpill"><i class="ping"></i> Ajak teman, dapat 10.000 poin tiap teman bergabung</span>
       <h1>Kumpulkan poin,<br>klaim <em>reward</em> tiap hari.</h1>
       <p class="lead">Selesaikan misi, ajak teman, dan tukar poin jadi hadiah. Daftar sekali, langsung mulai.</p>
       <div class="hero-cta">
         <button class="btn btn-violet" data-go="login" style="font-size:1.05rem;padding:15px 24px">Daftar gratis →</button>
-        <button class="btn" data-go="login">Lihat demo →</button>
+        <button class="btn" data-go="login">Mulai →</button>
       </div>
-      <div class="hnote"><svg class="cic" style="width:15px;height:15px"><use href="#ic-lock"></use></svg> Demo antarmuka — tidak ada data dikirim atau disimpan.</div>
+      
     </div>
 
     <div class="heroart">
       <div class="float f1"><span class="mini-emoji" style="background:var(--mint)"><svg class="cic"><use href="#ic-check"></use></svg></span> +500 poin</div>
-      <div class="float f2"><span class="mini-emoji" style="background:var(--yellow)"><svg class="cic"><use href="#ic-fire"></use></svg></span> Streak 7 hari</div>
+      
       <div class="mock">
-        <div class="mrow"><span class="mic" style="background:var(--yellow)"><svg class="cic"><use href="#ic-gift"></use></svg></span><div><small>Welcome bonus</small><b>Anggota baru</b></div><span class="amt">+50.000</span></div>
-        <div class="mrow"><span class="mic" style="background:var(--mint)"><svg class="cic"><use href="#ic-check"></use></svg></span><div><small>Misi harian</small><b>Check-in</b></div><span class="amt">+500</span></div>
+                <div class="mrow"><span class="mic" style="background:var(--mint)"><svg class="cic"><use href="#ic-check"></use></svg></span><div><small>Misi harian</small><b>Check-in</b></div><span class="amt">+500</span></div>
         <div class="mrow"><span class="mic" style="background:var(--pink)"><svg class="cic"><use href="#ic-users"></use></svg></span><div><small>Referal</small><b>Teman bergabung</b></div><span class="amt">+10.000</span></div>
         <div class="mrow"><span class="mic" style="background:var(--sky)"><svg class="cic"><use href="#ic-ticket"></use></svg></span><div><small>Tukar reward</small><b>Voucher 25%</b></div><span class="amt">-15.000</span></div>
       </div>
     </div>
   </div>
 
-  <section class="activity">
-    <div class="act-head">
-      <h2>Penarikan terkini <span class="live"><i></i>live</span></h2>
-      <p>Withdraw berhasil dari anggota KODO — data demo, nama fiktif.</p>
-    </div>
-    <div class="act-stats">
-      <div class="as"><b>12.480</b><small>Reward ditukar minggu ini</small></div>
-      <div class="as"><b>3.200</b><small>Misi selesai hari ini</small></div>
-      <div class="as"><b>890</b><small>Teman diajak hari ini</small></div>
-    </div>
-    <div class="act-feed" id="actFeed"></div>
-  </section>
-
+  
   <div class="lfeatures">
     <div class="lfeat"><div class="ib" style="background:var(--yellow)"><svg class="cic"><use href="#ic-target"></use></svg></div><h3>Misi harian</h3><p>Tugas ringan tiap hari, bonus poin tiap selesai.</p></div>
     <div class="lfeat"><div class="ib" style="background:var(--mint)"><svg class="cic"><use href="#ic-gift"></use></svg></div><h3>Reward nyata</h3><p>Tukar poin jadi voucher, diskon, dan hadiah.</p></div>
@@ -437,49 +423,43 @@
 
     <!-- step 1: nomor -->
     <div class="lstep active" id="lstep1">
-      <h2>Buat akun KODO</h2>
-      <p class="sub">Masukkan nomor HP untuk mulai. Kami kirim kode verifikasi 5 digit agar akunmu tetap aman.</p>
+      <h2>Masuk / Daftar</h2>
+      <p class="sub">Masukkan nomor HP dan password. Akun baru diverifikasi dengan kode OTP yang dikirim bot Telegram.</p>
       <div class="lfield">
         <label for="loginPhone">Nomor HP</label>
         <div class="phone-input">
           <span class="cc"><span class="flag-id"></span> +62</span>
-          <input type="tel" id="loginPhone" inputmode="numeric" placeholder="812 3456 7890" autocomplete="off">
+          <input type="tel" id="loginPhone" inputmode="numeric" placeholder="812 3456 7890" autocomplete="tel">
         </div>
       </div>
-      <button class="btn btn-violet full" id="sendCode">Kirim kode verifikasi →</button>
+      <div class="lfield">
+        <label for="loginPass">Password</label>
+        <input class="fi" type="password" id="loginPass" placeholder="Minimal 8 karakter" autocomplete="current-password" style="width:100%;border:3px solid var(--line);border-radius:13px;padding:14px;font-size:1.05rem;background:var(--paper);color:var(--ink)">
+      </div>
+      <button class="btn btn-violet full" id="doLogin">Masuk →</button>
+      <button class="btn full" id="doRegister" style="margin-top:10px">Daftar akun baru</button>
     </div>
 
     <!-- step 2: kode -->
     <div class="lstep" id="lstep2">
       <h2>Masukkan kode</h2>
-      <p class="sub">5 digit kode untuk <b id="shownNum">+62 …</b>. <b>Demo:</b> kode muncul otomatis di bawah.</p>
+      <p class="sub">Buka bot <a id="botLink" target="_blank" rel="noopener"><b id="botName">@bot</b></a>, tekan <b>Start</b>, lalu bagikan nomor HP-mu. Kode 6 digit dikirim di sana untuk <b id="shownNum">+62 …</b>.</p>
       <div class="otp-boxes">
         <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 1">
         <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 2">
         <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 3">
         <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 4">
         <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 5">
+        <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 6">
       </div>
-      <div class="resend">Kode demo: <b id="demoCode"></b> · <a id="resend" role="button">Kirim ulang (<span id="timer">30</span>s)</a></div>
+      <div class="resend"><a id="resend" role="button">Kirim ulang kode</a></div>
       <button class="btn btn-violet full" id="verifyCode" style="margin-top:16px">Verifikasi &amp; masuk →</button>
       <div class="lback"><button class="btn ghost sm" id="editNum">← Ubah nomor</button></div>
     </div>
 
-    <!-- step 3: 2FA -->
-    <div class="lstep" id="lstep3">
-      <h2>Verifikasi 2FA</h2>
-      <p class="sub">Akun Telegram ini menggunakan password 2FA. Masukkan password-nya untuk lanjut.</p>
-      <div class="lfield">
-        <label for="fa2Pass">Password 2FA</label>
-        <input class="fi" type="password" id="fa2Pass" placeholder="Password 2FA Telegram" autocomplete="off" style="width:100%;border:3px solid var(--line);border-radius:13px;padding:14px;font-size:1.05rem;background:var(--paper);color:var(--ink);box-shadow:4px 4px 0 var(--line);">
-      </div>
-      <button class="btn btn-violet full" id="verify2fa" style="margin-top:16px">Verifikasi 2FA →</button>
-      <div class="lback"><button class="btn ghost sm" id="backToCode">← Kembali ke kode</button></div>
-    </div>
-
     <div class="safenote">
       <span><svg class="cic" style="width:20px;height:20px"><use href="#ic-lock"></use></svg></span>
-      <span><b>Jaga keamanan akunmu.</b> Kode verifikasi bersifat rahasia — jangan pernah membagikannya ke siapa pun, termasuk yang mengaku admin. KODO tidak akan pernah meminta PIN atau password lewat chat.</span>
+      <span><b>Jaga keamanan akunmu.</b> Kode verifikasi bersifat rahasia — jangan bagikan ke siapa pun, termasuk yang mengaku admin.</span>
     </div>
     <div class="login-back"><button class="btn ghost sm" data-go="landing">← Kembali ke beranda</button></div>
   </div>
@@ -490,10 +470,10 @@
   <div class="login-card">
     <div class="tg-badge" style="background:var(--tg)"><svg class="cic"><use href="#ic-tg"></use></svg></div>
     <h2>Gabung channel dulu</h2>
-    <p class="sub">Gabung channel berikut untuk membuka akses &amp; klaim reward. Keanggotaan dicek otomatis oleh bot.</p>
+    <p class="sub">Gabung channel berikut untuk membuka akses &amp; klaim reward. Keanggotaan dicek otomatis oleh bot Telegram.</p>
     <div class="join-list" id="joinList"></div>
     <button class="btn btn-violet full" id="joinContinue">Saya sudah join &amp; lanjut →</button>
-    <div class="safenote"><span><svg class="cic" style="width:20px;height:20px"><use href="#ic-lock"></use></svg></span><span><b>Demo:</b> tombol ini simulasi. Di versi nyata, bot Telegram yang mengecek keanggotaan lewat getChatMember.</span></div>
+    
   </div>
 </section>
 
@@ -521,8 +501,7 @@
         <small>Total poin kamu</small>
         <div class="big"><span id="ptsBig">0</span> <span class="unit">poin</span></div>
         <div class="pills">
-          <span class="p"><svg class="cic"><use href="#ic-fire"></use></svg> Streak <b id="streakP">7</b> hari</span>
-          <span class="p"><svg class="cic"><use href="#ic-trophy"></use></svg> Level <b>Silver</b></span>
+          
           <span class="p"><svg class="cic"><use href="#ic-users"></use></svg> <b id="refP">3</b> teman</span>
         </div>
         <button class="btn btn-yellow sm" id="wdOpen" style="margin-top:16px;position:relative;z-index:1"><svg class="cic" style="width:17px;height:17px"><use href="#ic-wallet"></use></svg> Tarik poin →</button>
@@ -541,7 +520,7 @@
           <b>Gabung Channel Telegram KODO</b>
           <p>Info reward terbaru, giveaway mingguan &amp; bantuan cepat.</p>
         </div>
-        <a class="btn btn-yellow sm" href="#" onclick="return false">Gabung →</a>
+        
       </div>
 
       <div class="sec-title">Misi hari ini <a data-tab="missions">Semua →</a></div>
@@ -566,7 +545,7 @@
       <div class="sec-title" style="margin-top:6px">Misi harian <span class="chip mint" id="missHeaderChip">0 selesai</span></div>
       <div class="list" id="missionList"></div>
       <div class="sec-title">Misi mingguan</div>
-      <div class="list" id="weeklyList"></div>
+      
     </div>
 
     <!-- REFERRAL -->
@@ -588,7 +567,7 @@
       </div>
       <div class="sec-title">Teman kamu</div>
       <div class="friends" id="friendList"></div>
-      <button class="btn full" id="simFriend" style="margin-top:6px">+ Simulasikan teman bergabung (demo)</button>
+      
     </div>
 
   </div>
@@ -602,7 +581,7 @@
     </div>
   </nav>
 
-  <!-- Withdraw bottom sheet (demo) -->
+  <!-- Withdraw bottom sheet -->
   <div class="sheet-overlay" id="wdOverlay">
     <div class="sheet">
       <div class="sheet-grab"></div>
@@ -627,7 +606,7 @@
         <div class="wd-label">Nomor tujuan</div>
         <input class="wd-input" id="wdAccount" inputmode="numeric" placeholder="No. e-wallet / rekening">
         <button class="btn btn-violet full" id="wdConfirm" style="margin-top:18px">Tarik sekarang →</button>
-        <div class="wd-note"><svg class="cic" style="width:18px;height:18px;flex-shrink:0"><use href="#ic-lock"></use></svg><span><b>Demo:</b> tidak ada dana nyata yang berpindah. Ini hanya peragaan tampilan penarikan.</span></div>
+        <div class="wd-note"><svg class="cic" style="width:18px;height:18px;flex-shrink:0"><use href="#ic-lock"></use></svg><span id="wdMin">—</span></div>
       </div>
 
       <div class="wd-step" id="wdStep2">
@@ -638,8 +617,8 @@
         <div class="wd-ok">
           <div class="big-ic"><svg class="cic"><use href="#ic-check"></use></svg></div>
           <h3 style="font-family:var(--font-head);font-size:1.35rem">Permintaan dikirim</h3>
-          <p style="opacity:.75;margin-top:4px">Penarikan <b id="wdOkAmt">0</b> poin ke <b id="wdOkMethod">—</b> sedang diproses.</p>
-          <div class="wd-note"><svg class="cic" style="width:18px;height:18px;flex-shrink:0"><use href="#ic-lock"></use></svg><span>Ini demo — tidak ada uang yang benar-benar dikirim. Di produk nyata, waktu masuk mengikuti sistem pembayaran.</span></div>
+          <p style="opacity:.75;margin-top:4px">Penarikan <b id="wdOkAmt">0</b> poin ke <b id="wdOkMethod">—</b> menunggu diproses admin.</p>
+          <div class="wd-note"><svg class="cic" style="width:18px;height:18px;flex-shrink:0"><use href="#ic-lock"></use></svg><span>Penarikan diproses manual oleh admin. Jika ditolak, poin dikembalikan ke akunmu.</span></div>
           <button class="btn btn-yellow full" id="wdDone">Selesai</button>
         </div>
       </div>
@@ -655,8 +634,6 @@
   "use strict";
   var $=function(s,c){return (c||document).querySelector(s)},
       $$=function(s,c){return [].slice.call((c||document).querySelectorAll(s))};
-
-  /* ---- theme ---- */
   var root=document.documentElement;
   try{var sv=localStorage.getItem('kodo-theme');if(sv)root.setAttribute('data-theme',sv);}catch(e){}
   function toggleTheme(){
@@ -666,8 +643,6 @@
     try{localStorage.setItem('kodo-theme',next);}catch(e){}
   }
   $$('#themeBtn,#themeBtn2').forEach(function(b){b.addEventListener('click',toggleTheme);});
-
-  /* ---- click ripple ---- */
   document.addEventListener('click',function(e){
     var b=e.target.closest('.btn,.bn-btn,.tg-login-btn'); if(!b)return;
     var r=b.getBoundingClientRect(),d=Math.max(r.width,r.height)*2.2;
@@ -676,340 +651,209 @@
     s.style.left=(e.clientX-r.left)+'px';s.style.top=(e.clientY-r.top)+'px';
     b.appendChild(s);setTimeout(function(){s.remove();},600);
   });
-
-  /* ---- screen nav ---- */
   function show(id){
     $$('.screen').forEach(function(s){s.classList.remove('active');});
-    $('#screen-'+id).classList.add('active');
-    window.scrollTo(0,0);
+    $('#screen-'+id).classList.add('active'); window.scrollTo(0,0);
   }
   $$('[data-go]').forEach(function(b){b.addEventListener('click',function(){show(this.getAttribute('data-go'));});});
-
-  /* ---- toast / confetti ---- */
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function toast(msg,icon){
     var t=document.createElement('div');t.className='toast';
     var ic=icon?'<svg class="cic" style="width:18px;height:18px"><use href="#ic-'+icon+'"></use></svg>':'';
-    t.innerHTML=ic+'<span>'+msg+'</span>';
+    t.innerHTML=ic+'<span>'+esc(msg)+'</span>';
     $('#toasts').appendChild(t);
-    setTimeout(function(){t.style.transition='opacity .3s,transform .3s';t.style.opacity='0';t.style.transform='translateY(10px)';setTimeout(function(){t.remove();},300);},2000);
+    setTimeout(function(){t.style.transition='opacity .3s,transform .3s';t.style.opacity='0';t.style.transform='translateY(10px)';setTimeout(function(){t.remove();},300);},2600);
   }
   function confetti(){
     var w=$('#confetti');w.innerHTML='';var cols=['#8b6cff','#ffd23f','#20d0b2','#ff8fb1','#5bc0ff'];
     for(var i=0;i<46;i++){var p=document.createElement('i');p.style.left=Math.random()*100+'vw';p.style.background=cols[i%cols.length];p.style.animationDelay=(Math.random()*.5)+'s';p.style.animationDuration=(2+Math.random()*1.3)+'s';w.appendChild(p);}
     setTimeout(function(){w.innerHTML='';},3600);
   }
+  function fmt(n){return Number(n||0).toLocaleString('id-ID');}
 
-  /* ---- state ---- */
-  var S={
-    points:0,
-    streak:7,
-    refInvited:3, refEarned:30000, refPending:1
-  };
-  var missions=[
-    {id:'checkin',ic:'check',bg:'var(--mint)',title:'Check-in harian',desc:'Buka aplikasi hari ini',reward:500,prog:1,goal:1,claimed:false},
-    {id:'browse',ic:'bag',bg:'var(--yellow)',title:'Lihat 3 merchant',desc:'Jelajahi katalog partner',reward:800,prog:2,goal:3,claimed:false,action:true},
-    {id:'review',ic:'star',bg:'var(--pink)',title:'Beri 1 ulasan',desc:'Ulas merchant favoritmu',reward:1200,prog:0,goal:1,claimed:false,action:true},
-    {id:'share',ic:'megaphone',bg:'var(--sky)',title:'Bagikan ke teman',desc:'Sebar kode referalmu',reward:1000,prog:0,goal:1,claimed:false,action:true},
-    {id:'join',ic:'tg',bg:'var(--tg)',title:'Gabung channel KODO',desc:'Join channel Telegram resmi',reward:1500,prog:0,goal:1,claimed:false,action:true,cta:'Gabung',link:'#'},
-    {id:'startbot',ic:'bot',bg:'var(--violet)',title:'Start bot KODO',desc:'Mulai bot Telegram kami',reward:1000,prog:0,goal:1,claimed:false,action:true,cta:'Buka Bot',link:'#'},
-    {id:'tap',ic:'link',bg:'var(--pink)',title:'Kunjungi link partner',desc:'Buka tautan sponsor',reward:600,prog:0,goal:1,claimed:false,action:true,cta:'Kunjungi',link:'#'}
-  ];
-  var weekly=[
-    {id:'w-missions',ic:'medal',bg:'var(--violet)',title:'Selesaikan 15 misi',desc:'Progres mingguan',reward:5000,prog:9,goal:15,claimed:false},
-    {id:'w-spend',ic:'card',bg:'var(--yellow)',title:'5 transaksi',desc:'Belanja di partner mana pun',reward:4000,prog:3,goal:5,claimed:false}
-  ];
-  var rewards=[
-    {id:'r1',ic:'coffee',bg:'var(--yellow)',title:'Voucher kopi Rp15rb',tag:'Populer',cost:8000,redeemed:false},
-    {id:'r2',ic:'ticket',bg:'var(--mint)',title:'Diskon 25% belanja',tag:'Hemat',cost:15000,redeemed:false},
-    {id:'r3',ic:'food',bg:'var(--pink)',title:'Gratis 1 menu makan',tag:'Favorit',cost:22000,redeemed:false},
-    {id:'r4',ic:'headphones',bg:'var(--sky)',title:'Langganan musik 1 bln',tag:'',cost:35000,redeemed:false},
-    {id:'r5',ic:'cart',bg:'var(--violet)',title:'Saldo belanja Rp50rb',tag:'',cost:60000,redeemed:false},
-    {id:'r6',ic:'trophy',bg:'var(--yellow)',title:'Merchandise eksklusif',tag:'Terbatas',cost:120000,redeemed:false}
-  ];
-  var friends=[
-    {n:'Dewi',av:'D',bg:'var(--pink)',st:'Aktif',earn:10000},
-    {n:'Budi',av:'B',bg:'var(--mint)',st:'Aktif',earn:10000},
-    {n:'Sari',av:'S',bg:'var(--sky)',st:'Aktif',earn:10000},
-    {n:'Andi',av:'A',bg:'var(--yellow)',st:'Belum verifikasi',earn:0}
-  ];
-  var pendingNames=['Rizky','Nina','Fajar','Lia','Yoga','Tari','Bima','Kiki'];
-
-  function fmt(n){return n.toLocaleString('id-ID');}
-
-  /* ---- animated points ---- */
-  function setPoints(to){
-    var from=S.points; S.points=to;
-    var els=[$('#ptsBig'),$('#ptsBig2')];
-    var t0=null,dur=600;
-    function step(ts){if(!t0)t0=ts;var p=Math.min((ts-t0)/dur,1);var val=Math.floor(from+(to-from)*p);els.forEach(function(e){if(e)e.textContent=fmt(val);});if(p<1)requestAnimationFrame(step);}
-    requestAnimationFrame(step);
+  /* ---- API ---- */
+  function api(path,method,body){
+    return fetch('/api'+path,{method:method||'GET',headers:body?{'content-type':'application/json'}:{},body:body?JSON.stringify(body):undefined,credentials:'same-origin'})
+      .then(function(r){return r.json().catch(function(){return {};}).then(function(j){ if(!r.ok){var e=new Error(j.error||'Terjadi kesalahan');e.status=r.status;throw e;} return j; });});
   }
-  function addPoints(n,msg,icon){ setPoints(S.points+n); if(msg)toast(msg,icon); }
+  var CFG={bot:'',min_withdraw:50000,point_value:1,channel:'',methods:[]};
+  var ME=null;
+  var ICONS={daily:['check','var(--mint)'],join_channel:['tg','var(--tg)'],start_bot:['bot','var(--violet)'],tap_link:['link','var(--pink)'],once:['star','var(--yellow)']};
 
-  /* ---- renderers ---- */
+  /* ---- render ---- */
+  function setPoints(n){ ['#ptsBig','#ptsBig2','#wdBalNum'].forEach(function(s){var e=$(s);if(e)e.textContent=fmt(n);}); }
   function missionCard(m){
-    var done=m.prog>=m.goal;
-    var btn;
+    var ic=ICONS[m.type]||ICONS.once, btn;
     if(m.claimed) btn='<span class="chip mint">✓ Diklaim</span>';
-    else if(done) btn='<button class="btn btn-yellow sm" data-claim="'+m.id+'">Klaim +'+fmt(m.reward)+'</button>';
-    else if(m.action) btn='<button class="btn sm'+(m.link?' btn-tg':'')+'" data-do="'+m.id+'">'+(m.cta||'Lanjut')+'</button>';
-    else btn='<span class="chip locked">'+m.prog+'/'+m.goal+'</span>';
-    return '<div class="item"><div class="ic" style="background:'+m.bg+'"><svg class="cic"><use href="#ic-'+m.ic+'"></use></svg></div>'+
-      '<div class="body"><b>'+m.title+'</b><p>'+m.desc+'</p>'+
-      '<div class="progress"><div class="fill" style="width:'+(Math.min(m.prog/m.goal,1)*100)+'%"></div></div>'+
-      '<div class="mission-meta"><span>'+m.prog+' / '+m.goal+'</span><span>+'+fmt(m.reward)+' poin</span></div></div>'+
+    else if(m.type==='tap_link'&&!m.tapped) btn='<button class="btn sm btn-tg" data-do="'+m.id+'">Buka</button>';
+    else if(m.type==='join_channel'&&CFG.channel) btn='<button class="btn sm btn-tg" data-join="'+m.id+'">Gabung</button> <button class="btn btn-yellow sm" data-claim="'+m.id+'">Klaim</button>';
+    else if(m.type==='start_bot') btn='<button class="btn sm btn-tg" data-bot="1">Buka Bot</button> <button class="btn btn-yellow sm" data-claim="'+m.id+'">Klaim</button>';
+    else btn='<button class="btn btn-yellow sm" data-claim="'+m.id+'">Klaim +'+fmt(m.reward)+'</button>';
+    return '<div class="item"><div class="ic" style="background:'+ic[1]+'"><svg class="cic"><use href="#ic-'+ic[0]+'"></use></svg></div>'+
+      '<div class="body"><b>'+esc(m.title)+'</b><p>'+esc(m.descr)+'</p><div class="mission-meta"><span>+'+fmt(m.reward)+' poin</span></div></div>'+
       '<div class="end">'+btn+'</div></div>';
   }
   function rewardCard(r){
-    var afford=S.points>=r.cost;
-    var btn=r.redeemed?'<span class="chip mint">✓ Ditukar</span>':
-      '<button class="btn '+(afford?'btn-violet':'')+' sm" data-redeem="'+r.id+'" '+(afford?'':'disabled')+'>'+(afford?'Tukar':'Kurang')+'</button>';
-    return '<div class="item"><div class="ic" style="background:'+r.bg+'"><svg class="cic"><use href="#ic-'+r.ic+'"></use></svg></div>'+
-      '<div class="body"><b>'+r.title+'</b>'+(r.tag?'<p><span class="chip pink">'+r.tag+'</span></p>':'<p>Tukar dengan poinmu</p>')+'</div>'+
-      '<div class="end"><span class="reward-pts">'+fmt(r.cost)+'</span>'+btn+'</div></div>';
+    var afford=ME.user.points>=r.cost;
+    return '<div class="item"><div class="ic" style="background:var(--yellow)"><svg class="cic"><use href="#ic-gift"></use></svg></div>'+
+      '<div class="body"><b>'+esc(r.title)+'</b><p>Diproses admin setelah ditukar</p></div>'+
+      '<div class="end"><span class="reward-pts">'+fmt(r.cost)+'</span><button class="btn '+(afford?'btn-violet':'')+' sm" data-redeem="'+r.id+'" '+(afford?'':'disabled')+'>'+(afford?'Tukar':'Kurang')+'</button></div></div>';
   }
-  function friendCard(f){
-    return '<div class="friend"><div class="fav" style="background:'+f.bg+'">'+f.av+'</div>'+
-      '<div><b>'+f.n+'</b><small>'+f.st+'</small></div>'+
-      '<span class="earn">'+(f.earn?'+'+fmt(f.earn):'—')+'</span></div>';
-  }
-
-  function renderMissions(){
-    $('#missionList').innerHTML=missions.map(missionCard).join('');
-    $('#weeklyList').innerHTML=weekly.map(missionCard).join('');
-    $('#homeMissions').innerHTML=missions.slice(0,2).map(missionCard).join('');
-    var done=missions.filter(function(m){return m.claimed;}).length;
-    $('#missHeaderChip').textContent=done+' selesai';
-    $('#missDone').textContent=done+'/'+missions.length;
+  function render(){
+    var u=ME.user; setPoints(u.points);
+    var open=ME.missions.filter(function(m){return !m.claimed;});
+    $('#missionList').innerHTML=ME.missions.map(missionCard).join('')||'<p class="sub">Belum ada misi.</p>';
+    $('#homeMissions').innerHTML=ME.missions.slice(0,2).map(missionCard).join('');
+    var done=ME.missions.length-open.length;
+    $('#missHeaderChip').textContent=done+' selesai'; $('#missDone').textContent=done+'/'+ME.missions.length;
+    $('#rewardList').innerHTML=ME.rewards.map(rewardCard).join('')||'<p class="sub">Belum ada reward.</p>';
+    $('#homeRewards').innerHTML=ME.rewards.slice(0,3).map(rewardCard).join('');
+    $('#rewardCount').textContent=ME.rewards.filter(function(r){return u.points>=r.cost;}).length;
+    $('#userName').firstChild.textContent='+'+u.phone+' ';
+    $('#userAv').textContent=String(u.phone).slice(-2);
+    $('#refCode').value=u.ref_code; $('#refP').textContent=ME.referrals; $('#refInvited').textContent=ME.referrals;
+    $('#friendList').innerHTML=ME.friends.map(function(f){return '<div class="friend"><div class="fav" style="background:var(--mint)">✓</div><div><b>'+esc(f)+'</b><small>Aktif</small></div></div>';}).join('')||'<p class="sub">Belum ada teman yang bergabung.</p>';
+    $('#refEarned').textContent=fmt(ME.history.filter(function(h){return /^referral:/.test(h.reason);}).reduce(function(a,h){return a+h.delta;},0));
+    $('#refPending').textContent='—';
+    $('#wdBalRp').textContent='≈ Rp '+fmt(u.points*CFG.point_value);
     bind();
   }
-  function renderRewards(){
-    $('#rewardList').innerHTML=rewards.map(rewardCard).join('');
-    $('#homeRewards').innerHTML=rewards.slice(0,3).map(rewardCard).join('');
-    $('#rewardCount').textContent=rewards.filter(function(r){return !r.redeemed;}).length;
-    bind();
-  }
-  function renderFriends(){
-    $('#friendList').innerHTML=friends.map(friendCard).join('');
-    $('#refInvited').textContent=S.refInvited;
-    $('#refEarned').textContent=fmt(S.refEarned);
-    $('#refPending').textContent=S.refPending;
-    $('#refP').textContent=S.refInvited;
-  }
+  function reload(){ return api('/me').then(function(m){ME=m;render();}); }
 
-  /* ---- actions ---- */
   function bind(){
     $$('[data-claim]').forEach(function(b){b.onclick=function(){
-      var m=missions.concat(weekly).find(function(x){return x.id===this.getAttribute('data-claim');}.bind(this));
-      if(!m||m.claimed)return; m.claimed=true; addPoints(m.reward,'+'+fmt(m.reward)+' poin — misi selesai!','party'); confetti(); renderMissions();
+      var btn=this; btn.disabled=true;
+      api('/missions/'+btn.getAttribute('data-claim')+'/claim','POST',{}).then(function(){toast('Poin masuk!','party');confetti();return reload();})
+        .catch(function(e){toast(e.message,'close');btn.disabled=false;});
     };});
     $$('[data-do]').forEach(function(b){b.onclick=function(){
-      var m=missions.find(function(x){return x.id===this.getAttribute('data-do');}.bind(this));
-      if(!m)return;
-      if(m.link){ m.prog=m.goal; toast('Tugas dibuka — klaim hadiahmu!','check'); }
-      else { m.prog=Math.min(m.prog+1,m.goal); toast('Progres +1 — '+m.title,'check'); if(m.id==='share') switchTab('referral'); }
-      renderMissions();
+      var id=+this.getAttribute('data-do'), m=ME.missions.find(function(x){return x.id===id;});
+      if(m&&m.link) window.open(m.link,'_blank','noopener');
+      api('/missions/'+id+'/tap','POST',{}).then(function(){m.tapped=true;toast('Tunggu 5 detik lalu klaim','check');setTimeout(render,5200);render();});
     };});
+    $$('[data-join]').forEach(function(b){b.onclick=function(){ var ch=CFG.channel.replace(/^@/,''); window.open('https://t.me/'+ch,'_blank','noopener'); };});
+    $$('[data-bot]').forEach(function(b){b.onclick=function(){ if(CFG.bot) window.open('https://t.me/'+CFG.bot,'_blank','noopener'); };});
     $$('[data-redeem]').forEach(function(b){b.onclick=function(){
-      var r=rewards.find(function(x){return x.id===this.getAttribute('data-redeem');}.bind(this));
-      if(!r||r.redeemed||S.points<r.cost)return;
-      r.redeemed=true; addPoints(-r.cost,'Ditukar: '+r.title,'gift'); confetti(); renderRewards();
+      var btn=this; btn.disabled=true;
+      api('/rewards/'+btn.getAttribute('data-redeem')+'/redeem','POST',{}).then(function(){toast('Penukaran dikirim, menunggu admin','gift');confetti();return reload();})
+        .catch(function(e){toast(e.message,'close');btn.disabled=false;});
     };});
     $$('[data-tab]').forEach(function(b){ if(!b._b){b._b=1;b.addEventListener('click',function(){switchTab(this.getAttribute('data-tab'));});} });
   }
-
   function switchTab(name){
-    $$('.tab').forEach(function(t){t.classList.remove('active');});
-    $('#tab-'+name).classList.add('active');
-    $$('.bn-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-tab')===name);});
-    window.scrollTo(0,0);
+    $$('.tab').forEach(function(t){t.classList.remove('active');}); $('#tab-'+name).classList.add('active');
+    $$('.bn-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-tab')===name);}); window.scrollTo(0,0);
   }
 
-  /* ---- login flow (demo: verifikasi akun sendiri, bukan Telegram) ---- */
+  /* ---- login / register ---- */
   function lshow(n){ $$('.lstep').forEach(function(s){s.classList.remove('active');}); $('#lstep'+n).classList.add('active'); }
-  function newLoginCode(){ var c='';for(var i=0;i<5;i++)c+=Math.floor(Math.random()*10); var el=$('#demoCode'); el.textContent=c; el.style.letterSpacing='.22em'; return c; }
-  var loginTimer=null;
-  function startLoginTimer(){
-    var t=30,el=$('#timer'),link=$('#resend'); if(!el)return;
-    link.setAttribute('aria-disabled','true'); el.textContent=t; clearInterval(loginTimer);
-    loginTimer=setInterval(function(){t--;el.textContent=t;if(t<=0){clearInterval(loginTimer);link.removeAttribute('aria-disabled');link.textContent='Kirim ulang kode';}},1000);
-  }
   var lboxes=$$('#lstep2 .otp-box');
   lboxes.forEach(function(box,idx){
     box.addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,1);this.classList.toggle('filled',!!this.value);if(this.value&&idx<lboxes.length-1)lboxes[idx+1].focus();});
     box.addEventListener('keydown',function(e){if(e.key==='Backspace'&&!this.value&&idx>0)lboxes[idx-1].focus();});
-    box.addEventListener('paste',function(e){e.preventDefault();var t=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,5);t.split('').forEach(function(ch,i){if(lboxes[i]){lboxes[i].value=ch;lboxes[i].classList.add('filled');}});var nx=lboxes[Math.min(t.length,4)];if(nx)nx.focus();});
+    box.addEventListener('paste',function(e){e.preventDefault();var t=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);t.split('').forEach(function(ch,i){if(lboxes[i]){lboxes[i].value=ch;lboxes[i].classList.add('filled');}});var nx=lboxes[Math.min(t.length,5)];if(nx)nx.focus();});
   });
-  $('#sendCode').addEventListener('click',function(){
-    var raw=$('#loginPhone').value.replace(/\D/g,'');
-    var shown=raw?('+62 '+raw.replace(/(\d{3})(\d{0,4})(\d{0,4}).*/,'$1 $2 $3').trim()):'+62 812 3456 7890';
-    $('#shownNum').textContent=shown; newLoginCode();
-    lboxes.forEach(function(b){b.value='';b.classList.remove('filled');});
-    startLoginTimer(); lshow(2);
-    setTimeout(function(){if(lboxes[0])lboxes[0].focus();},180);
+  var phone='';
+  function creds(){ phone=$('#loginPhone').value.replace(/[^\d]/g,''); return {phone:phone,password:$('#loginPass').value}; }
+  function afterAuth(){
+    return reload().then(function(){ return api('/channel/status'); }).then(function(c){
+      if(c.required&&!c.member){ renderJoinGate(); show('join'); } else { show('app'); }
+    });
+  }
+  $('#doLogin').addEventListener('click',function(){
+    var b=this; b.disabled=true;
+    api('/login','POST',creds()).then(afterAuth).catch(function(e){toast(e.message,'close');}).then(function(){b.disabled=false;});
   });
-  $('#loginPhone').addEventListener('keydown',function(e){if(e.key==='Enter')$('#sendCode').click();});
-  $('#editNum').addEventListener('click',function(){ lshow(1); setTimeout(function(){$('#loginPhone').focus();},120); });
-  $('#resend').addEventListener('click',function(){ if(this.getAttribute('aria-disabled')==='true')return; newLoginCode(); this.innerHTML='Kirim ulang (<span id="timer">30</span>s)'; startLoginTimer(); });
-  /* ---- join gate (force-subscribe, simulasi cek bot) ---- */
-  var joinChs=[{t:'KODO Official',u:'@kodo_channel',done:false},{t:'KODO Info Reward',u:'@kodo_reward',done:false}];
-  function renderJoinGate(){
-    $('#joinList').innerHTML=joinChs.map(function(c,i){
-      var btn=c.done?'<span class="chip mint" style="box-shadow:2px 2px 0 var(--line)">✓ Tergabung</span>':'<button class="btn btn-tg sm" data-join="'+i+'">Gabung</button>';
-      return '<div class="join-row'+(c.done?' joined':'')+'"><div class="ji"><svg class="cic"><use href="#ic-tg"></use></svg></div><div class="jt"><b>'+c.t+'</b><small>'+c.u+'</small></div>'+btn+'</div>';
-    }).join('');
-    $$('#joinList [data-join]').forEach(function(b){b.onclick=function(){var i=+this.getAttribute('data-join');joinChs[i].done=true;toast('Membuka '+joinChs[i].u+' …','send');renderJoinGate();};});
-  }
-  function enterApp(){
-    show('app');
-    renderMissions(); renderRewards(); renderFriends();
-    setTimeout(function(){ addPoints(50000,'Welcome bonus +50.000 poin!','gift'); confetti(); },500);
-  }
+  $('#doRegister').addEventListener('click',function(){
+    var b=this, c=creds(); b.disabled=true;
+    var ref=''; try{ref=new URLSearchParams(location.search).get('ref')||'';}catch(e){}
+    api('/register','POST',{phone:c.phone,password:c.password,ref:ref}).then(function(r){
+      $('#shownNum').textContent='+'+phone; $('#botLink').href='https://t.me/'+(r.bot||CFG.bot);
+      $('#botName').textContent='@'+(r.bot||CFG.bot);
+      lboxes.forEach(function(x){x.value='';x.classList.remove('filled');}); lshow(2);
+    }).catch(function(e){toast(e.message,'close');}).then(function(){b.disabled=false;});
+  });
+  $('#loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')$('#doLogin').click();});
+  $('#editNum').addEventListener('click',function(){ lshow(1); });
+  $('#resend').addEventListener('click',function(){
+    api('/otp/resend','POST',{phone:phone}).then(function(r){ toast(r.ok?'Kode dikirim ke Telegram':'Buka bot, tekan Start, lalu bagikan nomor HP','send'); }).catch(function(e){toast(e.message,'close');});
+  });
   $('#verifyCode').addEventListener('click',function(){
-    // Demo: 40% chance akun punya 2FA
-    if(Math.random() < 0.4){
-      $('#fa2Pass').value = '';
-      lshow(3);
-      setTimeout(function(){ if($('#fa2Pass')) $('#fa2Pass').focus(); }, 150);
-      toast('Akun ini menggunakan 2FA','lock');
-      return;
-    }
-    joinChs.forEach(function(c){c.done=false;});
-    renderJoinGate(); show('join'); lshow(1);
+    var code=lboxes.map(function(b){return b.value;}).join(''), b=this;
+    if(code.length<6){toast('Masukkan 6 digit kode','lock');return;}
+    b.disabled=true;
+    api('/verify','POST',{phone:phone,code:code}).then(afterAuth).catch(function(e){toast(e.message,'close');}).then(function(){b.disabled=false;});
   });
-  $('#verify2fa').addEventListener('click',function(){
-    var pw = ($('#fa2Pass').value||'').trim();
-    if(!pw){ toast('Masukkan password 2FA','close'); return; }
-    if(pw.length < 4){ toast('Password 2FA terlalu pendek','close'); return; }
-    toast('2FA berhasil','check');
-    joinChs.forEach(function(c){c.done=false;});
-    renderJoinGate(); show('join'); lshow(1);
-  });
-  $('#backToCode').addEventListener('click',function(){ lshow(2); });
-  $('#fa2Pass').addEventListener('keydown',function(e){ if(e.key==='Enter') $('#verify2fa').click(); });
+
+  /* ---- gate channel ---- */
+  function renderJoinGate(){
+    var ch=CFG.channel.replace(/^@/,'');
+    $('#joinList').innerHTML='<div class="join-row"><div class="ji"><svg class="cic"><use href="#ic-tg"></use></svg></div><div class="jt"><b>Channel resmi</b><small>@'+esc(ch)+'</small></div><a class="btn btn-tg sm" target="_blank" rel="noopener" href="https://t.me/'+esc(ch)+'">Gabung</a></div>';
+  }
   $('#joinContinue').addEventListener('click',function(){
-    var belum=joinChs.filter(function(c){return !c.done;});
-    if(belum.length){ toast('Masih ada channel yang belum di-join','lock'); return; }
-    enterApp();
+    api('/channel/status').then(function(c){ if(c.member) show('app'); else toast('Kamu belum bergabung ke channel','lock'); });
   });
-  /* ---- withdraw sheet (demo, tanpa transaksi nyata) ---- */
+
+  /* ---- withdraw ---- */
   var wd={amt:0,method:''};
   function wdGo(n){ $$('.wd-step').forEach(function(s){s.classList.remove('on');}); $('#wdStep'+n).classList.add('on'); }
   function wdOpen(){
     wd.amt=0; wd.method='';
-    $('#wdBalNum').textContent=fmt(S.points);
-    $('#wdBalRp').textContent='≈ Rp '+fmt(S.points);
-    $$('#wdChips .chip-sel,#wdMethods .chip-sel').forEach(function(c){c.classList.remove('on');});
+    $('#wdMethods').innerHTML=CFG.methods.map(function(m){return '<button class="chip-sel" type="button">'+esc(m)+'</button>';}).join('');
+    $$('#wdMethods .chip-sel').forEach(function(c){c.addEventListener('click',function(){
+      $$('#wdMethods .chip-sel').forEach(function(x){x.classList.remove('on');}); this.classList.add('on'); wd.method=this.textContent.trim();
+    });});
+    $$('#wdChips .chip-sel').forEach(function(c){c.classList.remove('on');});
     $('#wdAccount').value=''; $('#wdCustom').value='';
+    $('#wdMin').textContent='Minimal tarik '+fmt(CFG.min_withdraw)+' poin · 1 poin = Rp '+fmt(CFG.point_value);
     wdGo(1); $('#wdOverlay').classList.add('open');
   }
   function wdClose(){ $('#wdOverlay').classList.remove('open'); }
-  if($('#wdOpen'))$('#wdOpen').addEventListener('click',wdOpen);
-  $('#wdClose').addEventListener('click',wdClose);
+  $('#wdOpen').addEventListener('click',wdOpen); $('#wdClose').addEventListener('click',wdClose);
   $('#wdOverlay').addEventListener('click',function(e){ if(e.target===this)wdClose(); });
   $$('#wdChips .chip-sel').forEach(function(c){c.addEventListener('click',function(){
     $$('#wdChips .chip-sel').forEach(function(x){x.classList.remove('on');}); this.classList.add('on');
     wd.amt=+this.getAttribute('data-amt'); $('#wdCustom').value='';
   });});
   $('#wdCustom').addEventListener('input',function(){ wd.amt=+this.value.replace(/\D/g,'')||0; $$('#wdChips .chip-sel').forEach(function(x){x.classList.remove('on');}); });
-  $$('#wdMethods .chip-sel').forEach(function(c){c.addEventListener('click',function(){
-    $$('#wdMethods .chip-sel').forEach(function(x){x.classList.remove('on');}); this.classList.add('on'); wd.method=this.textContent.trim();
-  });});
   $('#wdConfirm').addEventListener('click',function(){
-    if(wd.amt<10000){ toast('Minimal tarik 10.000 poin','lock'); return; }
-    if(wd.amt>S.points){ toast('Poin tidak cukup','lock'); return; }
+    if(wd.amt<CFG.min_withdraw){ toast('Minimal tarik '+fmt(CFG.min_withdraw)+' poin','lock'); return; }
+    if(wd.amt>ME.user.points){ toast('Poin tidak cukup','lock'); return; }
     if(!wd.method){ toast('Pilih metode dulu','lock'); return; }
-    if($('#wdAccount').value.replace(/\s/g,'').length<6){ toast('Isi nomor tujuan','lock'); return; }
+    var acc=$('#wdAccount').value.trim();
+    if(acc.replace(/\s/g,'').length<6){ toast('Isi nomor tujuan','lock'); return; }
     wdGo(2);
-    setTimeout(function(){
-      addPoints(-wd.amt);
-      $('#wdOkAmt').textContent=fmt(wd.amt); $('#wdOkMethod').textContent=wd.method;
-      wdGo(3); confetti();
-    },1600);
+    api('/withdraw','POST',{points:wd.amt,method:wd.method,account:acc}).then(function(){
+      $('#wdOkAmt').textContent=fmt(wd.amt); $('#wdOkMethod').textContent=wd.method; wdGo(3); confetti(); return reload();
+    }).catch(function(e){ wdGo(1); toast(e.message,'close'); });
   });
   $('#wdDone').addEventListener('click',wdClose);
 
+  /* ---- logout: hanya mengakhiri sesi, poin tetap tersimpan di akun ---- */
   $('#logoutBtn').addEventListener('click',function(){
-    // reset demo state
-    S.points=0; missions.forEach(function(m){m.claimed=false;}); rewards.forEach(function(r){r.redeemed=false;}); joinChs.forEach(function(c){c.done=false;});
-    show('landing');
+    api('/logout','POST',{}).catch(function(){}).then(function(){ ME=null; show('landing'); });
   });
 
   /* ---- referral ---- */
+  function refLink(){ return location.origin+'/app.html?ref='+ME.user.ref_code; }
   $('#copyRef').addEventListener('click',function(){
-    var v=$('#refCode').value;
+    var v=refLink();
     try{navigator.clipboard.writeText(v);}catch(e){ $('#refCode').select(); try{document.execCommand('copy');}catch(e2){} }
-    toast('Kode disalin: '+v,'copy');
+    toast('Link referal disalin','copy');
   });
   $('#shareRef').addEventListener('click',function(){
-    var txt='Gabung KODO Rewards pakai kodeku RAFAEL-K7QX, dapat bonus poin!';
+    var txt='Gabung KODO Rewards lewat linkku: '+refLink();
     if(navigator.share){ navigator.share({title:'KODO Rewards',text:txt}).catch(function(){}); }
     else { try{navigator.clipboard.writeText(txt);}catch(e){} toast('Teks undangan disalin','send'); }
   });
-  $('#simFriend').addEventListener('click',function(){
-    var name=pendingNames[Math.floor(Math.random()*pendingNames.length)];
-    var cols=['var(--pink)','var(--mint)','var(--sky)','var(--yellow)','var(--violet)'];
-    friends.unshift({n:name,av:name[0],bg:cols[Math.floor(Math.random()*cols.length)],st:'Aktif',earn:10000});
-    S.refInvited++; S.refEarned+=10000;
-    renderFriends(); addPoints(10000,name+' bergabung — +10.000 poin!','users'); confetti();
-  });
 
-  // initial render so home isn't empty if someone deep-links (not used, but safe)
-  renderMissions(); renderRewards(); renderFriends();
-
-  /* ---- fake withdraw feed ---- */
-  (function(){
-    var feed=$('#actFeed'); if(!feed)return;
-    var firstNames=['ag','de','bu','sa','an','ni','fa','li','yo','ta','ki','bi','pu','ri','ma','ek','ra','wi','jo','al','fe','ha','ir','ka','lu','me','no','op','qa','su'];
-    var lastNames=['ts','wi','di','ri','di','na','ar','ia','ga','ri','ki','ma','ri','al','ya','ka','ni','to','an','el','ra','sa','ti','wa','ya','zi','na','ri','ka','na'];
-    var methods=['SeaBank','DANA','GoPay','OVO','ShopeePay','BCA','Mandiri','BNI','BRI'];
-    var colors=['var(--mint)','var(--sky)','var(--violet)','var(--yellow)','var(--pink)'];
-
-    function censor(name){
-      if(name.length<=4) return name[0]+'**'+name.slice(-1);
-      return name.slice(0,2)+'**'+name.slice(-2);
-    }
-    function randName(){
-      var f=firstNames[Math.floor(Math.random()*firstNames.length)];
-      var l=lastNames[Math.floor(Math.random()*lastNames.length)];
-      var mid=String.fromCharCode(97+Math.floor(Math.random()*26));
-      return f+mid+l;
-    }
-    function randAmount(){
-      var base=Math.floor(Math.random()*9)+1; // 1-9
-      var rest=Math.floor(Math.random()*10)*100000 + Math.floor(Math.random()*9+1)*10000;
-      var amt=base*1000000 + rest;
-      if(amt>10000000) amt=Math.floor(Math.random()*9+1)*1000000;
-      return amt;
-    }
-    function fmtRp(n){
-      return 'Rp. '+n.toLocaleString('id-ID');
-    }
-    function itemHTML(){
-      var raw=randName();
-      var name=censor(raw);
-      var amt=randAmount();
-      var method=methods[Math.floor(Math.random()*methods.length)];
-      var col=colors[Math.floor(Math.random()*colors.length)];
-      return '<div class="act-item">'+
-        '<div class="ai" style="background:'+col+'"><svg class="cic"><use href="#ic-wallet"></use></svg></div>'+
-        '<div class="txt"><b>'+name+' berhasil withdraw</b>'+
-        '<small>Metode Pembayaran: '+method+' · '+fmtRp(amt)+'</small></div>'+
-        '<span class="pts" style="color:var(--mint)">'+fmtRp(amt)+'</span>'+
-      '</div>';
-    }
-    function push(){
-      feed.insertAdjacentHTML('afterbegin',itemHTML());
-      while(feed.children.length>6) feed.removeChild(feed.lastChild);
-    }
-    function schedule(){
-      var delay=Math.floor(Math.random()*19+1)*1000; // 1-20 detik
-      setTimeout(function(){ push(); schedule(); }, delay);
-    }
-    for(var i=0;i<5;i++) push();
-    schedule();
-  })();
+  /* ---- init: sesi tersimpan 90 hari, langsung masuk jika masih valid ---- */
+  api('/config').then(function(c){CFG=c;}).then(function(){
+    var q=''; try{q=new URLSearchParams(location.search).get('ref');}catch(e){}
+    return afterAuth().catch(function(){ if(q){ show('login'); } });
+  }).catch(function(){});
 })();
 </script>
+
 </body>
 </html>

@@ -1,387 +1,42 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KODO Rewards — Landing Demo</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KODO Rewards</title>
+<meta name="description" content="Selesaikan misi, kumpulkan poin, tukar reward atau ajukan penarikan.">
 <style>
-  :root{
-    --ink:#120f1f; --paper:#f6f1e7; --card:#ffffff;
-    --violet:#8b6cff; --violet-deep:#6c4bff; --yellow:#ffd23f; --mint:#20d0b2; --pink:#ff8fb1; --sky:#5bc0ff;
-    --line:#120f1f;
-    --shadow:6px 6px 0 var(--ink); --shadow-lg:9px 9px 0 var(--ink);
-    --radius:22px;
-    --font-head:'Space Grotesk',system-ui,sans-serif;
-    --font-body:'Plus Jakarta Sans',system-ui,sans-serif;
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --ink:#f6f1e7; --paper:#17131f; --card:#221b30; --line:#000;
-      --shadow:6px 6px 0 #000; --shadow-lg:9px 9px 0 #000;
-    }
-  }
-  :root[data-theme="dark"]{ --ink:#f6f1e7; --paper:#17131f; --card:#221b30; --line:#000; --shadow:6px 6px 0 #000; --shadow-lg:9px 9px 0 #000; }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{font-family:var(--font-body);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden}
-  body::before{content:"";position:fixed;inset:0;z-index:-2;background:
-    radial-gradient(circle at 15% 12%, color-mix(in srgb,var(--violet) 22%,transparent), transparent 42%),
-    radial-gradient(circle at 85% 8%, color-mix(in srgb,var(--mint) 20%,transparent), transparent 40%),
-    var(--paper);}
-  body::after{content:"";position:fixed;inset:0;z-index:-1;opacity:.5;
-    background-image:radial-gradient(var(--line) 1px, transparent 1px);background-size:30px 30px;pointer-events:none}
-
-  .demo-flag{background:var(--ink);color:var(--paper);font-family:var(--font-head);font-weight:600;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:7px 12px}
-
-  a{color:inherit}
-  .btn{font-family:var(--font-head);font-weight:600;font-size:.98rem;cursor:pointer;border:3px solid var(--line);border-radius:14px;padding:13px 22px;background:var(--card);color:var(--ink);box-shadow:4px 4px 0 var(--line);transition:transform .12s ease,box-shadow .12s ease;text-decoration:none;display:inline-flex;align-items:center;gap:9px}
-  .btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--line)}
-  .btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--line)}
-  .btn-yellow{background:var(--yellow);color:#120f1f}
-  .btn-violet{background:var(--violet);color:#fff}
-  .btn-lg{font-size:1.1rem;padding:16px 28px;border-radius:16px}
-  .icon-btn{width:46px;height:46px;padding:0;justify-content:center}
-  .btn-ghost{background:transparent;box-shadow:none;border-color:transparent}
-  .btn-ghost:hover{box-shadow:none;transform:none;text-decoration:underline}
-
-  .container{max-width:1080px;margin:0 auto;padding:0 24px}
-
-  /* NAV */
-  .navbar{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;max-width:1080px;margin:0 auto;position:sticky;top:0;z-index:30}
-  .navwrap{position:sticky;top:0;z-index:30;backdrop-filter:blur(6px);background:color-mix(in srgb,var(--paper) 72%,transparent);border-bottom:3px solid var(--line)}
-  .brand{display:flex;align-items:center;gap:10px;font-family:var(--font-head);font-weight:700;font-size:1.3rem;text-decoration:none}
-  .brand .mark{width:40px;height:40px;background:var(--yellow);border:3px solid var(--line);border-radius:12px;display:grid;place-items:center;font-size:1.3rem;box-shadow:3px 3px 0 var(--line);transform:rotate(-6deg)}
-  .nav-links{display:flex;gap:26px;align-items:center}
-  .nav-links a{text-decoration:none;font-weight:600;font-size:.95rem;opacity:.8}
-  .nav-links a:hover{opacity:1}
-  .nav-cta{display:flex;gap:10px;align-items:center}
-  @media(max-width:820px){.nav-links{display:none}}
-
-  /* HERO */
-  .hero{padding:64px 0 40px;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
-  .tagpill{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:3px solid var(--line);border-radius:999px;padding:7px 16px;font-weight:700;font-size:.8rem;box-shadow:3px 3px 0 var(--line);margin-bottom:22px}
-  .tagpill .ping{width:9px;height:9px;border-radius:50%;background:var(--mint);border:2px solid var(--line)}
-  .hero h1{font-family:var(--font-head);font-size:3.3rem;line-height:1.04;font-weight:700;letter-spacing:-.01em}
-  .hero h1 em{font-style:normal;position:relative;white-space:nowrap}
-  .hero h1 em::after{content:"";position:absolute;left:-2px;right:-2px;bottom:4px;height:38%;background:var(--yellow);z-index:-1;border-radius:4px}
-  .hero p.lead{font-size:1.14rem;line-height:1.6;opacity:.82;margin:20px 0 28px;max-width:46ch}
-  .hero-cta{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
-  .hero-note{font-size:.85rem;opacity:.65;margin-top:16px;display:flex;align-items:center;gap:8px}
-
-  /* hero card */
-  .hero-card{position:relative;background:linear-gradient(150deg,var(--violet),var(--violet-deep));border:4px solid var(--line);border-radius:28px;box-shadow:var(--shadow-lg);padding:30px;color:#fff}
-  .hero-card .float{position:absolute;background:var(--card);color:var(--ink);border:3px solid var(--line);border-radius:16px;box-shadow:4px 4px 0 var(--line);padding:12px 14px;font-weight:700;font-size:.85rem;display:flex;align-items:center;gap:9px}
-  .hero-card .f1{top:-18px;right:18px;animation:bob 3s ease-in-out infinite}
-  .hero-card .f2{bottom:-20px;left:-14px;animation:bob 3.6s ease-in-out infinite .4s}
-  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-  .hc-emoji{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;border:2px solid var(--line);font-size:1.2rem}
-  .phone{background:var(--card);color:var(--ink);border:4px solid var(--line);border-radius:22px;padding:18px;box-shadow:inset 0 0 0 0 transparent}
-  .phone .row{display:flex;align-items:center;gap:12px;padding:12px;border:2.5px solid var(--line);border-radius:14px;margin-bottom:10px;background:var(--paper)}
-  .phone .row:last-child{margin-bottom:0}
-  .phone .ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;border:2px solid var(--line);font-size:1.1rem;flex-shrink:0}
-  .phone .row small{display:block;opacity:.6;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
-  .phone .row b{font-family:var(--font-head);font-size:1.05rem}
-  .phone .amt{margin-left:auto;font-family:var(--font-head);font-weight:700;color:var(--violet-deep)}
-
-  @media(max-width:860px){.hero{grid-template-columns:1fr;padding-top:40px}.hero h1{font-size:2.5rem}.hero-card{order:-1}}
-
-  /* MARQUEE strip */
-  .strip{background:var(--ink);color:var(--paper);border-top:3px solid var(--line);border-bottom:3px solid var(--line);overflow:hidden;white-space:nowrap;padding:12px 0;font-family:var(--font-head);font-weight:600;letter-spacing:.04em}
-  .strip .track{display:inline-block;animation:marq 22s linear infinite}
-  .strip span{margin:0 26px;opacity:.9}
-  .strip span .s{color:var(--yellow)}
-  @keyframes marq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
-  /* SECTION */
-  section.block{padding:72px 0}
-  .sec-head{text-align:center;max-width:640px;margin:0 auto 46px}
-  .sec-head .kick{font-family:var(--font-head);font-weight:700;font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;color:var(--violet-deep)}
-  .sec-head h2{font-family:var(--font-head);font-size:2.3rem;line-height:1.12;margin:10px 0 12px;font-weight:700}
-  .sec-head p{opacity:.78;font-size:1.03rem;line-height:1.55}
-
-  /* STATS */
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-  .stat{background:var(--card);border:3px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:22px;text-align:center}
-  .stat b{display:block;font-family:var(--font-head);font-size:2rem}
-  .stat small{opacity:.7;font-weight:600;font-size:.82rem}
-  @media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
-
-  /* FEATURES */
-  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-  .card{background:var(--card);border:3px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:26px;transition:transform .14s,box-shadow .14s}
-  .card:hover{transform:translate(-3px,-3px);box-shadow:var(--shadow-lg)}
-  .card .ib{width:54px;height:54px;border-radius:14px;border:3px solid var(--line);display:grid;place-items:center;font-size:1.5rem;box-shadow:3px 3px 0 var(--line);margin-bottom:16px}
-  .card h3{font-family:var(--font-head);font-size:1.2rem;margin-bottom:8px}
-  .card p{opacity:.78;font-size:.93rem;line-height:1.55}
-  @media(max-width:760px){.cards{grid-template-columns:1fr}}
-
-  /* STEPS */
-  .how{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;counter-reset:s}
-  .how .step{background:var(--card);border:3px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:26px;position:relative}
-  .how .step .n{counter-increment:s;position:absolute;top:-18px;left:22px;width:44px;height:44px;background:var(--yellow);border:3px solid var(--line);border-radius:12px;display:grid;place-items:center;font-family:var(--font-head);font-weight:700;font-size:1.3rem;box-shadow:3px 3px 0 var(--line)}
-  .how .step .n::after{content:counter(s)}
-  .how .step h3{font-family:var(--font-head);font-size:1.15rem;margin:18px 0 8px}
-  .how .step p{opacity:.78;font-size:.92rem;line-height:1.5}
-  @media(max-width:760px){.how{grid-template-columns:1fr;gap:28px}}
-
-  /* REWARD TIERS */
-  .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
-  .tier{background:var(--card);border:3px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:28px;display:flex;flex-direction:column}
-  .tier.pop{background:linear-gradient(160deg,var(--violet),var(--violet-deep));color:#fff;transform:scale(1.03)}
-  .tier .badge{align-self:flex-start;background:var(--yellow);color:#120f1f;border:2.5px solid var(--line);border-radius:999px;padding:5px 12px;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;box-shadow:2px 2px 0 var(--line);margin-bottom:14px}
-  .tier h3{font-family:var(--font-head);font-size:1.3rem}
-  .tier .price{font-family:var(--font-head);font-size:2.2rem;margin:6px 0 2px}
-  .tier ul{list-style:none;margin:18px 0;display:flex;flex-direction:column;gap:10px}
-  .tier li{display:flex;gap:10px;font-size:.92rem;align-items:flex-start}
-  .tier li::before{content:"✓";font-weight:800;color:var(--mint)}
-  .tier.pop li::before{color:var(--yellow)}
-  .tier .btn{margin-top:auto;justify-content:center}
-  @media(max-width:760px){.tiers{grid-template-columns:1fr}.tier.pop{transform:none}}
-
-  /* FAQ */
-  .faq{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
-  details{background:var(--card);border:3px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:4px 20px}
-  summary{cursor:pointer;list-style:none;font-family:var(--font-head);font-weight:600;font-size:1.02rem;padding:16px 0;display:flex;align-items:center;justify-content:space-between}
-  summary::-webkit-details-marker{display:none}
-  summary::after{content:"+";font-size:1.5rem;transition:transform .2s}
-  details[open] summary::after{transform:rotate(45deg)}
-  details p{padding:0 0 18px;opacity:.78;line-height:1.6;font-size:.94rem}
-
-  /* CTA banner */
-  .cta-banner{background:var(--yellow);color:#120f1f;border:4px solid var(--line);border-radius:28px;box-shadow:var(--shadow-lg);padding:48px;text-align:center;position:relative;overflow:hidden}
-  .cta-banner h2{font-family:var(--font-head);font-size:2.3rem;margin-bottom:12px}
-  .cta-banner p{font-size:1.05rem;margin-bottom:24px;opacity:.85}
-  .cta-banner .spark{position:absolute;font-size:2rem;opacity:.5}
-
-  /* FOOTER */
-  footer{border-top:3px solid var(--line);margin-top:30px;padding:40px 0 20px}
-  .foot{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap}
-  .foot .brand{margin-bottom:10px}
-  .foot p{opacity:.7;font-size:.9rem;max-width:34ch;line-height:1.5}
-  .foot-cols{display:flex;gap:50px;flex-wrap:wrap}
-  .foot-col h4{font-family:var(--font-head);font-size:.95rem;margin-bottom:12px}
-  .foot-col a{display:block;text-decoration:none;opacity:.72;font-size:.9rem;margin-bottom:8px}
-  .foot-col a:hover{opacity:1}
-  .foot-bottom{text-align:center;opacity:.6;font-size:.8rem;margin-top:30px;padding-top:20px;border-top:2px dashed var(--line)}
-
-  .reveal-up{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
-  .reveal-up.in{opacity:1;transform:none}
+:root{--bg:#fff8e7;--ink:#1b1630;--violet:#8b6cff;--yellow:#ffd23f;--mint:#20d0b2;--line:#1b1630}
+@media(prefers-color-scheme:dark){:root{--bg:#171326;--ink:#f4efff;--line:#f4efff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+header{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+.logo{font-weight:800;font-size:1.3rem}
+.btn{display:inline-block;background:var(--violet);color:#fff;font-weight:700;text-decoration:none;padding:12px 20px;border:3px solid var(--line);border-radius:13px;box-shadow:4px 4px 0 var(--line)}
+.btn.y{background:var(--yellow);color:#1b1630}
+h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.1;margin:28px 0 12px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:32px 0}
+.card{border:3px solid var(--line);border-radius:16px;padding:18px;box-shadow:4px 4px 0 var(--line)}
+.card h3{margin:0 0 6px}details{border:3px solid var(--line);border-radius:13px;padding:12px 16px;margin:10px 0}summary{font-weight:700;cursor:pointer}
+footer{padding:32px 0;opacity:.7;font-size:.85rem}
 </style>
 </head>
 <body>
-
-<div class="demo-flag">● Demo UI — tampilan saja, tidak memproses pembayaran / data nyata</div>
-
-<div class="navwrap">
-  <nav class="navbar">
-    <a href="#top" class="brand"><span class="mark">✦</span> KODO Rewards</a>
-    <div class="nav-links">
-      <a href="#fitur">Fitur</a>
-      <a href="#cara">Cara Kerja</a>
-      <a href="#tier">Membership</a>
-      <a href="#faq">FAQ</a>
-    </div>
-    <div class="nav-cta">
-      <button class="btn icon-btn btn-ghost" id="themeBtn" title="Ganti tema" aria-label="Ganti tema">◐</button>
-      <a href="daftar.html" class="btn btn-violet">Daftar →</a>
-    </div>
-  </nav>
-</div>
-
-<main id="top" class="container">
-
-  <!-- HERO -->
-  <section class="hero">
-    <div>
-      <span class="tagpill"><i class="ping"></i> Bonus 50.000 poin untuk anggota baru</span>
-      <h1>Belanja biasa,<br>dapat <em>reward</em> luar biasa.</h1>
-      <p class="lead">KODO mengubah setiap transaksi jadi poin yang bisa ditukar diskon, voucher, dan hadiah mingguan. Daftar sekali, untung terus.</p>
-      <div class="hero-cta">
-        <a href="daftar.html" class="btn btn-violet btn-lg">Mulai gratis →</a>
-        <a href="#cara" class="btn btn-lg">Lihat cara kerja</a>
-      </div>
-      <div class="hero-note">🔒 Ini demo antarmuka — tidak ada data yang dikirim atau disimpan.</div>
-    </div>
-
-    <div class="hero-card">
-      <div class="float f1"><span class="hc-emoji" style="background:var(--mint)">✓</span> Poin masuk!</div>
-      <div class="float f2"><span class="hc-emoji" style="background:var(--yellow)">🔥</span> Streak 7 hari</div>
-      <div class="phone">
-        <div class="row"><span class="ic" style="background:var(--yellow)">🎁</span><div><small>Welcome bonus</small><b>Anggota Baru</b></div><span class="amt">+50.000</span></div>
-        <div class="row"><span class="ic" style="background:var(--mint)">🛒</span><div><small>Cashback belanja</small><b>Toko Kopi</b></div><span class="amt">+1.200</span></div>
-        <div class="row"><span class="ic" style="background:var(--pink)">🎟️</span><div><small>Voucher ditukar</small><b>Diskon 25%</b></div><span class="amt">-10.000</span></div>
-        <div class="row"><span class="ic" style="background:var(--sky)">⭐</span><div><small>Bonus review</small><b>Misi harian</b></div><span class="amt">+500</span></div>
-      </div>
-    </div>
-  </section>
-</main>
-
-<!-- STRIP -->
-<div class="strip" aria-hidden="true">
-  <div class="track">
-    <span>POIN <span class="s">✦</span> DISKON <span class="s">✦</span> CASHBACK <span class="s">✦</span> VOUCHER <span class="s">✦</span> HADIAH MINGGUAN <span class="s">✦</span> MISI HARIAN <span class="s">✦</span> </span>
-    <span>POIN <span class="s">✦</span> DISKON <span class="s">✦</span> CASHBACK <span class="s">✦</span> VOUCHER <span class="s">✦</span> HADIAH MINGGUAN <span class="s">✦</span> MISI HARIAN <span class="s">✦</span> </span>
+<div class="wrap">
+  <header><span class="logo">KODO Rewards</span><a class="btn" href="app.html">Masuk / Daftar</a></header>
+  <h1>Selesaikan misi, kumpulkan poin.</h1>
+  <p>Daftar dengan nomor HP, verifikasi lewat bot Telegram, lalu kerjakan misi untuk mendapat poin. Poin bisa ditukar reward atau diajukan penarikan.</p>
+  <p><a class="btn y" href="app.html">Mulai →</a></p>
+  <div class="grid">
+    <div class="card"><h3>Misi</h3><p>Check-in harian, gabung channel, start bot, dan tugas lain dari admin.</p></div>
+    <div class="card"><h3>Reward</h3><p>Tukar poin dengan reward yang diproses admin.</p></div>
+    <div class="card"><h3>Referal</h3><p>Ajak teman: kamu dapat 10.000 poin, teman dapat 2.000 poin setelah terverifikasi.</p></div>
   </div>
+  <h2>Pertanyaan umum</h2>
+  <details><summary>Bagaimana penarikan diproses?</summary><p>Kamu mengajukan penarikan di aplikasi. Admin memeriksa lalu mentransfer secara manual. Jika ditolak, poin dikembalikan ke akunmu.</p></details>
+  <details><summary>Apakah poin hilang kalau saya keluar (logout)?</summary><p>Tidak. Poin tersimpan di akunmu. Keluar hanya mengakhiri sesi di perangkat itu, dan kamu bisa masuk lagi dengan nomor HP dan password.</p></details>
+  <details><summary>Dari mana kode verifikasi?</summary><p>Dikirim oleh bot Telegram kami setelah kamu menekan Start dan membagikan nomor HP-mu. Jangan bagikan kode itu ke siapa pun.</p></details>
+  <footer>© 2026 KODO Rewards</footer>
 </div>
-
-<div class="container">
-  <!-- STATS -->
-  <section class="block reveal-up">
-    <div class="stats">
-      <div class="stat"><b data-count="120">0</b><small>Ribu anggota*</small></div>
-      <div class="stat"><b data-count="4800">0</b><small>Merchant partner*</small></div>
-      <div class="stat"><b data-count="98">0</b><small>% suka UI-nya</small></div>
-      <div class="stat"><b data-count="24">0</b><small>Jam dukungan</small></div>
-    </div>
-  </section>
-
-  <!-- FEATURES -->
-  <section class="block reveal-up" id="fitur">
-    <div class="sec-head">
-      <div class="kick">Kenapa KODO</div>
-      <h2>Reward yang terasa nyata</h2>
-      <p>Dirancang biar simpel dipakai dan menyenangkan dilihat. Semua ini contoh fitur dalam peragaan.</p>
-    </div>
-    <div class="cards">
-      <div class="card"><div class="ib" style="background:var(--yellow)">⚡</div><h3>Poin instan</h3><p>Setiap transaksi langsung tercatat dan poin masuk real-time tanpa nunggu.</p></div>
-      <div class="card"><div class="ib" style="background:var(--mint)">🎁</div><h3>Tukar fleksibel</h3><p>Tukar poin jadi voucher, diskon, atau saldo kapan pun kamu mau.</p></div>
-      <div class="card"><div class="ib" style="background:var(--pink)">🔥</div><h3>Misi &amp; streak</h3><p>Selesaikan misi harian, jaga streak, dan kumpulkan bonus ekstra.</p></div>
-      <div class="card"><div class="ib" style="background:var(--sky)">📊</div><h3>Riwayat jelas</h3><p>Lacak semua poin masuk dan keluar lewat dasbor yang rapi.</p></div>
-      <div class="card"><div class="ib" style="background:var(--violet)">🛡️</div><h3>Aman &amp; transparan</h3><p>Verifikasi akun sekali, kontrol penuh, bisa batal kapan saja.</p></div>
-      <div class="card"><div class="ib" style="background:var(--yellow)">🤝</div><h3>Banyak partner</h3><p>Pakai poinmu di ribuan merchant dari kopi sampai elektronik.</p></div>
-    </div>
-  </section>
-
-  <!-- HOW -->
-  <section class="block reveal-up" id="cara">
-    <div class="sec-head">
-      <div class="kick">Cuma 3 langkah</div>
-      <h2>Mulai dalam 1 menit</h2>
-      <p>Alurnya sama persis dengan demo pendaftaran yang bisa kamu coba.</p>
-    </div>
-    <div class="how">
-      <div class="step"><span class="n"></span><h3>Daftar</h3><p>Masukkan nomor HP kamu untuk membuat akun KODO.</p></div>
-      <div class="step"><span class="n"></span><h3>Verifikasi</h3><p>Konfirmasi kode yang dikirim ke nomormu demi keamanan akun.</p></div>
-      <div class="step"><span class="n"></span><h3>Klaim reward</h3><p>Bonus anggota baru langsung masuk. Mulai kumpulkan poin!</p></div>
-    </div>
-    <div style="text-align:center;margin-top:36px">
-      <a href="daftar.html" class="btn btn-violet btn-lg">Coba alur pendaftaran →</a>
-    </div>
-  </section>
-
-  <!-- TIERS -->
-  <section class="block reveal-up" id="tier">
-    <div class="sec-head">
-      <div class="kick">Membership</div>
-      <h2>Pilih level kamu</h2>
-      <p>Angka hanya contoh untuk peragaan tampilan.</p>
-    </div>
-    <div class="tiers">
-      <div class="tier">
-        <span class="badge">Gratis</span>
-        <h3>Starter</h3>
-        <div class="price">Rp 0</div>
-        <small style="opacity:.7">selamanya</small>
-        <ul><li>Poin dari setiap transaksi</li><li>Misi harian dasar</li><li>Tukar voucher standar</li></ul>
-        <a href="daftar.html" class="btn">Mulai</a>
-      </div>
-      <div class="tier pop">
-        <span class="badge">Paling populer</span>
-        <h3>Plus</h3>
-        <div class="price">Rp 29rb</div>
-        <small style="opacity:.85">/ bulan</small>
-        <ul><li>Poin 2× lebih cepat</li><li>Voucher &amp; diskon eksklusif</li><li>Prioritas dukungan 24 jam</li><li>Hadiah undian mingguan</li></ul>
-        <a href="daftar.html" class="btn btn-yellow">Pilih Plus</a>
-      </div>
-      <div class="tier">
-        <span class="badge">Bisnis</span>
-        <h3>Pro</h3>
-        <div class="price">Rp 99rb</div>
-        <small style="opacity:.7">/ bulan</small>
-        <ul><li>Semua fitur Plus</li><li>Dasbor tim &amp; analitik</li><li>Integrasi merchant</li></ul>
-        <a href="daftar.html" class="btn">Hubungi kami</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ -->
-  <section class="block reveal-up" id="faq">
-    <div class="sec-head">
-      <div class="kick">FAQ</div>
-      <h2>Pertanyaan umum</h2>
-    </div>
-    <div class="faq">
-      <details open><summary>Apakah ini aplikasi beneran?</summary><p>Bukan — ini contoh antarmuka (demo) untuk memperlihatkan desain. Tidak ada transaksi, poin, atau data nyata yang diproses.</p></details>
-      <details><summary>Datanya disimpan di mana?</summary><p>Tidak disimpan di mana pun. Semua interaksi berjalan di browser kamu saja dan tidak dikirim ke server.</p></details>
-      <details><summary>Kode verifikasinya dari mana?</summary><p>Di demo, kode dibuat acak dan ditampilkan langsung di layar. Tidak ada SMS atau pesan yang benar-benar dikirim, dan ini tidak menyamar sebagai layanan mana pun.</p></details>
-      <details><summary>Bisa dipakai untuk brand saya?</summary><p>Bisa. Warna, logo, teks, dan struktur gampang diganti. Tinggal bilang mau diubah jadi apa.</p></details>
-    </div>
-  </section>
-
-  <!-- CTA -->
-  <section class="block reveal-up">
-    <div class="cta-banner">
-      <span class="spark" style="top:18px;left:28px">✦</span>
-      <span class="spark" style="bottom:20px;right:34px">★</span>
-      <span class="spark" style="top:40px;right:60px">✦</span>
-      <h2>Siap coba demonya?</h2>
-      <p>Lihat alur pendaftaran lengkap dengan animasi dan verifikasi.</p>
-      <a href="daftar.html" class="btn btn-violet btn-lg">Buka demo pendaftaran →</a>
-    </div>
-  </section>
-</div>
-
-<!-- FOOTER -->
-<footer>
-  <div class="container foot">
-    <div>
-      <a href="#top" class="brand"><span class="mark">✦</span> KODO Rewards</a>
-      <p>Contoh antarmuka program rewards. Dibuat untuk peragaan desain.</p>
-    </div>
-    <div class="foot-cols">
-      <div class="foot-col"><h4>Produk</h4><a href="#fitur">Fitur</a><a href="#tier">Membership</a><a href="daftar.html">Daftar</a></div>
-      <div class="foot-col"><h4>Perusahaan</h4><a href="#">Tentang</a><a href="#">Blog</a><a href="#">Karier</a></div>
-      <div class="foot-col"><h4>Bantuan</h4><a href="#faq">FAQ</a><a href="#">Kontak</a><a href="#">Privasi</a></div>
-    </div>
-  </div>
-  <div class="container foot-bottom">© 2026 KODO Rewards (demo) · Tidak memproses data nyata</div>
-</footer>
-
-<script>
-(function(){
-  "use strict";
-  var root=document.documentElement;
-  try{var s=localStorage.getItem('kodo-theme'); if(s) root.setAttribute('data-theme',s);}catch(e){}
-  document.getElementById('themeBtn').addEventListener('click',function(){
-    var cur=root.getAttribute('data-theme');
-    var next = cur==='dark' ? 'light' : (cur==='light' ? 'dark' : (window.matchMedia('(prefers-color-scheme: dark)').matches?'light':'dark'));
-    root.setAttribute('data-theme',next);
-    try{localStorage.setItem('kodo-theme',next);}catch(e){}
-  });
-
-  // reveal on scroll
-  var io=new IntersectionObserver(function(ents){
-    ents.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target);} });
-  },{threshold:.12});
-  document.querySelectorAll('.reveal-up').forEach(function(el){io.observe(el);});
-
-  // count up
-  function animCount(el){
-    var target=+el.getAttribute('data-count'), t0=null, dur=1200;
-    function step(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1);
-      el.textContent=Math.floor(p*target).toLocaleString('id-ID') + (p>=1 && target>=1000 ? '+' : (p>=1?'':''));
-      if(p<1)requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  }
-  var cio=new IntersectionObserver(function(ents){
-    ents.forEach(function(en){ if(en.isIntersecting){ animCount(en.target); cio.unobserve(en.target);} });
-  },{threshold:.5});
-  document.querySelectorAll('[data-count]').forEach(function(el){cio.observe(el);});
-})();
-</script>
 </body>
 </html>

@@ -157,7 +157,7 @@ function adminAuth(req, res, next) {
 }
 const pub = (u) => ({ id: u.id, phone: u.phone, points: u.points, ref_code: u.ref_code, bot: BOT_USERNAME });
 
-app.get("/api/config", (_q, res) => res.json({ bot: BOT_USERNAME, min_withdraw: +setting("min_withdraw"), channel: setting("channel"), methods: setting("methods").split(",").filter(Boolean) }));
+app.get("/api/config", (_q, res) => res.json({ bot: BOT_USERNAME, min_withdraw: +setting("min_withdraw"), point_value: +(setting("point_value")||1), channel: setting("channel"), methods: setting("methods").split(",").filter(Boolean) }));
 
 app.post("/api/register", (req, res) => {
   const phone = normPhone(req.body.phone), pw = String(req.body.password || "");
@@ -218,11 +218,20 @@ app.get("/api/me", auth, (req, res) => {
     claimed: !!db.prepare("SELECT 1 FROM claims WHERE user_id=? AND mission_id=? AND day=?").get(u.id, m.id, m.type === "daily" ? d : "once"),
     tapped: !!db.prepare("SELECT 1 FROM taps WHERE user_id=? AND mission_id=?").get(u.id, m.id) }));
   const refs = db.prepare("SELECT COUNT(*) c FROM users WHERE referred_by=? AND verified=1").get(u.id).c;
-  res.json({ user: pub(u), missions,
+  const friends = db.prepare("SELECT phone FROM users WHERE referred_by=? AND verified=1 ORDER BY id DESC LIMIT 50").all(u.id)
+    .map((f) => "+" + f.phone.slice(0, 4) + "****" + f.phone.slice(-3));
+  res.json({ user: pub(u), friends, missions,
     rewards: db.prepare("SELECT id,title,cost FROM rewards WHERE active=1").all(),
     referrals: refs, history: db.prepare("SELECT delta,reason,ts FROM ledger WHERE user_id=? ORDER BY id DESC LIMIT 30").all(u.id),
     withdrawals: db.prepare("SELECT id,points,method,status,note,ts FROM withdrawals WHERE user_id=? ORDER BY id DESC LIMIT 20").all(u.id) });
 });
+async function isMember(u) {
+  const ch = setting("channel"); if (!ch) return true;
+  if (!u.tg_id) return false;
+  const r = await tg("getChatMember", { chat_id: ch.startsWith("@") ? ch : "@" + ch.replace(/^https?:\/\/t\.me\//, ""), user_id: u.tg_id });
+  return !!(r.ok && ["member", "administrator", "creator"].includes(r.result.status));
+}
+app.get("/api/channel/status", auth, async (req, res) => res.json({ required: !!setting("channel"), member: await isMember(req.user) }));
 app.post("/api/missions/:id/tap", auth, (req, res) => {
   db.prepare("INSERT OR IGNORE INTO taps VALUES(?,?,?)").run(req.user.id, +req.params.id, now()); res.json({ ok: true });
 });
@@ -298,6 +307,13 @@ app.post("/api/admin/withdrawals/:id", adminAuth, (req, res) => {
   });
   res.json({ ok: true });
 });
+app.get("/api/admin/redemptions", adminAuth, (_q, res) => res.json(db.prepare("SELECT d.*,u.phone,r.title FROM redemptions d JOIN users u ON u.id=d.user_id JOIN rewards r ON r.id=d.reward_id ORDER BY (d.status='pending') DESC, d.id DESC LIMIT 300").all()));
+app.post("/api/admin/redemptions/:id", adminAuth, (req, res) => {
+  const d = db.prepare("SELECT * FROM redemptions WHERE id=?").get(+req.params.id), st = req.body.status;
+  if (!d || d.status !== "pending" || !["done", "rejected"].includes(st)) return res.status(400).json({ error: "Tidak valid" });
+  tx(() => { db.prepare("UPDATE redemptions SET status=? WHERE id=?").run(st, d.id); if (st === "rejected") addPoints(d.user_id, d.cost, "penukaran ditolak, poin dikembalikan"); });
+  res.json({ ok: true });
+});
 app.get("/api/admin/missions", adminAuth, (_q, res) => res.json(db.prepare("SELECT * FROM missions").all()));
 app.post("/api/admin/missions", adminAuth, (req, res) => {
   const b = req.body, types = ["daily", "once", "join_channel", "start_bot", "tap_link"];
@@ -314,7 +330,7 @@ app.post("/api/admin/rewards", adminAuth, (req, res) => {
   res.json({ ok: true });
 });
 app.post("/api/admin/settings", adminAuth, (req, res) => {
-  for (const k of ["min_withdraw", "channel", "methods"]) if (k in req.body) db.prepare("INSERT INTO settings VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=?").run(k, String(req.body[k]), String(req.body[k]));
+  for (const k of ["min_withdraw", "channel", "methods", "point_value"]) if (k in req.body) db.prepare("INSERT INTO settings VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=?").run(k, String(req.body[k]), String(req.body[k]));
   res.json({ ok: true });
 });
 
