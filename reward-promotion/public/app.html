@@ -105,6 +105,14 @@
   .lfield label{display:block;font-weight:700;font-size:.82rem;margin-bottom:8px}
   .phone-input{display:flex;border:3px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:4px 4px 0 var(--line);background:var(--card)}
   .cc-select{border:0;outline:0;padding:0 8px;background:color-mix(in srgb,var(--yellow) 80%,var(--card));color:var(--ink);font-weight:700;font-size:.95rem;font-family:var(--font-body);max-width:118px}
+  .cc-select{border:0;border-right:3px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:6px;height:100%}
+  #ccSheet .csearch{width:100%;border:3px solid var(--line);border-radius:12px;padding:11px 13px;font-size:1rem;font-family:var(--font-body);background:var(--paper);color:var(--ink);margin-bottom:10px}
+  #ccList{max-height:52vh;overflow:auto}
+  #ccList .cci{display:flex;align-items:center;gap:10px;padding:11px 6px;border-bottom:2px solid color-mix(in srgb,var(--line) 12%,transparent);cursor:pointer}
+  #ccList .cci:hover{background:color-mix(in srgb,var(--violet) 10%,transparent)}
+  #ccList .cci .fl{font-size:1.3rem}
+  #ccList .cci .cn{flex:1}
+  #ccList .cci .cd{opacity:.65;font-size:.9rem}
   .phone-input input{flex:1;border:0;outline:0;padding:14px;font-size:1.05rem;font-family:var(--font-body);background:transparent;color:var(--ink)}
   .phone-input:focus-within{box-shadow:4px 4px 0 var(--violet)}
   .otp-boxes{display:flex;gap:9px;justify-content:space-between;margin:8px 0 10px}
@@ -428,7 +436,7 @@
       <div class="lfield">
         <label for="loginPhone">Nomor HP</label>
         <div class="phone-input">
-          <select id="loginCC" class="cc-select" aria-label="Kode negara"></select>
+          <button type="button" id="ccBtn" class="cc-select"></button>
           <input type="tel" id="loginPhone" inputmode="numeric" placeholder="Nomor HP tanpa 0 di depan" autocomplete="tel">
         </div>
       </div>
@@ -626,6 +634,14 @@
   </div>
 </section>
 
+<div class="sheet-overlay" id="ccSheet">
+  <div class="sheet">
+    <div class="sheet-head"><h3>Pilih negara</h3><button class="btn icon-btn ghost" id="ccClose" aria-label="Tutup"><svg class="cic"><use href="#ic-close"></use></svg></button></div>
+    <input class="csearch" id="ccSearch" placeholder="Cari negara atau kode..." autocomplete="off">
+    <div id="ccList"></div>
+  </div>
+</div>
+
 <div class="toasts" id="toasts"></div>
 <div class="confetti" id="confetti"></div>
 
@@ -753,26 +769,242 @@
     box.addEventListener('keydown',function(e){if(e.key==='Backspace'&&!this.value&&idx>0)lboxes[idx-1].focus();});
     box.addEventListener('paste',function(e){e.preventDefault();var t=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);t.split('').forEach(function(ch,i){if(lboxes[i]){lboxes[i].value=ch;lboxes[i].classList.add('filled');}});var nx=lboxes[Math.min(t.length,5)];if(nx)nx.focus();});
   });
+  // [ISO2, kode negara, nama] -- daftar lengkap ~190 negara, mirip pilihan negara di Telegram
   var COUNTRIES=[
-    ['62','Indonesia'],['60','Malaysia'],['65','Singapura'],['63','Filipina'],['66','Thailand'],['84','Vietnam'],
-    ['673','Brunei'],['855','Kamboja'],['856','Laos'],['95','Myanmar'],['91','India'],['92','Pakistan'],['880','Bangladesh'],
-    ['86','Tiongkok'],['852','Hong Kong'],['886','Taiwan'],['81','Jepang'],['82','Korea Selatan'],
-    ['966','Arab Saudi'],['971','UEA'],['974','Qatar'],['968','Oman'],['965','Kuwait'],['973','Bahrain'],['20','Mesir'],
-    ['44','Inggris'],['49','Jerman'],['33','Prancis'],['31','Belanda'],['34','Spanyol'],['39','Italia'],['41','Swiss'],['46','Swedia'],
-    ['1','AS/Kanada'],['61','Australia'],['64','Selandia Baru'],
-    ['55','Brasil'],['52','Meksiko'],['27','Afrika Selatan'],['234','Nigeria'],['254','Kenya']
+    ['ID','62','Indonesia'],
+    ['MY','60','Malaysia'],
+    ['SG','65','Singapura'],
+    ['PH','63','Filipina'],
+    ['TH','66','Thailand'],
+    ['VN','84','Vietnam'],
+    ['BN','673','Brunei Darussalam'],
+    ['KH','855','Kamboja'],
+    ['LA','856','Laos'],
+    ['MM','95','Myanmar'],
+    ['TL','670','Timor Leste'],
+    ['IN','91','India'],
+    ['PK','92','Pakistan'],
+    ['BD','880','Bangladesh'],
+    ['LK','94','Sri Lanka'],
+    ['NP','977','Nepal'],
+    ['BT','975','Bhutan'],
+    ['MV','960','Maladewa'],
+    ['AF','93','Afghanistan'],
+    ['CN','86','Tiongkok'],
+    ['HK','852','Hong Kong'],
+    ['MO','853','Makau'],
+    ['TW','886','Taiwan'],
+    ['JP','81','Jepang'],
+    ['KR','82','Korea Selatan'],
+    ['KP','850','Korea Utara'],
+    ['MN','976','Mongolia'],
+    ['SA','966','Arab Saudi'],
+    ['AE','971','Uni Emirat Arab'],
+    ['QA','974','Qatar'],
+    ['OM','968','Oman'],
+    ['KW','965','Kuwait'],
+    ['BH','973','Bahrain'],
+    ['YE','967','Yaman'],
+    ['JO','962','Yordania'],
+    ['LB','961','Lebanon'],
+    ['SY','963','Suriah'],
+    ['IQ','964','Irak'],
+    ['IR','98','Iran'],
+    ['IL','972','Israel'],
+    ['PS','970','Palestina'],
+    ['TR','90','Turki'],
+    ['EG','20','Mesir'],
+    ['LY','218','Libya'],
+    ['TN','216','Tunisia'],
+    ['DZ','213','Aljazair'],
+    ['MA','212','Maroko'],
+    ['SD','249','Sudan'],
+    ['SS','211','Sudan Selatan'],
+    ['ET','251','Etiopia'],
+    ['ER','291','Eritrea'],
+    ['DJ','253','Djibouti'],
+    ['SO','252','Somalia'],
+    ['KE','254','Kenya'],
+    ['TZ','255','Tanzania'],
+    ['UG','256','Uganda'],
+    ['RW','250','Rwanda'],
+    ['BI','257','Burundi'],
+    ['ZA','27','Afrika Selatan'],
+    ['NA','264','Namibia'],
+    ['BW','267','Botswana'],
+    ['ZW','263','Zimbabwe'],
+    ['ZM','260','Zambia'],
+    ['MW','265','Malawi'],
+    ['MZ','258','Mozambik'],
+    ['AO','244','Angola'],
+    ['CD','243','Kongo (DR)'],
+    ['CG','242','Kongo'],
+    ['CM','237','Kamerun'],
+    ['NG','234','Nigeria'],
+    ['GH','233','Ghana'],
+    ['CI','225','Pantai Gading'],
+    ['SN','221','Senegal'],
+    ['ML','223','Mali'],
+    ['NE','227','Niger'],
+    ['TD','235','Chad'],
+    ['BF','226','Burkina Faso'],
+    ['GN','224','Guinea'],
+    ['BJ','229','Benin'],
+    ['TG','228','Togo'],
+    ['SL','232','Sierra Leone'],
+    ['LR','231','Liberia'],
+    ['GM','220','Gambia'],
+    ['GW','245','Guinea-Bissau'],
+    ['CV','238','Tanjung Verde'],
+    ['MR','222','Mauritania'],
+    ['GA','241','Gabon'],
+    ['CF','236','Republik Afrika Tengah'],
+    ['GQ','240','Guinea Khatulistiwa'],
+    ['ST','239','Sao Tome dan Principe'],
+    ['SC','248','Seychelles'],
+    ['MU','230','Mauritius'],
+    ['MG','261','Madagaskar'],
+    ['KM','269','Komoro'],
+    ['LS','266','Lesotho'],
+    ['SZ','268','Eswatini'],
+    ['GB','44','Inggris'],
+    ['IE','353','Irlandia'],
+    ['FR','33','Prancis'],
+    ['DE','49','Jerman'],
+    ['NL','31','Belanda'],
+    ['BE','32','Belgia'],
+    ['LU','352','Luksemburg'],
+    ['CH','41','Swiss'],
+    ['AT','43','Austria'],
+    ['ES','34','Spanyol'],
+    ['PT','351','Portugal'],
+    ['IT','39','Italia'],
+    ['SM','378','San Marino'],
+    ['VA','379','Vatikan'],
+    ['MT','356','Malta'],
+    ['GR','30','Yunani'],
+    ['CY','357','Siprus'],
+    ['SE','46','Swedia'],
+    ['NO','47','Norwegia'],
+    ['DK','45','Denmark'],
+    ['FI','358','Finlandia'],
+    ['IS','354','Islandia'],
+    ['PL','48','Polandia'],
+    ['CZ','420','Republik Ceko'],
+    ['SK','421','Slowakia'],
+    ['HU','36','Hungaria'],
+    ['RO','40','Rumania'],
+    ['BG','359','Bulgaria'],
+    ['SI','386','Slovenia'],
+    ['HR','385','Kroasia'],
+    ['BA','387','Bosnia dan Herzegovina'],
+    ['RS','381','Serbia'],
+    ['ME','382','Montenegro'],
+    ['MK','389','Makedonia Utara'],
+    ['AL','355','Albania'],
+    ['XK','383','Kosovo'],
+    ['UA','380','Ukraina'],
+    ['BY','375','Belarus'],
+    ['MD','373','Moldova'],
+    ['RU','7','Rusia'],
+    ['EE','372','Estonia'],
+    ['LV','371','Latvia'],
+    ['LT','370','Lituania'],
+    ['GE','995','Georgia'],
+    ['AM','374','Armenia'],
+    ['AZ','994','Azerbaijan'],
+    ['KZ','77','Kazakhstan'],
+    ['UZ','998','Uzbekistan'],
+    ['TM','993','Turkmenistan'],
+    ['TJ','992','Tajikistan'],
+    ['KG','996','Kirgistan'],
+    ['US','1','Amerika Serikat'],
+    ['CA','1','Kanada'],
+    ['MX','52','Meksiko'],
+    ['GT','502','Guatemala'],
+    ['BZ','501','Belize'],
+    ['SV','503','El Salvador'],
+    ['HN','504','Honduras'],
+    ['NI','505','Nikaragua'],
+    ['CR','506','Kosta Rika'],
+    ['PA','507','Panama'],
+    ['CU','53','Kuba'],
+    ['JM','1','Jamaika'],
+    ['HT','509','Haiti'],
+    ['DO','1','Republik Dominika'],
+    ['TT','1','Trinidad dan Tobago'],
+    ['BS','1','Bahama'],
+    ['BB','1','Barbados'],
+    ['CO','57','Kolombia'],
+    ['VE','58','Venezuela'],
+    ['GY','592','Guyana'],
+    ['SR','597','Suriname'],
+    ['EC','593','Ekuador'],
+    ['PE','51','Peru'],
+    ['BR','55','Brasil'],
+    ['BO','591','Bolivia'],
+    ['PY','595','Paraguay'],
+    ['UY','598','Uruguay'],
+    ['AR','54','Argentina'],
+    ['CL','56','Chili'],
+    ['AU','61','Australia'],
+    ['NZ','64','Selandia Baru'],
+    ['FJ','679','Fiji'],
+    ['PG','675','Papua Nugini'],
+    ['SB','677','Kepulauan Solomon'],
+    ['VU','678','Vanuatu'],
+    ['NC','687','Kaledonia Baru'],
+    ['PF','689','Polinesia Prancis'],
+    ['WS','685','Samoa'],
+    ['TO','676','Tonga'],
+    ['KI','686','Kiribati'],
+    ['FM','691','Mikronesia'],
+    ['PW','680','Palau'],
+    ['MH','692','Kepulauan Marshall'],
+    ['NR','674','Nauru'],
+    ['TV','688','Tuvalu']
   ];
+  function flagEmoji(iso2){
+    if(!iso2||iso2.length!==2) return '🏳️';
+    var cps=iso2.toUpperCase().split('').map(function(c){return 127397+c.charCodeAt(0);});
+    return String.fromCodePoint.apply(null,cps);
+  }
+  var curCC={iso:'ID',code:'62',name:'Indonesia'};
+  function setCC(c){
+    curCC={iso:c[0],code:c[1],name:c[2]};
+    var b=$('#ccBtn'); if(b) b.innerHTML='<span class="fl">'+flagEmoji(c[0])+'</span><span>+'+c[1]+'</span>';
+    try{localStorage.setItem('kodo-cc',JSON.stringify(curCC));}catch(e){}
+  }
   (function(){
-    var sel=$('#loginCC'); if(!sel)return;
-    sel.innerHTML=COUNTRIES.map(function(c){return '<option value="'+c[0]+'">+'+c[0]+' '+c[1]+'</option>';}).join('');
-    try{var saved=localStorage.getItem('kodo-cc');if(saved)sel.value=saved;}catch(e){}
-    sel.addEventListener('change',function(){try{localStorage.setItem('kodo-cc',sel.value);}catch(e){}});
+    try{var saved=JSON.parse(localStorage.getItem('kodo-cc')||'null');if(saved&&saved.code)curCC=saved;}catch(e){}
+    setCC([curCC.iso,curCC.code,curCC.name]);
   })();
+  function renderCCList(q){
+    q=(q||'').trim().toLowerCase();
+    var list=COUNTRIES.filter(function(c){
+      if(!q) return true;
+      return c[2].toLowerCase().indexOf(q)>-1 || c[1].indexOf(q)>-1 || c[0].toLowerCase().indexOf(q)>-1;
+    });
+    $('#ccList').innerHTML=list.map(function(c){
+      return '<div class="cci" data-iso="'+c[0]+'" data-code="'+c[1]+'"><span class="fl">'+flagEmoji(c[0])+'</span><span class="cn">'+esc(c[2])+'</span><span class="cd">+'+c[1]+'</span></div>';
+    }).join('')||'<p class="sub" style="padding:14px 6px">Tidak ditemukan.</p>';
+    $$('#ccList .cci').forEach(function(el){
+      el.addEventListener('click',function(){
+        var c=COUNTRIES.find(function(x){return x[0]===el.getAttribute('data-iso');});
+        if(c){ setCC(c); $('#ccSheet').classList.remove('open'); }
+      });
+    });
+  }
+  if($('#ccBtn')){
+    $('#ccBtn').addEventListener('click',function(){ $('#ccSearch').value=''; renderCCList(''); $('#ccSheet').classList.add('open'); setTimeout(function(){$('#ccSearch').focus();},150); });
+    $('#ccClose').addEventListener('click',function(){ $('#ccSheet').classList.remove('open'); });
+    $('#ccSheet').addEventListener('click',function(e){ if(e.target===this) this.classList.remove('open'); });
+    $('#ccSearch').addEventListener('input',function(){ renderCCList(this.value); });
+  }
   var phone='';
   function creds(){
-    var cc=($('#loginCC')&&$('#loginCC').value)||'62';
     var local=$('#loginPhone').value.replace(/[^\d]/g,'').replace(/^0+/,'');
-    phone=cc+local;
+    phone=curCC.code+local;
     return {phone:phone,password:$('#loginPass').value};
   }
   function afterAuth(){
