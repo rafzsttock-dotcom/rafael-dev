@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KODO Rewards — Selesaikan misi, kumpulkan poin</title>
+<meta name="description" content="Daftar dengan nomor HP, verifikasi lewat bot Telegram, kerjakan misi, lalu tukar poin dengan reward atau ajukan penarikan.">
+<meta name="theme-color" content="#14132b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14132b;
+  --bg-2:#1b1a38;
+  --card:#15142c;
+  --ink:#f1eeff;          /* teks & garis utama */
+  --muted:#b9b5d6;
+  --purple:#8b7cf6;
+  --purple-d:#6f5fe0;
+  --yellow:#f8d35e;
+  --green:#5ee6a0;
+  --pink:#ff8fb1;
+  --shadow:6px 6px 0 var(--ink);
+  --shadow-s:4px 4px 0 var(--ink);
+  --r:22px;
+  --max:1080px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.6;
+  overflow-x:hidden;
+  background-image:
+    radial-gradient(circle at 12% 8%,rgba(139,124,246,.22),transparent 40%),
+    radial-gradient(circle at 92% 30%,rgba(248,211,94,.10),transparent 38%),
+    radial-gradient(rgba(241,238,255,.07) 1.2px,transparent 1.2px);
+  background-size:auto,auto,26px 26px;
+}
+a{color:inherit;text-decoration:none}
+main{overflow-x:clip}
+.wrap{width:min(100% - 40px,var(--max));margin-inline:auto}
+section{padding:72px 0}
+.eyebrow{
+  display:inline-block;font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--bg);background:var(--yellow);padding:5px 12px;border-radius:999px;
+  border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);margin-bottom:16px;
+}
+h2{font-size:clamp(1.8rem,5vw,2.6rem);line-height:1.15;font-weight:800;letter-spacing:-.02em}
+.lead{color:var(--muted);font-size:1.05rem;max-width:560px;margin-top:12px}
+
+/* ---------- Tombol ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:10px;
+  font:inherit;font-weight:800;font-size:1rem;cursor:pointer;
+  padding:14px 26px;border-radius:16px;border:2px solid var(--ink);
+  color:var(--bg);background:var(--yellow);
+  box-shadow:var(--shadow-s);
+  transition:transform .15s ease,box-shadow .15s ease,background .2s;
+  position:relative;overflow:hidden;
+}
+.btn::after{ /* kilau */
+  content:"";position:absolute;inset:0 auto 0 -60%;width:40%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
+  transform:skewX(-20deg);transition:left .6s ease;
+}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink)}
+.btn:hover::after{left:130%}
+.btn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+.btn .arrow{transition:transform .2s}
+.btn:hover .arrow{transform:translateX(5px)}
+.btn.purple{background:var(--purple);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.sm{padding:10px 18px;font-size:.92rem;border-radius:14px}
+.btn:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+
+/* ---------- Navbar ---------- */
+header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(20,19,43,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:2px solid rgba(241,238,255,.12);
+}
+.nav{display:flex;align-items:center;justify-content:space-between;height:72px;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.2rem;letter-spacing:-.01em}
+.logo i{
+  width:34px;height:34px;border-radius:10px;background:var(--yellow);color:var(--bg);
+  display:grid;place-items:center;font-style:normal;font-weight:800;
+  border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);transform:rotate(-6deg);
+  transition:transform .3s;
+}
+.logo:hover i{transform:rotate(8deg) scale(1.08)}
+.menu{display:none;gap:28px;font-weight:600;color:var(--muted)}
+.menu a{position:relative;padding:4px 0;transition:color .2s}
+.menu a::after{content:"";position:absolute;left:0;bottom:-2px;height:3px;width:0;background:var(--yellow);border-radius:3px;transition:width .25s}
+.menu a:hover{color:var(--ink)}
+.menu a:hover::after{width:100%}
+@media(min-width:820px){.menu{display:flex}}
+
+/* ---------- Hero ---------- */
+.hero{padding:56px 0 40px;position:relative}
+.hero-grid{display:grid;gap:48px;align-items:center}
+@media(min-width:900px){.hero-grid{grid-template-columns:1.1fr .9fr}}
+.badge{
+  display:inline-flex;align-items:center;gap:8px;font-size:.85rem;font-weight:700;
+  padding:7px 14px;border-radius:999px;border:2px solid var(--ink);background:var(--bg-2);margin-bottom:22px;
+}
+.badge .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(94,230,160,.7);animation:ping 1.8s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 10px rgba(94,230,160,0)}100%{box-shadow:0 0 0 0 rgba(94,230,160,0)}}
+h1{font-size:clamp(2.5rem,9vw,4.3rem);line-height:1.05;font-weight:800;letter-spacing:-.03em}
+h1 .hl{
+  position:relative;display:inline-block;color:var(--yellow);z-index:0;
+}
+h1 .hl::after{
+  content:"";position:absolute;left:-4px;right:-4px;bottom:4px;height:.28em;background:var(--purple);
+  z-index:-1;border-radius:6px;transform:scaleX(0);transform-origin:left;animation:grow .8s .5s forwards cubic-bezier(.2,.8,.2,1);
+}
+@keyframes grow{to{transform:scaleX(1)}}
+.hero p.sub{margin:22px 0 30px;font-size:1.12rem;color:var(--muted);max-width:520px}
+.hero-cta{display:flex;flex-wrap:wrap;gap:16px}
+.trust{display:flex;flex-wrap:wrap;gap:18px;margin-top:30px;color:var(--muted);font-size:.9rem;font-weight:600}
+.trust span::before{content:"✓";color:var(--green);font-weight:800;margin-right:6px}
+
+/* Kartu HP (visual) */
+.visual{position:relative;display:grid;place-items:center;min-height:380px}
+.phone{
+  width:min(100%,300px);background:var(--card);border:2px solid var(--ink);border-radius:30px;
+  box-shadow:10px 10px 0 var(--ink);padding:22px;position:relative;
+  animation:float 6s ease-in-out infinite;transform:rotate(2deg);
+}
+@keyframes float{50%{transform:translateY(-12px) rotate(-1deg)}}
+.phone .top{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--muted);font-weight:600}
+.phone .pts{font-size:2.4rem;font-weight:800;letter-spacing:-.03em;margin:6px 0 2px;color:var(--yellow)}
+.bar{height:12px;border:2px solid var(--ink);border-radius:99px;overflow:hidden;background:var(--bg)}
+.bar b{display:block;height:100%;width:0;background:var(--purple);animation:fill 2s .6s forwards cubic-bezier(.2,.8,.2,1)}
+@keyframes fill{to{width:68%}}
+.task{
+  display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px;border:2px solid var(--ink);border-radius:14px;background:var(--bg-2);
+  font-size:.88rem;font-weight:700;
+}
+.task em{margin-left:auto;font-style:normal;color:var(--yellow);font-weight:800}
+.task .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:.95rem;background:var(--purple);border:2px solid var(--ink)}
+.task.done .ic{background:var(--green);color:var(--bg)}
+.coin{
+  position:absolute;width:54px;height:54px;border-radius:50%;background:var(--yellow);color:var(--bg);
+  border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);display:grid;place-items:center;font-weight:800;font-size:1.1rem;
+}
+.coin.c1{top:6%;left:2%;animation:bob 4s ease-in-out infinite}
+.coin.c2{bottom:8%;right:0;width:44px;height:44px;font-size:.9rem;animation:bob 5s -1.5s ease-in-out infinite;background:var(--pink)}
+.coin.c3{top:46%;left:-2%;width:34px;height:34px;font-size:.75rem;animation:bob 3.5s -2s ease-in-out infinite;background:var(--purple);color:#fff}
+@keyframes bob{50%{transform:translateY(-16px) rotate(12deg)}}
+
+/* ---------- Ticker ---------- */
+.ticker{border-block:2px solid var(--ink);background:var(--purple);color:#fff;overflow:hidden;padding:12px 0;transform:rotate(-1deg);margin:30px 0}
+.ticker .track{display:flex;gap:40px;width:max-content;animation:scroll 28s linear infinite;font-weight:800;white-space:nowrap}
+.ticker:hover .track{animation-play-state:paused}
+@keyframes scroll{to{transform:translateX(-50%)}}
+
+/* ---------- Kartu umum ---------- */
+.card{
+  background:var(--card);border:2px solid var(--ink);border-radius:var(--r);padding:26px;
+  box-shadow:var(--shadow);transition:transform .2s ease,box-shadow .2s ease;
+}
+.card:hover{transform:translate(-3px,-3px);box-shadow:9px 9px 0 var(--ink)}
+.card h3{font-size:1.25rem;font-weight:800;margin:14px 0 8px}
+.card p{color:var(--muted)}
+.icon{
+  width:52px;height:52px;border-radius:15px;display:grid;place-items:center;font-size:1.5rem;
+  border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+}
+.grid{display:grid;gap:26px;margin-top:40px}
+@media(min-width:720px){.grid.g3{grid-template-columns:repeat(3,1fr)}.grid.g2{grid-template-columns:repeat(2,1fr)}}
+
+/* Langkah */
+.step{position:relative}
+.step .num{
+  position:absolute;top:-16px;right:20px;width:40px;height:40px;border-radius:50%;
+  background:var(--yellow);color:var(--bg);font-weight:800;display:grid;place-items:center;
+  border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+}
+
+/* Referral */
+.ref{
+  display:grid;gap:30px;align-items:center;background:var(--purple);color:#fff;border:2px solid var(--ink);
+  border-radius:28px;padding:34px;box-shadow:10px 10px 0 var(--ink);position:relative;overflow:hidden;
+}
+.ref::before{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.14)}
+@media(min-width:760px){.ref{grid-template-columns:1.2fr .8fr;padding:48px}}
+.ref h2{color:#fff}
+.ref p{color:rgba(255,255,255,.88);margin-top:12px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px;position:relative}
+.split div{background:var(--card);color:var(--ink);border:2px solid var(--ink);border-radius:18px;padding:18px 12px;text-align:center;box-shadow:4px 4px 0 var(--ink)}
+.split small{display:block;color:var(--muted);font-weight:600;font-size:.78rem}
+.split strong{font-size:1.5rem;font-weight:800;color:var(--yellow);display:block;line-height:1.2;margin-top:4px}
+
+/* FAQ */
+.faq{max-width:760px;margin:36px auto 0;display:grid;gap:16px}
+details{background:var(--card);border:2px solid var(--ink);border-radius:18px;box-shadow:var(--shadow-s);transition:transform .2s}
+details[open]{background:var(--bg-2)}
+summary{
+  list-style:none;cursor:pointer;padding:18px 22px;font-weight:700;display:flex;justify-content:space-between;gap:14px;align-items:center;
+}
+summary::-webkit-details-marker{display:none}
+summary::after{
+  content:"+";flex:none;width:30px;height:30px;border-radius:50%;background:var(--yellow);color:var(--bg);
+  display:grid;place-items:center;font-weight:800;border:2px solid var(--ink);transition:transform .25s;
+}
+details[open] summary::after{transform:rotate(135deg)}
+details p{padding:0 22px 20px;color:var(--muted)}
+
+/* CTA */
+.cta{text-align:center}
+.cta .box{
+  background:var(--yellow);color:var(--bg);border:2px solid var(--ink);border-radius:30px;padding:48px 24px;
+  box-shadow:10px 10px 0 var(--ink);
+}
+.cta h2{color:var(--bg)}
+.cta p{margin:12px auto 26px;max-width:480px;font-weight:500;color:#3b3560}
+.cta .btn{background:var(--bg);color:var(--ink);box-shadow:4px 4px 0 var(--purple)}
+.cta .btn:hover{box-shadow:7px 7px 0 var(--purple)}
+.cta .btn:active{box-shadow:0 0 0 var(--purple)}
+
+footer{padding:40px 0 60px;color:var(--muted);font-size:.9rem;text-align:center;border-top:2px solid rgba(241,238,255,.1);margin-top:30px}
+footer .logo{justify-content:center;color:var(--ink);margin-bottom:10px}
+
+/* ---------- Animasi muncul saat scroll ---------- */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
+.reveal.in{opacity:1;transform:none}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}
+
+@media(max-width:480px){
+  section{padding:56px 0}
+  .btn{padding:13px 22px}
+  .phone{box-shadow:7px 7px 0 var(--ink)}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .reveal{opacity:1;transform:none}
+  .bar b{width:68%}
+  h1 .hl::after{transform:scaleX(1)}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a href="#" class="logo" aria-label="KODO Rewards"><i>K</i>KODO Rewards</a>
+    <nav class="menu" aria-label="Menu utama">
+      <a href="#cara">Cara Kerja</a>
+      <a href="#fitur">Fitur</a>
+      <a href="#referal">Referal</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a href="#daftar" class="btn purple sm">Masuk / Daftar</a>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="badge"><span class="dot"></span> Misi baru tersedia setiap hari</div>
+        <h1>Selesaikan misi, <span class="hl">kumpulkan poin.</span></h1>
+        <p class="sub">Daftar dengan nomor HP, verifikasi lewat bot Telegram, lalu kerjakan misi untuk mendapat poin. Poin bisa ditukar reward atau diajukan penarikan.</p>
+        <div class="hero-cta">
+          <a href="#daftar" class="btn">Mulai <span class="arrow">→</span></a>
+          <a href="#cara" class="btn ghost">Lihat cara kerja</a>
+        </div>
+        <div class="trust">
+          <span>Gratis daftar</span>
+          <span>Verifikasi via Telegram</span>
+          <span>Diproses admin</span>
+        </div>
+      </div>
+
+      <div class="visual" aria-hidden="true">
+        <div class="coin c1">P</div>
+        <div class="coin c2">+</div>
+        <div class="coin c3">P</div>
+        <div class="phone">
+          <div class="top"><span>Poin kamu</span><span>Level 3</span></div>
+          <div class="pts" id="pts">0</div>
+          <div class="bar"><b></b></div>
+          <div class="task done"><span class="ic">✓</span>Check-in harian<em>+500</em></div>
+          <div class="task done"><span class="ic">✓</span>Gabung channel<em>+1.000</em></div>
+          <div class="task"><span class="ic">★</span>Start bot<em>+800</em></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker" aria-hidden="true">
+    <div class="track">
+      <span>★ Check-in harian</span><span>★ Gabung channel</span><span>★ Start bot</span><span>★ Ajak teman</span><span>★ Tukar reward</span><span>★ Ajukan penarikan</span>
+      <span>★ Check-in harian</span><span>★ Gabung channel</span><span>★ Start bot</span><span>★ Ajak teman</span><span>★ Tukar reward</span><span>★ Ajukan penarikan</span>
+    </div>
+  </div>
+
+  <!-- CARA KERJA -->
+  <section id="cara">
+    <div class="wrap">
+      <div class="reveal">
+        <span class="eyebrow">Cara kerja</span>
+        <h2>Mulai dalam 3 langkah mudah</h2>
+        <p class="lead">Tidak perlu ribet. Cukup ikuti urutan di bawah ini.</p>
+      </div>
+      <div class="grid g3">
+        <article class="card step reveal">
+          <span class="num">1</span>
+          <div class="icon" style="background:var(--purple)">📱</div>
+          <h3>Daftar</h3>
+          <p>Buat akun memakai nomor HP kamu. Cuma butuh satu menit.</p>
+        </article>
+        <article class="card step reveal d1">
+          <span class="num">2</span>
+          <div class="icon" style="background:var(--green)">✅</div>
+          <h3>Verifikasi</h3>
+          <p>Buka bot Telegram kami dan konfirmasi nomor kamu supaya akun aman.</p>
+        </article>
+        <article class="card step reveal d2">
+          <span class="num">3</span>
+          <div class="icon" style="background:var(--yellow)">🎯</div>
+          <h3>Kerjakan misi</h3>
+          <p>Selesaikan tugas, kumpulkan poin, lalu tukar dengan reward.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- FITUR -->
+  <section id="fitur">
+    <div class="wrap">
+      <div class="reveal">
+        <span class="eyebrow">Fitur</span>
+        <h2>Semua yang kamu butuhkan</h2>
+        <p class="lead">Dari misi harian sampai reward, semuanya ada di satu tempat.</p>
+      </div>
+      <div class="grid g2">
+        <article class="card reveal">
+          <div class="icon" style="background:var(--purple)">🎯</div>
+          <h3>Misi</h3>
+          <p>Check-in harian, gabung channel, start bot, dan tugas lain dari admin.</p>
+        </article>
+        <article class="card reveal d1">
+          <div class="icon" style="background:var(--yellow)">🎁</div>
+          <h3>Reward</h3>
+          <p>Tukar poin dengan reward yang diproses admin.</p>
+        </article>
+        <article class="card reveal">
+          <div class="icon" style="background:var(--green)">💸</div>
+          <h3>Penarikan</h3>
+          <p>Poin yang sudah terkumpul bisa kamu ajukan untuk ditarik.</p>
+        </article>
+        <article class="card reveal d1">
+          <div class="icon" style="background:var(--pink)">🔒</div>
+          <h3>Aman &amp; terverifikasi</h3>
+          <p>Setiap akun diverifikasi lewat Telegram agar tetap adil untuk semua.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- REFERAL -->
+  <section id="referal">
+    <div class="wrap">
+      <div class="ref reveal">
+        <div style="position:relative">
+          <span class="eyebrow" style="background:var(--yellow)">Referal</span>
+          <h2>Ajak teman, dapat poin lebih banyak</h2>
+          <p>Bagikan kode referal kamu. Setelah teman terverifikasi, kalian berdua sama-sama dapat poin.</p>
+        </div>
+        <div class="split">
+          <div><small>Kamu dapat</small><strong data-count="10000">0</strong><small>poin</small></div>
+          <div><small>Teman dapat</small><strong data-count="2000">0</strong><small>poin</small></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="reveal" style="text-align:center">
+        <span class="eyebrow">Pertanyaan umum</span>
+        <h2>Masih bingung? Cek di sini</h2>
+      </div>
+      <div class="faq">
+        <details class="reveal" open>
+          <summary>Bagaimana cara daftar?</summary>
+          <p>Klik “Masuk / Daftar”, isi nomor HP, lalu verifikasi lewat bot Telegram kami.</p>
+        </details>
+        <details class="reveal">
+          <summary>Apakah daftar ini berbayar?</summary>
+          <p>Tidak. Pendaftaran dan mengerjakan misi gratis.</p>
+        </details>
+        <details class="reveal">
+          <summary>Kapan poin referal masuk?</summary>
+          <p>Poin referal masuk setelah teman yang kamu ajak selesai terverifikasi.</p>
+        </details>
+        <details class="reveal">
+          <summary>Bagaimana cara menukar poin?</summary>
+          <p>Pilih reward yang tersedia atau ajukan penarikan. Permintaan kamu akan diproses oleh admin.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="daftar">
+    <div class="wrap">
+      <div class="box reveal">
+        <h2>Siap kumpulkan poin pertamamu?</h2>
+        <p>Daftar sekarang dan selesaikan misi pertama hari ini.</p>
+        <a href="#" class="btn">Masuk / Daftar <span class="arrow">→</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a href="#" class="logo"><i>K</i>KODO Rewards</a>
+    <p>© <span id="y">2026</span> KODO Rewards. Semua hak dilindungi.</p>
+  </div>
+</footer>
+
+<script>
+/* Muncul saat scroll */
+const io = new IntersectionObserver((es)=>{
+  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+},{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* Hitung angka naik */
+const fmt = n => n.toLocaleString('id-ID');
+function count(el, to, dur=1400){
+  const t0 = performance.now();
+  (function tick(t){
+    const p = Math.min((t-t0)/dur,1), e = 1-Math.pow(1-p,3);
+    el.textContent = fmt(Math.round(to*e));
+    if(p<1) requestAnimationFrame(tick);
+  })(t0);
+}
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cio = new IntersectionObserver((es)=>{
+  es.forEach(e=>{
+    if(e.isIntersecting){
+      const to = +e.target.dataset.count;
+      reduce ? e.target.textContent = fmt(to) : count(e.target,to);
+      cio.unobserve(e.target);
+    }
+  });
+},{threshold:.6});
+document.querySelectorAll('[data-count]').forEach(el=>cio.observe(el));
+
+/* Poin di kartu HP */
+const pts = document.getElementById('pts');
+reduce ? pts.textContent = fmt(12500) : setTimeout(()=>count(pts,12500,1800),500);
+
+document.getElementById('y').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
