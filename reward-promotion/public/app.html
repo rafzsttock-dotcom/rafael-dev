@@ -496,6 +496,7 @@
       </div>
       <div class="right">
         <button class="btn icon-btn ghost" id="themeBtn2" title="Tema" aria-label="Ganti tema"><svg class="cic"><use href="#ic-theme"></use></svg></button>
+        <button class="btn icon-btn ghost" id="settingsBtn" title="Pengaturan" aria-label="Pengaturan"><svg class="cic"><use href="#ic-lock"></use></svg></button>
         <button class="btn sm ghost" id="logoutBtn">Keluar</button>
       </div>
     </div>
@@ -634,6 +635,19 @@
   </div>
 </section>
 
+<div class="sheet-overlay" id="setSheet">
+  <div class="sheet">
+    <div class="sheet-head"><h3>Pengaturan akun</h3><button class="btn icon-btn ghost" id="setClose" aria-label="Tutup"><svg class="cic"><use href="#ic-close"></use></svg></button></div>
+    <p class="sub">Nomor: <b id="setPhone">—</b></p>
+    <div class="wd-label">Ganti password</div>
+    <input class="wd-input" id="setOld" type="password" placeholder="Password lama" autocomplete="current-password">
+    <input class="wd-input" id="setNew" type="password" placeholder="Password baru (min 8 karakter)" autocomplete="new-password" style="margin-top:8px">
+    <button class="btn btn-violet full" id="setChangePw" style="margin-top:12px">Simpan password baru</button>
+    <div class="wd-note" style="margin-top:18px"><svg class="cic" style="width:18px;height:18px;flex-shrink:0"><use href="#ic-lock"></use></svg><span>Kamu bisa keluar kapan pun kamu mau. Poin dan riwayatmu tetap tersimpan di akun walau sudah keluar.</span></div>
+    <button class="btn full" id="setLogoutAll" style="margin-top:10px">Keluar dari semua perangkat</button>
+  </div>
+</div>
+
 <div class="sheet-overlay" id="ccSheet">
   <div class="sheet">
     <div class="sheet-head"><h3>Pilih negara</h3><button class="btn icon-btn ghost" id="ccClose" aria-label="Tutup"><svg class="cic"><use href="#ic-close"></use></svg></button></div>
@@ -670,6 +684,7 @@
   function show(id){
     $$('.screen').forEach(function(s){s.classList.remove('active');});
     $('#screen-'+id).classList.add('active'); window.scrollTo(0,0);
+    if(id==='login' && $('#lstep1')) $$('.lstep').forEach(function(s,i){s.classList.toggle('active',i===0);}); // selalu mulai dari nomor HP+password
   }
   $$('[data-go]').forEach(function(b){b.addEventListener('click',function(){show(this.getAttribute('data-go'));});});
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -1084,6 +1099,28 @@
   /* ---- logout: hanya mengakhiri sesi, poin tetap tersimpan di akun ---- */
   $('#logoutBtn').addEventListener('click',function(){
     api('/logout','POST',{}).catch(function(){}).then(function(){ ME=null; show('landing'); });
+  });
+
+  /* ---- pengaturan: ganti password & keluar dari semua perangkat ---- */
+  $('#settingsBtn').addEventListener('click',function(){
+    $('#setPhone').textContent='+'+(ME&&ME.user?ME.user.phone:'');
+    $('#setOld').value=''; $('#setNew').value='';
+    $('#setSheet').classList.add('open');
+  });
+  $('#setClose').addEventListener('click',function(){ $('#setSheet').classList.remove('open'); });
+  $('#setSheet').addEventListener('click',function(e){ if(e.target===this) this.classList.remove('open'); });
+  $('#setChangePw').addEventListener('click',function(){
+    var b=this, old=$('#setOld').value, np=$('#setNew').value;
+    if(np.length<8){ toast('Password baru minimal 8 karakter','lock'); return; }
+    b.disabled=true;
+    api('/me/password','POST',{old:old,new:np}).then(function(){
+      toast('Password diganti. Sesi di perangkat lain sudah keluar.','check');
+      $('#setOld').value=''; $('#setNew').value='';
+    }).catch(function(e){ toast(e.message,'close'); }).then(function(){ b.disabled=false; });
+  });
+  $('#setLogoutAll').addEventListener('click',function(){
+    if(!confirm('Keluar dari semua perangkat yang sedang login, termasuk perangkat ini?')) return;
+    api('/me/logout-all','POST',{}).catch(function(){}).then(function(){ ME=null; $('#setSheet').classList.remove('open'); show('landing'); });
   });
 
   /* ---- referral ---- */

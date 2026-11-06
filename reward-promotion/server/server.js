@@ -36,6 +36,11 @@ CREATE TABLE IF NOT EXISTS ledger(id INTEGER PRIMARY KEY, user_id INTEGER, delta
 CREATE TABLE IF NOT EXISTS settings(k TEXT PRIMARY KEY, v TEXT);
 CREATE TABLE IF NOT EXISTS admins(username TEXT PRIMARY KEY, pass_hash TEXT NOT NULL);
 `);
+for (const stmt of [
+  "ALTER TABLE users ADD COLUMN reg_ip TEXT",
+  "ALTER TABLE users ADD COLUMN last_login INTEGER",
+  "ALTER TABLE users ADD COLUMN last_ip TEXT",
+]) { try { db.exec(stmt); } catch (e) { if (!/duplicate column/i.test(e.message)) throw e; } }
 if (!db.prepare("SELECT 1 FROM missions LIMIT 1").get()) {
   const m = db.prepare("INSERT INTO missions(title,descr,reward,type,link) VALUES(?,?,?,?,?)");
   [["Check-in harian", "Buka aplikasi hari ini", 500, "daily", ""],
@@ -175,12 +180,15 @@ app.post("/api/register", (req, res) => {
   if (!phone) return res.status(400).json({ error: "Nomor HP tidak valid" });
   if (pw.length < 8) return res.status(400).json({ error: "Password minimal 8 karakter" });
   if (!limit("reg:" + req.ip, 10, 3600)) return res.status(429).json({ error: "Terlalu banyak percobaan" });
+  // anti multi-akun kasar: batasi berapa akun terverifikasi boleh lahir dari satu IP per hari
+  const verifiedFromIp = db.prepare("SELECT COUNT(*) c FROM users WHERE reg_ip=? AND verified=1 AND created>?").get(req.ip, now() - 86400).c;
+  if (verifiedFromIp >= 5) return res.status(429).json({ error: "Terlalu banyak pendaftaran dari jaringan ini hari ini, coba lagi besok" });
   const ex = db.prepare("SELECT id,verified FROM users WHERE phone=?").get(phone);
   if (ex && ex.verified) return res.status(409).json({ error: "Nomor sudah terdaftar, silakan login" });
   let ref = null;
   if (req.body.ref) { const r = db.prepare("SELECT id FROM users WHERE ref_code=? AND verified=1").get(String(req.body.ref)); ref = r && r.id; }
-  if (ex) db.prepare("UPDATE users SET pass_hash=? WHERE id=?").run(hashPw(pw), ex.id);
-  else db.prepare("INSERT INTO users(phone,pass_hash,ref_code,referred_by,created) VALUES(?,?,?,?,?)").run(phone, hashPw(pw), crypto.randomBytes(4).toString("hex"), ref, now());
+  if (ex) db.prepare("UPDATE users SET pass_hash=?,reg_ip=? WHERE id=?").run(hashPw(pw), req.ip, ex.id);
+  else db.prepare("INSERT INTO users(phone,pass_hash,ref_code,referred_by,created,reg_ip) VALUES(?,?,?,?,?,?)").run(phone, hashPw(pw), crypto.randomBytes(4).toString("hex"), ref, now(), req.ip);
   res.json({ ok: true, bot: botName() });
 });
 app.post("/api/otp/resend", async (req, res) => {
@@ -207,6 +215,7 @@ app.post("/api/verify", (req, res) => {
       if (u.referred_by) { addPoints(u.referred_by, 10000, "referral:" + u.id); addPoints(u.id, 2000, "bonus referral"); }
     }
   });
+  db.prepare("UPDATE users SET last_login=?,last_ip=? WHERE id=?").run(now(), req.ip, u.id);
   newSession(res, u.id);
   res.json({ ok: true });
 });
@@ -215,12 +224,26 @@ app.post("/api/login", (req, res) => {
   if (!limit("login:" + req.ip, 20, 900) || (phone && !limit("loginp:" + phone, 8, 900))) return res.status(429).json({ error: "Terlalu banyak percobaan, coba lagi nanti" });
   const u = phone && db.prepare("SELECT * FROM users WHERE phone=? AND verified=1").get(phone);
   if (!u || !checkPw(pw, u.pass_hash) || u.banned) return res.status(401).json({ error: "Nomor atau password salah" });
+  db.prepare("UPDATE users SET last_login=?,last_ip=? WHERE id=?").run(now(), req.ip, u.id);
   newSession(res, u.id); res.json({ ok: true });
 });
 app.post("/api/logout", auth, (req, res) => {
   // Logout hanya menghapus sesi di perangkat ini. Poin TIDAK dihapus.
   db.prepare("DELETE FROM sessions WHERE token_hash=?").run(sha(cookies(req).sid));
   res.append("Set-Cookie", "sid=; Path=/; Max-Age=0"); res.json({ ok: true });
+});
+app.post("/api/me/password", auth, (req, res) => {
+  const np = String(req.body.new || "");
+  if (!checkPw(String(req.body.old || ""), req.user.pass_hash)) return res.status(400).json({ error: "Password lama salah" });
+  if (np.length < 8) return res.status(400).json({ error: "Password baru minimal 8 karakter" });
+  db.prepare("UPDATE users SET pass_hash=? WHERE id=?").run(hashPw(np), req.user.id);
+  db.prepare("DELETE FROM sessions WHERE user_id=? AND token_hash<>?").run(req.user.id, sha(cookies(req).sid));
+  res.json({ ok: true });
+});
+app.post("/api/me/logout-all", auth, (req, res) => {
+  db.prepare("DELETE FROM sessions WHERE user_id=?").run(req.user.id);
+  res.append("Set-Cookie", "sid=; Path=/; Max-Age=0");
+  res.json({ ok: true });
 });
 app.get("/api/me", auth, (req, res) => {
   const u = req.user, d = today();
@@ -327,7 +350,12 @@ app.get("/api/admin/overview", adminAuth, (_q, res) => res.json({
   pending_withdrawals: db.prepare("SELECT COUNT(*) c FROM withdrawals WHERE status='pending'").get().c,
   bot: { configured: !!botToken(), username: botName() },
   settings: Object.fromEntries(db.prepare("SELECT k,v FROM settings WHERE k NOT IN ('bot_token')").all().map((r) => [r.k, r.v])) }));
-app.get("/api/admin/users", adminAuth, (_q, res) => res.json(db.prepare("SELECT id,phone,tg_name,points,banned,created FROM users WHERE verified=1 ORDER BY id DESC LIMIT 500").all()));
+app.get("/api/admin/users", adminAuth, (_q, res) => {
+  const rows = db.prepare("SELECT id,phone,tg_name,points,banned,created,reg_ip,last_ip,last_login FROM users WHERE verified=1 ORDER BY id DESC LIMIT 500").all();
+  const ipCounts = {};
+  for (const r of rows) if (r.reg_ip) ipCounts[r.reg_ip] = (ipCounts[r.reg_ip] || 0) + 1;
+  res.json(rows.map((r) => ({ ...r, same_ip_count: r.reg_ip ? ipCounts[r.reg_ip] : 1 })));
+});
 app.post("/api/admin/users/:id/ban", adminAuth, (req, res) => { db.prepare("UPDATE users SET banned=? WHERE id=?").run(req.body.banned ? 1 : 0, +req.params.id); res.json({ ok: true }); });
 app.get("/api/admin/withdrawals", adminAuth, (_q, res) => res.json(db.prepare("SELECT w.*,u.phone FROM withdrawals w JOIN users u ON u.id=w.user_id ORDER BY (w.status='pending') DESC, w.id DESC LIMIT 300").all()));
 app.post("/api/admin/withdrawals/:id", adminAuth, (req, res) => {
