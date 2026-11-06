@@ -357,7 +357,12 @@ app.get("/api/admin/users", adminAuth, (_q, res) => {
   res.json(rows.map((r) => ({ ...r, same_ip_count: r.reg_ip ? ipCounts[r.reg_ip] : 1 })));
 });
 app.post("/api/admin/users/:id/ban", adminAuth, (req, res) => { db.prepare("UPDATE users SET banned=? WHERE id=?").run(req.body.banned ? 1 : 0, +req.params.id); res.json({ ok: true }); });
-app.get("/api/admin/withdrawals", adminAuth, (_q, res) => res.json(db.prepare("SELECT w.*,u.phone FROM withdrawals w JOIN users u ON u.id=w.user_id ORDER BY (w.status='pending') DESC, w.id DESC LIMIT 300").all()));
+app.get("/api/admin/withdrawals", adminAuth, (_q, res) => {
+  const rows = db.prepare("SELECT w.*,u.phone,u.created AS acc_created,u.reg_ip FROM withdrawals w JOIN users u ON u.id=w.user_id ORDER BY (w.status='pending') DESC, w.id DESC LIMIT 300").all();
+  const ipCounts = {};
+  for (const u of db.prepare("SELECT reg_ip FROM users WHERE verified=1 AND reg_ip IS NOT NULL").all()) ipCounts[u.reg_ip] = (ipCounts[u.reg_ip] || 0) + 1;
+  res.json(rows.map((r) => ({ ...r, acc_age_hours: Math.round((now() - r.acc_created) / 3600), same_ip_count: r.reg_ip ? (ipCounts[r.reg_ip] || 1) : 1 })));
+});
 app.post("/api/admin/withdrawals/:id", adminAuth, (req, res) => {
   const w = db.prepare("SELECT * FROM withdrawals WHERE id=?").get(+req.params.id), st = req.body.status;
   if (!w || w.status !== "pending" || !["paid", "rejected"].includes(st)) return res.status(400).json({ error: "Tidak valid" });
