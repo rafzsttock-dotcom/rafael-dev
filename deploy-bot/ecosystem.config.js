@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   apps: [{
     name: 'deploy-bot',
     script: 'src/index.js',
