@@ -456,7 +456,6 @@
         <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 3">
         <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 4">
         <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 5">
-        <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 6">
       </div>
       <div class="resend"><a id="resend" role="button">Kirim ulang kode</a></div>
       <button class="btn btn-violet full" id="verifyCode" style="margin-top:16px">Verifikasi &amp; masuk →</button>
@@ -795,7 +794,7 @@
   lboxes.forEach(function(box,idx){
     box.addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,1);this.classList.toggle('filled',!!this.value);if(this.value&&idx<lboxes.length-1)lboxes[idx+1].focus();});
     box.addEventListener('keydown',function(e){if(e.key==='Backspace'&&!this.value&&idx>0)lboxes[idx-1].focus();});
-    box.addEventListener('paste',function(e){e.preventDefault();var t=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);t.split('').forEach(function(ch,i){if(lboxes[i]){lboxes[i].value=ch;lboxes[i].classList.add('filled');}});var nx=lboxes[Math.min(t.length,5)];if(nx)nx.focus();});
+    box.addEventListener('paste',function(e){e.preventDefault();var t=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,5);t.split('').forEach(function(ch,i){if(lboxes[i]){lboxes[i].value=ch;lboxes[i].classList.add('filled');}});var nx=lboxes[Math.min(t.length,4)];if(nx)nx.focus();});
   });
   // [ISO2, kode negara, nama] -- daftar lengkap ~190 negara, mirip pilihan negara di Telegram
   var COUNTRIES=[
