@@ -215,14 +215,7 @@ app.post("/api/auth/start", async (req, res) => {
   if (!identifier) return res.status(400).json({ error: "Isi username atau nomor Telegram" });
   if (!limit("authstart:" + req.ip, 20, 900)) return res.status(429).json({ error: "Terlalu banyak percobaan, coba lagi nanti" });
   const r = await tgService("/resolve", { identifier });
-  if (!r.ok) {
-    const digits = identifier.replace(/[^0-9]/g, "");
-    const looksPhone = /^\+?\d{6,}$/.test(identifier.replace(/\s/g, ""));
-    const msg = looksPhone || (digits.length >= 6 && digits.length === identifier.replace(/\D/g,"").length && !identifier.includes("@"))
-      ? "Nomor HP tidak bisa dipakai. Masukkan @username Telegram kamu (atur di Telegram: Settings → Username)."
-      : (r.error || "Akun Telegram tidak ditemukan. Pakai @username publik kamu.");
-    return res.status(400).json({ error: msg });
-  }
+  if (!r.ok) return res.status(400).json({ error: r.error || "Akun Telegram tidak ditemukan. Cek nomor/@username kamu." });
   const tgId = String(r.tg_id || "").replace(/[^\d]/g, "");
   if (!tgId) return res.status(400).json({ error: "Telegram tidak valid" });
   const key = tgId; // key internal disimpan di kolom phone (NOT NULL UNIQUE)

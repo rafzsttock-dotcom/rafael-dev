@@ -21,6 +21,8 @@ from telethon.errors import (
 )
 from telethon.sessions import StringSession
 from telethon.tl.functions.channels import GetParticipantRequest
+from telethon.tl.functions.contacts import ImportContactsRequest
+from telethon.tl.types import InputPhoneContact
 from telethon.tl.types import ChannelParticipant, ChannelParticipantAdmin, ChannelParticipantCreator
 
 API_ID = int(os.environ.get("TELEGRAM_API_ID") or "0")
@@ -81,10 +83,20 @@ async def resolve_entity(identifier: str):
     # numeric telegram id
     if re.fullmatch(r"-?\d{5,}", raw):
         return await c.get_entity(int(raw))
-    # phone E.164-ish
+    # phone E.164-ish -> import contact dulu (get_entity(phone) gagal utk non-kontak)
     if re.fullmatch(r"\+?\d{8,15}", raw.replace(" ", "")):
         phone = raw if raw.startswith("+") else "+" + re.sub(r"\D", "", raw)
-        return await c.get_entity(phone)
+        try:
+            return await c.get_entity(phone)
+        except Exception:
+            pass
+        res = await c(ImportContactsRequest(
+            [InputPhoneContact(client_id=0, phone=phone, first_name="kodo", last_name="user")]
+        ))
+        users = getattr(res, "users", None) or []
+        if users:
+            return users[0]
+        raise ValueError("Nomor tidak terdaftar di Telegram, atau privasi user menolak dicari lewat nomor")
     return await c.get_entity(raw)
 
 

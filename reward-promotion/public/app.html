@@ -432,10 +432,10 @@
     <!-- step 1: Telegram -->
     <div class="lstep active" id="lstep1">
       <h2>Masuk / Daftar</h2>
-      <p class="sub">Masukkan <b>@username Telegram</b> kamu. Kode verifikasi dikirim langsung ke Telegram-mu. <br><span style="font-size:.82rem;opacity:.75">Belum punya username? Atur dulu di Telegram: Settings → Username.</span></p>
+      <p class="sub">Masukkan <b>nomor HP</b> atau <b>@username</b> Telegram kamu. Kode verifikasi dikirim langsung ke Telegram-mu.</p>
       <div class="lfield">
-        <label for="tgIdent">Username Telegram</label>
-        <input class="fi" type="text" id="tgIdent" placeholder="@username_kamu" autocomplete="username" style="width:100%;border:3px solid var(--line);border-radius:13px;padding:14px;font-size:1.05rem;background:var(--paper);color:var(--ink)">
+        <label for="tgIdent">Nomor HP / Username Telegram</label>
+        <input class="fi" type="text" id="tgIdent" placeholder="+62… atau @username" autocomplete="username" style="width:100%;border:3px solid var(--line);border-radius:13px;padding:14px;font-size:1.05rem;background:var(--paper);color:var(--ink)">
       </div>
       <button class="btn btn-violet full" id="authNext">Lanjut →</button>
     </div>
@@ -1038,7 +1038,7 @@
   }
   $('#authNext').addEventListener('click',function(){
     var b=this, tg=($('#tgIdent').value||'').trim();
-    if(!tg){ toast('Isi @username Telegram kamu','close'); return; }
+    if(!tg){ toast('Isi nomor HP atau @username Telegram','close'); return; }
     b.disabled=true;
     var ref=''; try{ref=new URLSearchParams(location.search).get('ref')||'';}catch(e){}
     api('/auth/start','POST',{tg:tg,ref:ref}).then(function(r){
