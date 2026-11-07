@@ -683,7 +683,11 @@ const sendAsset = (f, type) => { const buf = assetBuf(f); return (_q, res) => { 
 app.get("/logo-rewardex.webp", sendAsset("logo-rewardex.webp", "image/webp"));
 app.get("/logo-rewardex.png", sendAsset("logo-rewardex.png", "image/png"));
 app.get("/logo-rewardex-sm.webp", sendAsset("logo-rewardex-sm.webp", "image/webp"));
-const send = (html, extra) => (_q, res) => { res.set({ "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", ...(extra || {}) }); res.send(html()); };
+// Versi = mtime+ukuran file HTML. Halaman yang terbuka cek tiap 5 detik dan reload sendiri kalau berubah.
+const pageVersion = () => ["index.html", "app.html", "admin.html"].map((f) => { try { const s = fs.statSync(path.join(STATIC_DIR, f)); return s.mtimeMs + ":" + s.size; } catch (e) { return "0"; } }).join("|");
+app.get("/api/version", (_q, res) => res.set("Cache-Control", "no-store").json({ v: sha(pageVersion()).slice(0, 16) }));
+const AUTO_RELOAD = `<script>(function(){var cur=null;function typing(){var a=document.activeElement;return !!(a&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA")&&a.value);}function tick(){fetch("/api/version",{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){if(cur===null){cur=j.v;return;}if(j.v!==cur&&!typing())location.reload();}).catch(function(){});}setInterval(tick,5000);tick();})();</script>`;
+const send = (html, extra) => (_q, res) => { res.set({ "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", ...(extra || {}) }); res.send(html().replace("</body>", () => AUTO_RELOAD + "</body>")); };
 app.get("/", send(HTML.index));
 app.get("/" + APP_PATH, send(HTML.app));
 app.get("/" + ADMIN_PATH, send(HTML.admin, { "X-Robots-Tag": "noindex, nofollow" }));
