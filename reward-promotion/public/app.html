@@ -726,7 +726,8 @@
     var ic=ICONS[m.type]||ICONS.once, btn;
     if(m.claimed) btn='<span class="chip mint">✓ Diklaim</span>';
     else if(m.type==='tap_link'&&!m.tapped) btn='<button class="btn sm btn-tg" data-do="'+m.id+'">Buka</button>';
-    else if(m.type==='join_channel'&&CFG.channel) btn='<button class="btn sm btn-tg" data-join="'+m.id+'">Gabung</button> <button class="btn btn-yellow sm" data-claim="'+m.id+'">Klaim</button>';
+    else if(m.type==='join_channel'&&CFG.channel&&!m.tapped) btn='<button class="btn sm btn-tg" data-join="'+m.id+'">Gabung Channel</button>';
+    else if(m.type==='join_channel'&&CFG.channel) btn='<button class="btn btn-yellow sm" data-claim="'+m.id+'">Cek &amp; Klaim</button>';
     else if(m.type==='start_bot') btn='<button class="btn sm btn-tg" data-bot="1">Buka Bot</button> <button class="btn btn-yellow sm" data-claim="'+m.id+'">Klaim</button>';
     else btn='<button class="btn btn-yellow sm" data-claim="'+m.id+'">Klaim +'+fmt(m.reward)+'</button>';
     return '<div class="item"><div class="ic" style="background:'+ic[1]+'"><svg class="cic"><use href="#ic-'+ic[0]+'"></use></svg></div>'+
@@ -774,7 +775,14 @@
       if(m&&m.link) window.open(m.link,'_blank','noopener');
       api('/missions/'+id+'/tap','POST',{}).then(function(){m.tapped=true;toast('Tunggu 5 detik lalu klaim','check');setTimeout(render,5200);render();});
     };});
-    $$('[data-join]').forEach(function(b){b.onclick=function(){ var ch=CFG.channel.replace(/^@/,''); window.open('https://t.me/'+ch,'_blank','noopener'); };});
+    $$('[data-join]').forEach(function(b){b.onclick=function(){
+      var id=+this.getAttribute('data-join'), ch=CFG.channel.replace(/^@/,'');
+      window.open('https://t.me/'+ch,'_blank','noopener');
+      api('/missions/'+id+'/tap','POST',{}).then(function(){
+        var m=ME.missions.find(function(x){return x.id===id;}); if(m)m.tapped=true;
+        toast('Udah join? Klik "Cek & Klaim"','check'); render();
+      });
+    };});
     $$('[data-bot]').forEach(function(b){b.onclick=function(){ if(CFG.bot) window.open('https://t.me/'+CFG.bot,'_blank','noopener'); };});
     var promo=$('.tg-promo');
     if(promo){
