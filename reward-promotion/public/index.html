@@ -153,6 +153,16 @@
   footer{border-top:3px solid var(--line);margin-top:56px;padding:28px 0}
   footer .inner{max-width:1040px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;opacity:.85;font-size:.88rem}
 
+  /* logo brand */
+  .logo-chip{display:inline-flex;align-items:center;background:#0a0a0a;border:3px solid var(--line);border-radius:12px;box-shadow:3px 3px 0 var(--line);padding:6px 11px}
+  .logo-chip img{height:26px;display:block}
+  .logoband{max-width:1040px;margin:24px auto 0;padding:0 20px}
+  .logoframe{background:radial-gradient(130% 130% at 50% 22%,#241a04 0%,#070707 64%);border:4px solid var(--line);border-radius:24px;box-shadow:var(--shadow-lg);padding:28px 20px;text-align:center;position:relative;overflow:hidden}
+  .logoframe::after{content:"";position:absolute;inset:0;background-image:radial-gradient(#ffd23f 1px,transparent 1px);background-size:26px 26px;opacity:.06;pointer-events:none}
+  .logoframe img{position:relative;max-width:min(440px,80%);height:auto;display:block;margin:0 auto;filter:drop-shadow(0 6px 22px rgba(255,185,0,.3));animation:logoglow 4.5s ease-in-out infinite}
+  @keyframes logoglow{0%,100%{filter:drop-shadow(0 6px 18px rgba(255,185,0,.22))}50%{filter:drop-shadow(0 10px 36px rgba(255,205,50,.5))}}
+  .logoframe .lb-cap{position:relative;color:#f6f1e7;opacity:.82;font-family:var(--font-head);font-weight:600;font-size:.76rem;letter-spacing:.24em;text-transform:uppercase;margin-top:14px}
+
   /* reveal */
   .reveal{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1)}
   .reveal.in{opacity:1;transform:none}
@@ -178,7 +188,7 @@
 <!-- NAV -->
 <nav class="lnav" id="nav">
   <div class="inner">
-    <a class="brand" href="#top"><span class="mark">🎁</span> KODO <span style="color:var(--violet-deep)">Rewards</span></a>
+    <a class="brand" href="#top" aria-label="REWARDEX"><span class="logo-chip"><picture><source srcset="/logo-rewardex-sm.webp" type="image/webp"><img src="/logo-rewardex.png" alt="REWARDEX"></picture></span></a>
     <div class="nav-actions">
       <button class="btn icon-btn sm" id="themeBtn" aria-label="Ganti tema" title="Ganti tema">🌙</button>
       <a class="btn btn-violet sm" href="app.html">Masuk / Daftar</a>
@@ -187,6 +197,14 @@
 </nav>
 
 <span id="top"></span>
+
+<!-- LOGO SHOWCASE -->
+<section class="logoband reveal">
+  <div class="logoframe">
+    <picture><source srcset="/logo-rewardex.webp" type="image/webp"><img src="/logo-rewardex.png" alt="REWARDEX — misi, poin, reward"></picture>
+    <div class="lb-cap">Misi · Poin · Reward</div>
+  </div>
+</section>
 
 <!-- HERO -->
 <header class="hero">
@@ -310,7 +328,7 @@
 
 <footer>
   <div class="inner">
-    <a class="brand" href="#top" style="font-size:1.1rem"><span class="mark" style="width:32px;height:32px;font-size:1.05rem">🎁</span> KODO Rewards</a>
+    <a class="brand" href="#top" aria-label="REWARDEX"><span class="logo-chip"><picture><source srcset="/logo-rewardex-sm.webp" type="image/webp"><img src="/logo-rewardex.png" alt="REWARDEX"></picture></span></a>
     <span>© <span id="yr"></span> KODO Rewards · Dibuat dengan ❤️</span>
   </div>
 </footer>
