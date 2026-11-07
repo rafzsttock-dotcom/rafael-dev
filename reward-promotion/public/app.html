@@ -103,9 +103,11 @@
   .lstep.active{display:block;animation:fade .3s ease}
   .lfield{text-align:left;margin-bottom:18px}
   .lfield label{display:block;font-weight:700;font-size:.82rem;margin-bottom:8px}
-  .phone-input{display:flex;border:3px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:4px 4px 0 var(--line);background:var(--card)}
-  .cc-select{border:0;outline:0;padding:0 8px;background:color-mix(in srgb,var(--yellow) 80%,var(--card));color:var(--ink);font-weight:700;font-size:.95rem;font-family:var(--font-body);max-width:118px}
-  .cc-select{border:0;border-right:3px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:6px;height:100%}
+  .phone-input{display:flex;gap:10px;align-items:stretch}
+  .cc-select{flex-shrink:0;border:3px solid var(--line);border-radius:13px;box-shadow:4px 4px 0 var(--line);padding:0 14px;min-height:54px;background:var(--yellow);color:#120f1f;font-weight:700;font-size:1rem;font-family:var(--font-head);cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:transform .12s,box-shadow .12s}
+  .cc-select:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--line)}
+  .cc-select:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--line)}
+  .cc-select .fl{font-size:1.25rem;line-height:1}
   #ccSheet .csearch{width:100%;border:3px solid var(--line);border-radius:12px;padding:11px 13px;font-size:1rem;font-family:var(--font-body);background:var(--paper);color:var(--ink);margin-bottom:10px}
   #ccList{max-height:52vh;overflow:auto}
   #ccList .cci{display:flex;align-items:center;gap:10px;padding:11px 6px;border-bottom:2px solid color-mix(in srgb,var(--line) 12%,transparent);cursor:pointer}
@@ -113,8 +115,8 @@
   #ccList .cci .fl{font-size:1.3rem}
   #ccList .cci .cn{flex:1}
   #ccList .cci .cd{opacity:.65;font-size:.9rem}
-  .phone-input input{flex:1;border:0;outline:0;padding:14px;font-size:1.05rem;font-family:var(--font-body);background:transparent;color:var(--ink)}
-  .phone-input:focus-within{box-shadow:4px 4px 0 var(--violet)}
+  .phone-input input{flex:1;min-width:0;border:3px solid var(--line);border-radius:13px;box-shadow:4px 4px 0 var(--line);outline:0;padding:14px;font-size:1.05rem;font-family:var(--font-body);background:var(--card);color:var(--ink);transition:box-shadow .12s}
+  .phone-input input:focus{box-shadow:4px 4px 0 var(--violet)}
   .otp-boxes{display:flex;gap:9px;justify-content:space-between;margin:8px 0 10px}
   .otp-box{flex:1;aspect-ratio:3/4;max-width:56px;border:3px solid var(--line);border-radius:13px;text-align:center;font-size:1.5rem;font-weight:800;font-family:var(--font-head);background:var(--card);color:var(--ink);box-shadow:3px 3px 0 var(--line);transition:.12s}
   .otp-box:focus{outline:0;box-shadow:0 0 0 4px color-mix(in srgb,var(--violet) 45%,transparent),3px 3px 0 var(--line);transform:translateY(-2px)}
