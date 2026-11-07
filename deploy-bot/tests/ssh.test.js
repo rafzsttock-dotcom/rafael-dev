@@ -13,7 +13,7 @@ const vpsConfig = { host: '1.2.3.4', port: 22, user: 'root', authType: 'password
 
 test('connectSSH calls ssh.connect with correct params', async () => {
   await connectSSH(vpsConfig)
-  expect(mockSSH.connect).toHaveBeenCalledWith({ host: '1.2.3.4', port: 22, username: 'root', password: 'pass' })
+  expect(mockSSH.connect).toHaveBeenCalledWith({ host: '1.2.3.4', port: 22, username: 'root', password: 'pass', readyTimeout: 15000 })
 })
 
 test('runCommand returns stdout and code', async () => {

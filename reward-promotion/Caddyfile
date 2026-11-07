@@ -2,3 +2,12 @@
 	encode gzip
 	reverse_proxy app:3000
 }
+
+# Deploy Panel (Mini App deploy-bot) — jalan di host via pm2, bukan di Docker.
+{$PANEL_DOMAIN} {
+	encode gzip
+	reverse_proxy host.docker.internal:8787 {
+		# Log deploy dikirim live baris per baris, jangan di-buffer.
+		flush_interval -1
+	}
+}

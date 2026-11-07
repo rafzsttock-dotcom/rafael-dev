@@ -5,7 +5,8 @@ export async function connectSSH(vpsConfig) {
   const opts = {
     host: vpsConfig.host,
     port: vpsConfig.port,
-    username: vpsConfig.user
+    username: vpsConfig.user,
+    readyTimeout: 15000
   }
   if (vpsConfig.authType === 'key') {
     opts.privateKeyPath = vpsConfig.keyPath
@@ -19,6 +20,16 @@ export async function connectSSH(vpsConfig) {
 export async function runCommand(ssh, cmd, cwd) {
   const result = await ssh.execCommand(cmd, { cwd })
   return { stdout: result.stdout, stderr: result.stderr, code: result.code }
+}
+
+/** Jalankan command dan kirim output per potongan lewat callback (buat log live). */
+export async function streamCommand(ssh, cmd, cwd, onChunk) {
+  const result = await ssh.execCommand(cmd, {
+    cwd,
+    onStdout: (buf) => onChunk('out', buf.toString('utf8')),
+    onStderr: (buf) => onChunk('err', buf.toString('utf8'))
+  })
+  return { code: result.code }
 }
 
 export async function testConnection(vpsConfig) {

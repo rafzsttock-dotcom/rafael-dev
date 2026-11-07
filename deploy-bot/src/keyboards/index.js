@@ -1,7 +1,9 @@
 import { InlineKeyboard } from 'grammy'
 
 export function mainMenuKeyboard() {
-  return new InlineKeyboard()
+  const kb = new InlineKeyboard()
+  if (process.env.PANEL_URL) kb.webApp('🚀 Buka Panel', process.env.PANEL_URL).row()
+  return kb
     .text('🖥 VPS List', 'vps_list').text('➕ Add VPS', 'add_vps').row()
     .text('📊 Status All', 'status_all')
 }

@@ -48,6 +48,15 @@ export function addProject(vpsId, projectData) {
   return project
 }
 
+export function updateProject(vpsId, projectId, patch) {
+  const config = loadConfig()
+  const project = config.vps.find(v => v.id === vpsId)?.projects.find(p => p.id === projectId)
+  if (!project) return null
+  Object.assign(project, patch)
+  saveConfig(config)
+  return project
+}
+
 export function removeProject(vpsId, projectId) {
   const config = loadConfig()
   const vps = config.vps.find(v => v.id === vpsId)

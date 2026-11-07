@@ -27,4 +27,25 @@ bot.on('callback_query', async (ctx) => {
   await ctx.answerCallbackQuery('⚠️ Tombol ini sudah expired. Ketik /start')
 })
 
-bot.start({ onStart: () => console.log('🤖 Deploy Bot running...') })
+const { startPanel } = await import('./panel/server.js')
+startPanel({
+  botToken: process.env.BOT_TOKEN,
+  ownerId: process.env.OWNER_CHAT_ID,
+  host: process.env.PANEL_HOST || '172.17.0.1',
+  port: Number(process.env.PANEL_PORT || 8787)
+})
+
+bot.start({
+  onStart: async () => {
+    console.log('🤖 Deploy Bot running...')
+    if (!process.env.PANEL_URL) return
+    try {
+      await bot.api.setChatMenuButton({
+        chat_id: Number(process.env.OWNER_CHAT_ID),
+        menu_button: { type: 'web_app', text: 'Panel', web_app: { url: process.env.PANEL_URL } }
+      })
+    } catch (err) {
+      console.error('❌ Gagal pasang menu button panel:', err.message)
+    }
+  }
+})

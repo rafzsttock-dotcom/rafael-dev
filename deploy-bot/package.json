@@ -8,10 +8,11 @@
     "test": "node --experimental-vm-modules node_modules/.bin/jest"
   },
   "dependencies": {
-    "grammy": "^1.21.0",
     "@grammyjs/conversations": "^1.2.0",
-    "node-ssh": "^13.1.0",
-    "dotenv": "^16.4.0"
+    "dotenv": "^16.4.0",
+    "express": "^5.3.0",
+    "grammy": "^1.21.0",
+    "node-ssh": "^13.1.0"
   },
   "devDependencies": {
     "jest": "^29.7.0"
