@@ -1,0 +1,34 @@
+# Deploy KODO Rewards + Telethon
+
+## 1. Siapkan kredensial Telegram (laptop)
+pip install telethon
+python telegram-service/make_session.py
+# copy TELEGRAM_SESSION yang dicetak
+
+## 2. Di VPS — isi .env
+cd /path/ke/reward-promotion
+cp .env.example .env
+nano .env
+# isi: DOMAIN, ADMIN_*, TELEGRAM_API_ID, TELEGRAM_API_HASH, TELEGRAM_SERVICE_SECRET
+# tambahan untuk StringSession Telegram:
+#   SESSION_GENERATOR_SECRET, SESSION_ENC_KEY (openssl rand -base64 32)
+
+## 3. Build & jalan
+sudo docker compose down
+sudo docker compose up -d --build
+sudo docker compose ps
+sudo docker compose logs -f telethon --tail=50
+sudo docker compose logs -f session-generator --tail=50
+sudo docker compose logs -f app --tail=50
+
+## 4. Cek
+curl -sI https://rewardex.site | head -3
+# Admin > Pengaturan > Cek status Telethon
+# Admin > Sessions > Telegram StringSession > pilih user + nomor > Kirim kode
+
+## Catatan risiko
+- Telethon = akun USER Telegram, bukan bot. Jangan spam OTP.
+- Simpan TELEGRAM_SESSION seperti password.
+- StringSession Telegram setara password akun: tersimpan terenkripsi di DB.
+  Jangan ganti SESSION_ENC_KEY setelah ada data, dan jangan pernah share/copy ke tempat publik.
+- Privacy user bisa menolak pesan dari non-kontak — minta user izinkan / add kontak akun pengirim.

@@ -1,0 +1,59 @@
+services:
+  telethon:
+    # Sidecar Telegram = PHP + MadelineProto (multi-akun). Sesi login disimpan di ./data/tg
+    build: ./telegram-service
+    restart: unless-stopped
+    env_file: .env
+    dns: [1.1.1.1, 8.8.8.8]
+    environment:
+      TELEGRAM_API_ID: "${TELEGRAM_API_ID}"
+      TELEGRAM_API_HASH: "${TELEGRAM_API_HASH}"
+      TELEGRAM_SERVICE_SECRET: "${TELEGRAM_SERVICE_SECRET:-kodo-internal}"
+      TELEGRAM_SESSION_DIR: "/data/tg"
+    volumes:
+      - ./data:/data
+    expose:
+      - "8090"
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    dns: [1.1.1.1, 8.8.8.8]
+    environment:
+      SECURE_COOKIE: "${SECURE_COOKIE:-1}"
+      TELEGRAM_SERVICE_URL: "http://telethon:8090"
+      TELEGRAM_SERVICE_SECRET: "${TELEGRAM_SERVICE_SECRET:-kodo-internal}"
+      SESSION_GENERATOR_URL: "http://session-generator:8091"
+      SESSION_GENERATOR_SECRET: "${SESSION_GENERATOR_SECRET:-kodo-internal}"
+      SESSION_ENC_KEY: "${SESSION_ENC_KEY:-}"
+    volumes:
+      - ./data:/data
+    depends_on:
+      - telethon
+      - session-generator
+  session-generator:
+    # Sidecar GramJS: login Telegram -> StringSession (HTTP internal, tidak diekspos)
+    build: ./telegram-session-generator
+    restart: unless-stopped
+    env_file: .env
+    dns: [1.1.1.1, 8.8.8.8]
+    environment:
+      TELEGRAM_API_ID: "${TELEGRAM_API_ID}"
+      TELEGRAM_API_HASH: "${TELEGRAM_API_HASH}"
+      SESSION_GENERATOR_SECRET: "${SESSION_GENERATOR_SECRET:-kodo-internal}"
+      SESSION_GENERATOR_PORT: "8091"
+    expose:
+      - "8091"
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    dns: [1.1.1.1, 8.8.8.8]
+    environment:
+      DOMAIN: "${DOMAIN:-:80}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on: [app]
+volumes:
+  caddy_data:
