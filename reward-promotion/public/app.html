@@ -449,7 +449,7 @@
     <!-- step 2: hubungkan Telegram + kode 2FA (Telethon) -->
     <div class="lstep" id="lstep2">
       <h2>Verifikasi 2FA</h2>
-      <p class="sub">Kode 6 digit dikirim ke Telegram <b id="shownNum"></b>. Buka Telegram-mu untuk melihat kodenya.</p>
+      <p class="sub">Kode verifikasi dikirim ke Telegram <b id="shownNum"></b>. Buka Telegram-mu untuk melihat kodenya.</p>
       <div class="otp-boxes">
         <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 1">
         <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 2">
@@ -1068,7 +1068,7 @@
   });
   $('#verifyCode').addEventListener('click',function(){
     var code=lboxes.map(function(b){return b.value;}).join(''), b=this;
-    if(code.length<6){toast('Masukkan 6 digit kode','lock');return;}
+    if(code.length<4){toast('Masukkan kode yang kamu terima di Telegram','lock');return;}
     b.disabled=true;
     api('/verify','POST',{phone:AUTHKEY,code:code}).then(function(r){
       if(r && r.need_password){ AUTHPTOKEN=r.ptoken||''; lshow(3); setTimeout(function(){var el=$('#loginPass');if(el)el.focus();},120); b.disabled=false; return; }
