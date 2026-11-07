@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Telegram MTProto Login (Personal)</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <h1>Telegram MTProto Login</h1>
+    <p class="sub">Tool pribadi untuk login akun Telegram milik sendiri via MTProto dan menyimpan StringSession terenkripsi secara lokal.</p>
+
+    <section id="gate" class="card">
+      <h2>Akses Tool</h2>
+      <label>Access Token</label>
+      <input id="gateToken" type="password" placeholder="APP_ACCESS_TOKEN" autocomplete="off" />
+      <button id="gateBtn">Masuk</button>
+      <p id="gateMsg" class="msg"></p>
+    </section>
+
+    <section id="app" class="card hidden">
+      <div id="stepPhone">
+        <h2>1. Nomor Telepon</h2>
+        <label>Nomor (pakai kode negara)</label>
+        <input id="phone" type="text" placeholder="+628xxxxxxxxxx" autocomplete="off" />
+        <button id="sendCodeBtn">Kirim Kode OTP</button>
+      </div>
+
+      <div id="stepCode" class="hidden">
+        <h2>2. Kode OTP</h2>
+        <p class="hint">Kode dikirim lewat Telegram (pesan "Telegram"), bukan SMS kalau akun sudah pernah pakai Telegram.</p>
+        <label>Kode OTP</label>
+        <input id="code" type="text" placeholder="12345" autocomplete="off" />
+        <button id="submitCodeBtn">Verifikasi Kode</button>
+      </div>
+
+      <div id="stepPassword" class="hidden">
+        <h2>3. Password 2FA</h2>
+        <p class="hint">Akun ini punya verifikasi dua langkah, isi password cloud password-nya.</p>
+        <label>Password 2FA</label>
+        <input id="password" type="password" autocomplete="off" />
+        <button id="submitPasswordBtn">Verifikasi Password</button>
+      </div>
+
+      <p id="authMsg" class="msg"></p>
+
+      <h2>Sesi Tersimpan</h2>
+      <div id="sessions"></div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
