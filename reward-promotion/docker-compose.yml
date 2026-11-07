@@ -22,6 +22,7 @@ services:
     environment:
       SECURE_COOKIE: "${SECURE_COOKIE:-1}"
       TELEGRAM_SERVICE_URL: "http://telethon:8090"
+      TELEGRAM_GATEWAY_TOKEN: "${TELEGRAM_GATEWAY_TOKEN}"
       TELEGRAM_SERVICE_SECRET: "${TELEGRAM_SERVICE_SECRET:-kodo-internal}"
     volumes:
       - ./data:/data

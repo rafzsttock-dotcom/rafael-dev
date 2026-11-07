@@ -45,6 +45,7 @@ for (const stmt of [
   "ALTER TABLE sessions ADD COLUMN ip TEXT",
   "ALTER TABLE sessions ADD COLUMN ua TEXT",
   "ALTER TABLE sessions ADD COLUMN tg_name TEXT",
+  "ALTER TABLE otps ADD COLUMN request_id TEXT",
 ]) { try { db.exec(stmt); } catch (e) { if (!/duplicate column/i.test(e.message)) throw e; } }
 try { db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_username_uq ON users(username) WHERE username IS NOT NULL AND username <> ''"); } catch (_) {}
 if (!db.prepare("SELECT 1 FROM missions LIMIT 1").get()) {
@@ -131,18 +132,30 @@ async function linkTelegram(phone, identifier) {
   db.prepare("UPDATE users SET tg_id=?,tg_name=? WHERE phone=?").run(String(r.tg_id), r.tg_name || r.username || "", phone);
   return { ok: true, tg_id: r.tg_id, tg_name: r.tg_name };
 }
+/* ---- Telegram Gateway (kirim kode resmi lewat Telegram) ---- */
+const GW_TOKEN = (process.env.TELEGRAM_GATEWAY_TOKEN || "").trim();
+const GW_URL = (process.env.TELEGRAM_GATEWAY_URL || "https://gatewayapi.telegram.org").replace(/\/$/, "");
+async function gwCall(method, body) {
+  try {
+    const r = await fetch(GW_URL + "/" + method, {
+      method: "POST",
+      headers: { "content-type": "application/json", Authorization: "Bearer " + GW_TOKEN },
+      body: JSON.stringify(body || {}),
+    });
+    return await r.json().catch(() => ({ ok: false, error: "respons tidak valid" }));
+  } catch (e) { return { ok: false, error: "Gateway offline: " + String(e.message || e) }; }
+}
 async function sendOtp(phone) {
-  const u = db.prepare("SELECT tg_id FROM users WHERE phone=?").get(phone);
-  if (!u || !u.tg_id) return false;
-  const row = db.prepare("SELECT sent FROM otps WHERE phone=?").get(phone);
+  if (!GW_TOKEN) { console.error("TELEGRAM_GATEWAY_TOKEN belum diisi di .env"); return false; }
   const code = String(crypto.randomInt(100000, 1000000));
-  db.prepare("INSERT INTO otps(phone,code_hash,expires,attempts,sent) VALUES(?,?,?,0,?) ON CONFLICT(phone) DO UPDATE SET code_hash=?,expires=?,attempts=0,sent=?")
-    .run(phone, sha(code), now() + 300, 1, sha(code), now() + 300, ((row && row.sent) || 0) + 1);
-  const r = await tgService("/send", {
-    tg_id: +u.tg_id,
-    text: `Kode verifikasi KODO Rewards: ${code}\nBerlaku 5 menit. Jangan bagikan ke siapa pun.`,
-  });
-  return !!r.ok;
+  const e164 = "+" + String(phone).replace(/\D/g, "");
+  const r = await gwCall("sendVerificationMessage", { phone_number: e164, code, ttl: 300, payload: "login" });
+  if (!r || !r.ok) { console.error("Gateway gagal kirim:", (r && r.error) || "?"); return false; }
+  const reqId = (r.result && r.result.request_id) || "";
+  const row = db.prepare("SELECT sent FROM otps WHERE phone=?").get(phone);
+  db.prepare("INSERT INTO otps(phone,code_hash,expires,attempts,sent,request_id) VALUES(?,?,?,0,?,?) ON CONFLICT(phone) DO UPDATE SET code_hash=?,expires=?,attempts=0,sent=?,request_id=?")
+    .run(phone, sha(code), now() + 300, 1, reqId, sha(code), now() + 300, ((row && row.sent) || 0) + 1, reqId);
+  return true;
 }
 // kompatibilitas nama lama di UI/admin
 const botName = () => "telethon";
@@ -209,37 +222,26 @@ function uniqueUsername(base, selfKey) {
   while (taken(n)) { i++; n = (cand.slice(0, 20) + i).slice(0, 24); }
   return n;
 }
-// Mulai: resolve Telegram -> buat/temukan akun (key internal = tg_id) -> kirim OTP
+// Mulai: user masukkan NOMOR -> buat/temukan akun (key = nomor) -> kirim kode via Telegram Gateway
 app.post("/api/auth/start", async (req, res) => {
-  const identifier = String(req.body.tg || req.body.identifier || "").trim();
-  if (!identifier) return res.status(400).json({ error: "Isi username atau nomor Telegram" });
+  const raw = String(req.body.tg || req.body.phone || req.body.identifier || "").trim();
+  const phone = normPhone(raw);
+  if (!phone) return res.status(400).json({ error: "Nomor tidak valid" });
   if (!limit("authstart:" + req.ip, 20, 900)) return res.status(429).json({ error: "Terlalu banyak percobaan, coba lagi nanti" });
-  const r = await tgService("/resolve", { identifier });
-  if (!r.ok) return res.status(400).json({ error: r.error || "Akun Telegram tidak ditemukan. Cek nomor/@username kamu." });
-  const tgId = String(r.tg_id || "").replace(/[^\d]/g, "");
-  if (!tgId) return res.status(400).json({ error: "Telegram tidak valid" });
-  const key = tgId; // key internal disimpan di kolom phone (NOT NULL UNIQUE)
-  const tgUser = r.username || "";
-  const tgName = r.tg_name || tgUser || tgId;
-  let u = db.prepare("SELECT * FROM users WHERE tg_id=? OR phone=?").get(tgId, key);
+  let u = db.prepare("SELECT * FROM users WHERE phone=?").get(phone);
   if (!u) {
     if (!limit("reg:" + req.ip, 10, 3600)) return res.status(429).json({ error: "Terlalu banyak percobaan" });
     let ref = null;
     if (req.body.ref) { const rr = db.prepare("SELECT id FROM users WHERE ref_code=? AND verified=1").get(String(req.body.ref)); ref = rr && rr.id; }
-    const uname = uniqueUsername(tgUser, key);
-    db.prepare("INSERT INTO users(phone,pass_hash,tg_id,tg_name,username,ref_code,referred_by,created,reg_ip,verified) VALUES(?,?,?,?,?,?,?,?,?,0)")
-      .run(key, "", tgId, tgName, uname, crypto.randomBytes(4).toString("hex"), ref, now(), req.ip);
-    u = db.prepare("SELECT * FROM users WHERE phone=?").get(key);
-  } else {
-    // selalu segarkan tg_id/tg_name; isi username kalau masih kosong
-    const uname = u.username || uniqueUsername(tgUser, u.phone);
-    db.prepare("UPDATE users SET tg_id=?,tg_name=?,username=? WHERE id=?").run(tgId, tgName, uname, u.id);
-    u = db.prepare("SELECT * FROM users WHERE id=?").get(u.id);
+    const uname = uniqueUsername("", phone);
+    db.prepare("INSERT INTO users(phone,pass_hash,username,ref_code,referred_by,created,reg_ip,verified) VALUES(?,?,?,?,?,?,?,0)")
+      .run(phone, "", uname, crypto.randomBytes(4).toString("hex"), ref, now(), req.ip);
+    u = db.prepare("SELECT * FROM users WHERE phone=?").get(phone);
   }
   if (u.banned) return res.status(403).json({ error: "Akun diblokir" });
   const sent = await sendOtp(u.phone);
-  if (!sent) return res.status(502).json({ error: "Gagal kirim kode via Telethon. Pastikan privacy Telegram mengizinkan pesan dari non-kontak." });
-  res.json({ ok: true, phone: u.phone, mode: u.verified ? "login" : "register", has_password: !!(u.pass_hash && u.pass_hash.length), tg_name: tgName, username: u.username });
+  if (!sent) return res.status(502).json({ error: "Gagal kirim kode. Pastikan nomor benar & terhubung Telegram, atau coba lagi sebentar." });
+  res.json({ ok: true, phone: u.phone, mode: u.verified ? "login" : "register", has_password: !!(u.pass_hash && u.pass_hash.length) });
 });
 // Langkah password (hanya untuk akun yang punya 2FA) setelah OTP sukses
 app.post("/api/auth/password", (req, res) => {
@@ -288,16 +290,10 @@ app.post("/api/register", (req, res) => {
 app.post("/api/otp/resend", async (req, res) => {
   const phone = normPhone(req.body.phone);
   if (!phone || !limit("otp:" + phone, 5, 3600)) return res.status(429).json({ error: "Terlalu banyak permintaan" });
-  const u = db.prepare("SELECT tg_id FROM users WHERE phone=?").get(phone);
+  const u = db.prepare("SELECT id FROM users WHERE phone=?").get(phone);
   if (!u) return res.status(404).json({ error: "Nomor belum terdaftar" });
-  // opsional: hubungkan Telegram via username/nomor saat kirim ulang
-  if (!u.tg_id && req.body.tg) {
-    const link = await linkTelegram(phone, String(req.body.tg));
-    if (!link.ok) return res.status(400).json({ error: link.error || "Gagal hubungkan Telegram" });
-  }
-  const u2 = db.prepare("SELECT tg_id FROM users WHERE phone=?").get(phone);
-  if (!u2 || !u2.tg_id) return res.json({ ok: false, need_tg: true, error: "Isi username Telegram (@user) dulu" });
-  res.json({ ok: await sendOtp(phone) });
+  const ok = await sendOtp(phone);
+  res.json({ ok, error: ok ? undefined : "Gagal kirim kode, coba lagi" });
 });
 // Hubungkan akun Telegram (Telethon resolve) lalu kirim OTP
 app.post("/api/tg/link", async (req, res) => {
@@ -390,7 +386,7 @@ app.get("/api/me", auth, (req, res) => {
 });
 async function isMember(u) {
   const ch = setting("channel"); if (!ch) return true;
-  if (!u.tg_id) return false;
+  if (!u.tg_id) return true; // login via Gateway: identitas Telegram tak tersedia -> jangan blokir
   const r = await tgService("/member", { tg_id: +u.tg_id, channel: ch });
   return !!(r.ok && r.member);
 }
@@ -403,12 +399,13 @@ app.post("/api/missions/:id/claim", auth, async (req, res) => {
   if (!m) return res.status(404).json({ error: "Misi tidak ada" });
   if (m.type === "join_channel") {
     const ch = m.link || setting("channel");
-    if (!u.tg_id) return res.status(400).json({ error: "Akun Telegram belum terhubung" });
-    const r = ch ? await tgService("/member", { tg_id: +u.tg_id, channel: ch }) : { ok: true, member: true };
-    if (!r.ok || !r.member) return res.status(400).json({ error: "Kamu belum bergabung ke channel" });
+    // Login via Gateway tak menyimpan identitas Telegram -> tak bisa verifikasi, anggap valid.
+    if (u.tg_id && ch) {
+      const r = await tgService("/member", { tg_id: +u.tg_id, channel: ch });
+      if (!r.ok || !r.member) return res.status(400).json({ error: "Kamu belum bergabung ke channel" });
+    }
   } else if (m.type === "start_bot") {
-    // legacy tipe misi: cukup punya tg_id terhubung via Telethon
-    if (!u.tg_id) return res.status(400).json({ error: "Akun Telegram belum terhubung" });
+    // tanpa identitas Telegram tak bisa diverifikasi otomatis -> percaya.
   } else if (m.type === "tap_link") {
     const t = db.prepare("SELECT ts FROM taps WHERE user_id=? AND mission_id=?").get(u.id, m.id);
     if (!t || now() - t.ts < 5) return res.status(400).json({ error: "Buka tautannya dulu" });
