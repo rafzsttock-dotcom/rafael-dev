@@ -1,5 +1,6 @@
 services:
   telethon:
+    # Sidecar Telegram = PHP + MadelineProto (multi-akun). Sesi login disimpan di ./data/tg
     build: ./telegram-service
     restart: unless-stopped
     env_file: .env
@@ -7,8 +8,10 @@ services:
     environment:
       TELEGRAM_API_ID: "${TELEGRAM_API_ID}"
       TELEGRAM_API_HASH: "${TELEGRAM_API_HASH}"
-      TELEGRAM_SESSION: "${TELEGRAM_SESSION}"
       TELEGRAM_SERVICE_SECRET: "${TELEGRAM_SERVICE_SECRET:-kodo-internal}"
+      TELEGRAM_SESSION_DIR: "/data/tg"
+    volumes:
+      - ./data:/data
     expose:
       - "8090"
   app:

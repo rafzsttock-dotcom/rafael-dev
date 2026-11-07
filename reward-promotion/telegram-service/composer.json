@@ -1,0 +1,17 @@
+{
+  "name": "kodo/telegram-service",
+  "description": "MadelineProto HTTP sidecar untuk KODO/Rewardex: resolve nomor/username, kirim OTP, cek member channel. Multi-akun.",
+  "require": {
+    "php": ">=8.2",
+    "danog/madelineproto": "^8",
+    "amphp/http-server": "^3",
+    "amphp/log": "^2",
+    "monolog/monolog": "^3"
+  },
+  "config": {
+    "allow-plugins": {
+      "*": true
+    },
+    "sort-packages": true
+  }
+}

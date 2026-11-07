@@ -1,0 +1,4 @@
+vendor/
+*.madeline
+*.madeline.lock
+MadelineProto.log
