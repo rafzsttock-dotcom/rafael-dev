@@ -17,7 +17,7 @@ Aplikasi misi + poin + reward (Node.js + SQLite + **Telethon**).
    ```
 3. Login akun Telegram untuk sidecar (interaktif, sekali per akun):
    ```bash
-   docker compose run --rm telethon php login.php akun1
+   docker compose run --rm telethon node login.js akun1
    ```
    Sesi tersimpan di `./data/tg` (bukan string session di `.env`).
 4. Deploy:

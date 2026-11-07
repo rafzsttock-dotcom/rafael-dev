@@ -1,0 +1,17 @@
+{
+  "name": "telegram-service",
+  "version": "1.0.0",
+  "description": "GramJS userbot sidecar for KODO/Rewardex OTP delivery.",
+  "license": "MIT",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "login": "node login.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "input": "^1.0.1",
+    "telegram": "^2.26.22"
+  }
+}

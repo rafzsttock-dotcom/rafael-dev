@@ -1,6 +1,6 @@
 services:
   telethon:
-    # Sidecar Telegram = PHP + MadelineProto (multi-akun). Sesi login disimpan di ./data/tg
+    # Sidecar Telegram = Node.js + GramJS (multi-akun). Sesi login disimpan di ./data/tg
     build: ./telegram-service
     restart: unless-stopped
     env_file: .env

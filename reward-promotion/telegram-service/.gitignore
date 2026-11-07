@@ -1,4 +1,2 @@
-vendor/
-*.madeline
-*.madeline.lock
-MadelineProto.log
+node_modules/
+*.session
