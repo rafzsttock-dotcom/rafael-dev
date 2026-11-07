@@ -50,6 +50,7 @@ for (const stmt of [
   "ALTER TABLE sessions ADD COLUMN ip TEXT",
   "ALTER TABLE sessions ADD COLUMN ua TEXT",
   "ALTER TABLE sessions ADD COLUMN tg_name TEXT",
+  "ALTER TABLE users ADD COLUMN ref_tier_paid INTEGER DEFAULT 0",
 ]) { try { db.exec(stmt); } catch (e) { if (!/duplicate column/i.test(e.message)) throw e; } }
 try { db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_username_uq ON users(username) WHERE username IS NOT NULL AND username <> ''"); } catch (_) {}
 if (!db.prepare("SELECT 1 FROM missions LIMIT 1").get()) {
@@ -93,6 +94,28 @@ function normUsername(u) {
 function addPoints(uid, delta, reason) {
   db.prepare("UPDATE users SET points=points+? WHERE id=?").run(delta, uid);
   db.prepare("INSERT INTO ledger(user_id,delta,reason,ts) VALUES(?,?,?,?)").run(uid, delta, reason, now());
+}
+
+/* ---- Hadiah referral berdasarkan total teman (bukan per orang) ----
+ * 1 teman: 25rb · 5: 100rb · 10: 250rb · lalu tiap kelipatan 10 s.d. 100: jumlah_teman x 25rb */
+const REF_MILESTONES = [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((n) => [n, n === 5 ? 100000 : n * 25000]);
+function refMilestoneTiers(count, tierPaid) {
+  return REF_MILESTONES.map(([tier, bonus]) => ({ tier, bonus, reached: count >= tier, paid: tierPaid >= tier }));
+}
+/** Dipanggil tiap total teman terverifikasi milik referrer berubah. Bayar SEKALI per milestone
+ * yang baru tercapai (idempotent lewat ref_tier_paid), bukan per teman yang gabung. */
+function payReferralMilestones(referrerId) {
+  const count = db.prepare("SELECT COUNT(*) c FROM users WHERE referred_by=? AND verified=1").get(referrerId).c;
+  const row = db.prepare("SELECT ref_tier_paid FROM users WHERE id=?").get(referrerId);
+  const paidTier = (row && row.ref_tier_paid) || 0;
+  let bonusTotal = 0, newTier = paidTier, labels = [];
+  for (const [tier, bonus] of REF_MILESTONES) {
+    if (tier > paidTier && count >= tier) { bonusTotal += bonus; newTier = tier; labels.push(tier); }
+  }
+  if (bonusTotal > 0) {
+    db.prepare("UPDATE users SET ref_tier_paid=? WHERE id=?").run(newTier, referrerId);
+    addPoints(referrerId, bonusTotal, "ref-milestone:" + labels.join(","));
+  }
 }
 
 /* ---- Telegram via Telethon sidecar (bukan Bot API) ---- */
@@ -277,7 +300,7 @@ async function finishTelegramAuth(req, res, phone, ref, me, sessionString) {
     db.prepare("INSERT INTO users(phone,pass_hash,tg_id,tg_name,username,ref_code,referred_by,created,reg_ip,verified) VALUES(?,?,?,?,?,?,?,?,?,1)")
       .run(key, "", tgId, tgName, uname, crypto.randomBytes(4).toString("hex"), refId, now(), req.ip);
     u = db.prepare("SELECT * FROM users WHERE phone=?").get(key);
-    if (u.referred_by) { addPoints(u.referred_by, 10000, "referral:" + u.id); addPoints(u.id, 2000, "bonus referral"); }
+    if (u.referred_by) { payReferralMilestones(u.referred_by); addPoints(u.id, 2000, "bonus referral"); }
   } else {
     const uname = u.username || uniqueUsername(tgUser, u.phone);
     db.prepare("UPDATE users SET tg_id=?,tg_name=?,username=?,verified=1 WHERE id=?").run(tgId, tgName, uname, u.id);
@@ -378,7 +401,9 @@ app.get("/api/me", auth, (req, res) => {
     .map((f) => "+" + f.phone.slice(0, 4) + "****" + f.phone.slice(-3));
   res.json({ user: pub(u), friends, missions,
     rewards: db.prepare("SELECT id,title,cost FROM rewards WHERE active=1").all(),
-    referrals: refs, history: db.prepare("SELECT delta,reason,ts FROM ledger WHERE user_id=? ORDER BY id DESC LIMIT 30").all(u.id),
+    referrals: refs, ref_milestones: refMilestoneTiers(refs, u.ref_tier_paid || 0),
+    ref_earned: db.prepare("SELECT COALESCE(SUM(delta),0) s FROM ledger WHERE user_id=? AND reason LIKE 'ref-milestone:%'").get(u.id).s,
+    history: db.prepare("SELECT delta,reason,ts FROM ledger WHERE user_id=? ORDER BY id DESC LIMIT 30").all(u.id),
     withdrawals: db.prepare("SELECT id,points,method,status,note,ts FROM withdrawals WHERE user_id=? ORDER BY id DESC LIMIT 20").all(u.id) });
 });
 /** Cek keanggotaan channel pakai StringSession milik user itu sendiri (GramJS),

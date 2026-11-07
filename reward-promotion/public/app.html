@@ -397,7 +397,7 @@
 
   <div class="hero">
     <div>
-      <span class="tagpill"><i class="ping"></i> Ajak teman, dapat 10.000 poin tiap teman bergabung</span>
+      <span class="tagpill"><i class="ping"></i> Ajak teman, hadiah milestone sampai 2.500.000 poin</span>
       <h1>Kumpulkan poin,<br>klaim <em>reward</em> tiap hari.</h1>
       <p class="lead">Selesaikan misi, ajak teman, dan tukar poin jadi hadiah. Daftar sekali, langsung mulai.</p>
       <div class="hero-cta">
@@ -412,7 +412,7 @@
       
       <div class="mock">
                 <div class="mrow"><span class="mic" style="background:var(--mint)"><svg class="cic"><use href="#ic-check"></use></svg></span><div><small>Misi harian</small><b>Check-in</b></div><span class="amt">+500</span></div>
-        <div class="mrow"><span class="mic" style="background:var(--pink)"><svg class="cic"><use href="#ic-users"></use></svg></span><div><small>Referal</small><b>Teman bergabung</b></div><span class="amt">+10.000</span></div>
+        <div class="mrow"><span class="mic" style="background:var(--pink)"><svg class="cic"><use href="#ic-users"></use></svg></span><div><small>Referal</small><b>Milestone teman</b></div><span class="amt">+25.000</span></div>
         <div class="mrow"><span class="mic" style="background:var(--sky)"><svg class="cic"><use href="#ic-ticket"></use></svg></span><div><small>Tukar reward</small><b>Voucher 25%</b></div><span class="amt">-15.000</span></div>
       </div>
     </div>
@@ -571,7 +571,7 @@
       <div class="ref-hero">
         <div class="gift"><svg class="cic"><use href="#ic-party"></use></svg></div>
         <h2>Ajak teman, dapat poin</h2>
-        <p>Setiap teman yang gabung pakai kodemu, kamu dapat <b>10.000 poin</b> dan mereka dapat bonus.</p>
+        <p>Ajak teman pakai kodemu. Tiap jumlah teman gabung nyampe target tertentu (1, 5, 10, lalu kelipatan 10 s.d. 100), kamu dapat <b>hadiah milestone</b> dan mereka dapat bonus.</p>
         <div class="ref-code">
           <input id="refCode" value="RAFAEL-K7QX" readonly aria-label="Kode referal">
           <button class="btn btn-violet" id="copyRef">Salin</button>
@@ -583,6 +583,8 @@
         <div class="ref-stat"><b id="refEarned">30.000</b><small>Poin dari referal</small></div>
         <div class="ref-stat"><b id="refPending">1</b><small>Menunggu</small></div>
       </div>
+      <div class="sec-title">Hadiah milestone ajak teman</div>
+      <div class="list" id="refMilestoneList"></div>
       <div class="sec-title">Teman kamu</div>
       <div class="friends" id="friendList"></div>
       
@@ -735,6 +737,16 @@
       '<div class="body"><b>'+esc(m.title)+'</b><p>'+esc(m.descr)+'</p><div class="mission-meta"><span>+'+fmt(m.reward)+' poin</span></div></div>'+
       '<div class="end">'+btn+'</div></div>';
   }
+  function renderRefMilestones(){
+    var box=$('#refMilestoneList'); if(!box) return;
+    var tiers=(ME.ref_milestones||[]), cur=ME.referrals||0;
+    box.innerHTML=tiers.map(function(t){
+      var status=t.paid?'<span class="chip mint">✓ Cair</span>':'<span class="chip" style="opacity:.55">'+Math.max(0,t.tier-cur)+' lagi</span>';
+      return '<div class="item"><div class="ic" style="background:var(--pink)"><svg class="cic"><use href="#ic-users"></use></svg></div>'+
+        '<div class="body"><b>'+t.tier+' teman gabung</b><p>Hadiah milestone</p></div>'+
+        '<div class="end" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><b>+'+fmt(t.bonus)+'</b>'+status+'</div></div>';
+    }).join('');
+  }
   function rewardCard(r){
     var afford=ME.user.points>=r.cost;
     return '<div class="item"><div class="ic" style="background:var(--yellow)"><svg class="cic"><use href="#ic-gift"></use></svg></div>'+
@@ -758,7 +770,8 @@
     $('#userAv').textContent=(u.username||String(u.tg_name||tgid)).slice(0,2).toUpperCase();
     $('#refCode').value=u.ref_code; $('#refP').textContent=ME.referrals; $('#refInvited').textContent=ME.referrals;
     $('#friendList').innerHTML=ME.friends.map(function(f){return '<div class="friend"><div class="fav" style="background:var(--mint)">✓</div><div><b>'+esc(f)+'</b><small>Aktif</small></div></div>';}).join('')||'<p class="sub">Belum ada teman yang bergabung.</p>';
-    $('#refEarned').textContent=fmt(ME.history.filter(function(h){return /^referral:/.test(h.reason);}).reduce(function(a,h){return a+h.delta;},0));
+    $('#refEarned').textContent=fmt(ME.ref_earned||0);
+    renderRefMilestones();
     $('#refPending').textContent='—';
     $('#wdBalRp').textContent='≈ Rp '+fmt(u.points*CFG.point_value);
     bind();
