@@ -51,6 +51,7 @@ for (const stmt of [
   "ALTER TABLE sessions ADD COLUMN ua TEXT",
   "ALTER TABLE sessions ADD COLUMN tg_name TEXT",
   "ALTER TABLE users ADD COLUMN ref_tier_paid INTEGER DEFAULT 0",
+  "ALTER TABLE users ADD COLUMN new_member_bonus_paid INTEGER DEFAULT 0",
 ]) { try { db.exec(stmt); } catch (e) { if (!/duplicate column/i.test(e.message)) throw e; } }
 try { db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_username_uq ON users(username) WHERE username IS NOT NULL AND username <> ''"); } catch (_) {}
 if (!db.prepare("SELECT 1 FROM missions LIMIT 1").get()) {
@@ -450,10 +451,20 @@ app.post("/api/missions/:id/claim", auth, async (req, res) => {
     if (!t || now() - t.ts < 5) return res.status(400).json({ error: "Buka tautannya dulu" });
   }
   const day = m.type === "daily" ? today() : "once";
+  let newMemberBonus = 0;
   try {
-    tx(() => { db.prepare("INSERT INTO claims VALUES(?,?,?)").run(u.id, m.id, day); addPoints(u.id, m.reward, "misi:" + m.title); });
+    tx(() => {
+      db.prepare("INSERT INTO claims VALUES(?,?,?)").run(u.id, m.id, day);
+      addPoints(u.id, m.reward, "misi:" + m.title);
+      // Bonus member baru: SEKALI seumur akun, pas pertama kali berhasil join channel.
+      if (m.type === "join_channel" && !u.new_member_bonus_paid) {
+        newMemberBonus = 20000;
+        addPoints(u.id, newMemberBonus, "bonus-member-baru");
+        db.prepare("UPDATE users SET new_member_bonus_paid=1 WHERE id=?").run(u.id);
+      }
+    });
   } catch { return res.status(409).json({ error: "Sudah diklaim" }); }
-  res.json({ ok: true, points: db.prepare("SELECT points FROM users WHERE id=?").get(u.id).points });
+  res.json({ ok: true, points: db.prepare("SELECT points FROM users WHERE id=?").get(u.id).points, new_member_bonus: newMemberBonus });
 });
 app.post("/api/rewards/:id/redeem", auth, (req, res) => {
   const r = db.prepare("SELECT * FROM rewards WHERE id=? AND active=1").get(+req.params.id);

@@ -781,8 +781,13 @@
   function bind(){
     $$('[data-claim]').forEach(function(b){b.onclick=function(){
       var btn=this; btn.disabled=true;
-      api('/missions/'+btn.getAttribute('data-claim')+'/claim','POST',{}).then(function(){toast('Poin masuk!','party');confetti();return reload();})
-        .catch(function(e){toast(e.message,'close');btn.disabled=false;});
+      api('/missions/'+btn.getAttribute('data-claim')+'/claim','POST',{}).then(function(r){
+        if(r&&r.new_member_bonus>0){
+          toast('🎉 Bonus Member Baru +'+fmt(r.new_member_bonus)+' poin!','party');
+          confetti();setTimeout(confetti,250);setTimeout(confetti,500);
+        }else{toast('Poin masuk!','party');confetti();}
+        return reload();
+      }).catch(function(e){toast(e.message,'close');btn.disabled=false;});
     };});
     $$('[data-do]').forEach(function(b){b.onclick=function(){
       var id=+this.getAttribute('data-do'), m=ME.missions.find(function(x){return x.id===id;});
