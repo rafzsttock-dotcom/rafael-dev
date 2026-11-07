@@ -243,14 +243,6 @@ export function createPanelApp({ botToken, ownerId }) {
     }
   })
 
-  api.post('/vps/:id/exec', async (req, res) => {
-    const vps = findVps(req, res); if (!vps) return
-    const cmd = String(req.body.cmd || '').trim()
-    if (!cmd || cmd.length > 2000) return res.status(400).json({ error: 'Command kosong atau terlalu panjang' })
-    const cwd = typeof req.body.cwd === 'string' && req.body.cwd.startsWith('/') ? req.body.cwd : undefined
-    await streamExec(req, res, vps, cmd, cwd)
-  })
-
   app.use('/api', api)
   app.use('/api', (req, res) => res.status(404).json({ error: 'Tidak ditemukan' }))
   app.use(express.static(PANEL_DIR, { setHeaders: (res) => res.set('Cache-Control', 'no-cache') }))
