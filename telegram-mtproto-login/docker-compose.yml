@@ -4,7 +4,22 @@ services:
     container_name: telegram-mtproto-login
     restart: unless-stopped
     env_file: .env
+    # Masih dibuka ke localhost VPS buat debug langsung (curl health check dll).
     ports:
       - "127.0.0.1:8088:8088"
     volumes:
       - ./data:/app/data
+    networks:
+      - default
+      - reward_proxy
+
+networks:
+  default: {}
+  # Network Docker Compose milik stack reward-promotion (Caddy jalan di situ).
+  # Join ke network yang sama supaya Caddy bisa reverse_proxy ke container ini
+  # pakai nama "telegram-mtproto-login", tanpa expose port 8088 ke internet.
+  # Cek nama network aslinya di VPS dengan: docker network ls | grep reward
+  # Override di .env kalau namanya beda, mis. REWARD_PROXY_NETWORK=namafolder_default
+  reward_proxy:
+    external: true
+    name: ${REWARD_PROXY_NETWORK:-reward-promotion_default}
