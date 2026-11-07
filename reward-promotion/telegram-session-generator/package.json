@@ -1,0 +1,28 @@
+{
+  "name": "telegram-session-generator",
+  "version": "1.0.0",
+  "description": "A lightweight Node.js tool that authenticates a Telegram user account using GramJS and generates a reusable session string (StringSession).",
+  "keywords": [
+    "bot",
+    "telegram",
+    "telegram-bot",
+    "telegram-mtproto"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Emmanuel Nwoye",
+    "url": "https://github.com/Emmynem"
+  },
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "generate": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "input": "^1.0.1",
+    "telegram": "^2.26.22"
+  }
+}
