@@ -432,12 +432,16 @@
     <!-- step 1: Telegram -->
     <div class="lstep active" id="lstep1">
       <h2>Masuk / Daftar</h2>
-      <p class="sub">Masukkan <b>nomor HP</b> atau <b>@username</b> Telegram kamu. Kode verifikasi dikirim langsung ke Telegram-mu.</p>
+      <p class="sub">Masukkan <b>nomor Telegram</b> Anda. Kode verifikasi dikirim langsung ke Telegram kamu.</p>
       <div class="lfield">
-        <label for="tgIdent">Nomor HP / Username Telegram</label>
-        <input class="fi" type="text" id="tgIdent" placeholder="+62… atau @username" autocomplete="username" style="width:100%;border:3px solid var(--line);border-radius:13px;padding:14px;font-size:1.05rem;background:var(--paper);color:var(--ink)">
+        <label for="loginPhone">Nomor Telegram</label>
+        <div class="phone-input">
+          <button type="button" id="ccBtn" class="cc-select"></button>
+          <input type="tel" id="loginPhone" inputmode="numeric" placeholder="Nomor tanpa 0 di depan" autocomplete="tel">
+        </div>
       </div>
       <button class="btn btn-violet full" id="authNext">Lanjut →</button>
+      <p class="sub" style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:.84rem"><svg class="cic" style="width:18px;height:18px"><use href="#ic-lock"></use></svg> Nomor kamu dijaga dengan keamanan terenkripsi.</p>
     </div>
 
     <!-- step 2: hubungkan Telegram + kode 2FA (Telethon) -->
@@ -1036,18 +1040,23 @@
     lboxes.forEach(function(x){x.value='';x.classList.remove('filled');});
     lshow(2); setTimeout(function(){ if(lboxes[0]) lboxes[0].focus(); },120);
   }
+  function phoneDigits(){
+    var local=($('#loginPhone').value||'').replace(/[^0-9]/g,'').replace(/^0+/,'');
+    if(!local) return '';
+    return curCC.code+local;
+  }
   $('#authNext').addEventListener('click',function(){
-    var b=this, tg=($('#tgIdent').value||'').trim();
-    if(!tg){ toast('Isi nomor HP atau @username Telegram','close'); return; }
+    var b=this, ph=phoneDigits();
+    if(!ph){ toast('Isi nomor Telegram kamu','close'); return; }
     b.disabled=true;
     var ref=''; try{ref=new URLSearchParams(location.search).get('ref')||'';}catch(e){}
-    api('/auth/start','POST',{tg:tg,ref:ref}).then(function(r){
+    api('/auth/start','POST',{tg:'+'+ph,ref:ref}).then(function(r){
       AUTHKEY=r.phone||'';
       toast(r.mode==='login'?'Selamat datang kembali \u2014 kode dikirim':'Akun dibuat \u2014 kode dikirim ke Telegram','send');
-      goOtpStep(r.username?('@'+r.username):(r.tg_name||''));
+      goOtpStep('+'+ph);
     }).catch(function(e){toast(e.message,'close');}).then(function(){b.disabled=false;});
   });
-  $('#tgIdent').addEventListener('keydown',function(e){if(e.key==='Enter')$('#authNext').click();});
+  $('#loginPhone').addEventListener('keydown',function(e){if(e.key==='Enter')$('#authNext').click();});
   $('#editNum').addEventListener('click',function(){ lshow(1); });
   $('#resend').addEventListener('click',function(){
     if(!AUTHKEY){ toast('Mulai dari awal','close'); return; }

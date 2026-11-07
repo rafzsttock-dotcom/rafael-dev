@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KODO Rewards — Selesaikan misi, kumpulkan poin, tukar reward</title>
+<title>REWARDEX — Selesaikan misi, kumpulkan poin, tukar reward</title>
 <meta name="description" content="Masuk lewat Telegram, kerjakan misi harian, kumpulkan poin, lalu tukar jadi reward atau tarik saldo. Gratis, aman, dan gampang.">
 <meta name="theme-color" content="#8b6cff">
-<meta property="og:title" content="KODO Rewards">
+<meta property="og:title" content="REWARDEX">
 <meta property="og:description" content="Selesaikan misi, kumpulkan poin, tukar jadi reward. Masuk cukup lewat Telegram.">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -163,6 +163,15 @@
   @keyframes logoglow{0%,100%{filter:drop-shadow(0 6px 18px rgba(255,185,0,.22))}50%{filter:drop-shadow(0 10px 36px rgba(255,205,50,.5))}}
   .logoframe .lb-cap{position:relative;color:#f6f1e7;opacity:.82;font-family:var(--font-head);font-weight:600;font-size:.76rem;letter-spacing:.24em;text-transform:uppercase;margin-top:14px}
 
+  /* custom icons */
+  .ic{width:24px;height:24px;color:var(--line);display:block;flex-shrink:0}
+  .mic .ic{width:22px;height:22px}
+  .ib .ic{width:26px;height:26px}
+  .rchip .ic{width:22px;height:22px;color:var(--violet-deep)}
+  .hnote .ic{width:17px;height:17px;color:var(--violet-deep);display:inline-block;vertical-align:-3px}
+  .marquee .ic{width:19px;height:19px;color:var(--yellow)}
+  .marquee .track span{color:var(--yellow)}
+
   /* reveal */
   .reveal{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1)}
   .reveal.in{opacity:1;transform:none}
@@ -182,6 +191,38 @@
 </style>
 </head>
 <body>
+<!-- ===== Custom icon sprite ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="ic-gift" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="1.5" fill="currentColor" opacity=".16"/><path d="M4 10.5h16M4 10.5V19a1.5 1.5 0 001.5 1.5h13A1.5 1.5 0 0020 19v-8.5M3.5 7.5h17v3h-17zM12 7.5V20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 7.5C12 7.5 10.5 3.5 8.5 4.2 6.8 4.8 8 7.5 12 7.5zM12 7.5c0 0 1.5-4 3.5-3.3 1.7.6.5 3.3-3.5 3.3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="currentColor" opacity=".14"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/></symbol>
+  <symbol id="ic-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2" fill="currentColor" opacity=".16"/><circle cx="9" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 6.2a3 3 0 010 5.6M17.6 19c0-2.3-.9-4-2.3-5.1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="currentColor" opacity=".16"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 12.4l2.7 2.7L16 9.6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-fire" viewBox="0 0 24 24"><path d="M12 3c1 3-1.5 4-1.5 6.5C10.5 11 11.5 12 12 12s1.5-1 1.5-2.5C13.5 11 16 10 15 6c2 1.5 3.5 4 3.5 7A6.5 6.5 0 1112 21 6.5 6.5 0 015.5 13c0-2 1-4 2.5-5.5" fill="currentColor" opacity=".16"/><path d="M12 3c1 3-1.5 4-1.5 6.5C10.5 11 11.5 12 12 12s1.5-1 1.5-2.5C13.5 11 16 10 15 6c2 1.5 3.5 4 3.5 7A6.5 6.5 0 1112 21 6.5 6.5 0 015.5 13c0-2 1-4 2.5-5.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-bag" viewBox="0 0 24 24"><path d="M6 8h12l1 12H5z" fill="currentColor" opacity=".16"/><path d="M6 8h12l1 12H5L6 8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 9V7a3 3 0 016 0v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.6 1-5.8-4.3-4.1 5.9-.9z" fill="currentColor" opacity=".16"/><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.6 1-5.8-4.3-4.1 5.9-.9z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-megaphone" viewBox="0 0 24 24"><path d="M4 10v4a1 1 0 001 1h3l1 4h2l-1-4 8 3V6L9 9H5a1 1 0 00-1 1z" fill="currentColor" opacity=".16"/><path d="M4 10v4a1 1 0 001 1h3l1 4h2l-1-4 8 3V6L9 9H5a1 1 0 00-1 1zM19 10c1 0 1.5.8 1.5 2s-.5 2-1.5 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+  <symbol id="ic-medal" viewBox="0 0 24 24"><path d="M8.5 9.5L6 3h4l2 4M15.5 9.5L18 3h-4l-2 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="14.5" r="5.5" fill="currentColor" opacity=".16"/><circle cx="12" cy="14.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11.8l1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z" fill="currentColor"/></symbol>
+  <symbol id="ic-card" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2" fill="currentColor" opacity=".16"/><rect x="3" y="5.5" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 9.5h18" stroke="currentColor" stroke-width="1.8"/><path d="M6.5 14.5h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-coffee" viewBox="0 0 24 24"><path d="M5 8h12v5a5 5 0 01-5 5H10a5 5 0 01-5-5z" fill="currentColor" opacity=".16"/><path d="M5 8h12v5a5 5 0 01-5 5H10a5 5 0 01-5-5V8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M17 9.5h2a2.5 2.5 0 010 5h-2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 3.6c-.6 1 .6 1.5 0 2.4M11.5 3.6c-.6 1 .6 1.5 0 2.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4.5 21h13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-ticket" viewBox="0 0 24 24"><path d="M3 7.5h18v3a1.8 1.8 0 000 3.6v3H3v-3a1.8 1.8 0 000-3.6z" fill="currentColor" opacity=".16"/><path d="M3 7.5h18v3a1.8 1.8 0 000 3.6v3H3v-3a1.8 1.8 0 000-3.6V7.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 7.5v10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-dasharray="1.5 2.2"/></symbol>
+  <symbol id="ic-food" viewBox="0 0 24 24"><path d="M4 9a8 8 0 0116 0H4z" fill="currentColor" opacity=".16"/><path d="M4 9a8 8 0 0116 0H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M5 12.5h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M5.5 15.5h13a4 4 0 01-4 4h-5a4 4 0 01-4-4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="9" cy="6" r=".8" fill="currentColor"/><circle cx="12.6" cy="5.4" r=".8" fill="currentColor"/><circle cx="15.3" cy="6.7" r=".8" fill="currentColor"/></symbol>
+  <symbol id="ic-headphones" viewBox="0 0 24 24"><path d="M5 13v-1a7 7 0 0114 0v1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="3.5" y="13" width="4" height="6.5" rx="1.6" fill="currentColor" opacity=".16"/><rect x="3.5" y="13" width="4" height="6.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="16.5" y="13" width="4" height="6.5" rx="1.6" fill="currentColor" opacity=".16"/><rect x="16.5" y="13" width="4" height="6.5" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="ic-cart" viewBox="0 0 24 24"><path d="M4 5h2l2 10h9l2-7H7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="9" cy="19" r="1.5" fill="currentColor"/><circle cx="17" cy="19" r="1.5" fill="currentColor"/></symbol>
+  <symbol id="ic-trophy" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 01-10 0z" fill="currentColor" opacity=".16"/><path d="M7 4h10v5a5 5 0 01-10 0V4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 5.5H4.5V8a3 3 0 003 3M17 5.5h2.5V8a3 3 0 01-3 3M9 20h6M12 14v3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-home" viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1.5 1.5 0 01-1.5 1.5H5.5A1.5 1.5 0 014 19z" fill="currentColor" opacity=".16"/><path d="M4 11l8-6 8 6v8a1.5 1.5 0 01-1.5 1.5H5.5A1.5 1.5 0 014 19v-8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.5 20.5V14h5v6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-chart" viewBox="0 0 24 24"><path d="M4 4v15a1 1 0 001 1h15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7 15l3.5-4 3 2.5L18 7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 7h-2.6M18 7v2.6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="ic-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="currentColor" opacity=".16"/><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7.5a4 4 0 018 0V10" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="15" r="1.4" fill="currentColor"/></symbol>
+  <symbol id="ic-party" viewBox="0 0 24 24"><path d="M4 20l5-13 8 8z" fill="currentColor" opacity=".16"/><path d="M4 20l5-13 8 8-13 5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 4c1.5 0 1.5 2 3 2M15 9c1-1 3-1 4 0M18 13c.5-1 2-1.5 3-1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="19" cy="7" r=".9" fill="currentColor"/></symbol>
+  <symbol id="ic-sparkle" viewBox="0 0 24 24"><path d="M12 3c.6 4.5 1.5 5.4 6 6-4.5.6-5.4 1.5-6 6-.6-4.5-1.5-5.4-6-6 4.5-.6 5.4-1.5 6-6z" fill="currentColor"/><path d="M19 13c.3 2 .7 2.4 2.7 2.7-2 .3-2.4.7-2.7 2.7-.3-2-.7-2.4-2.7-2.7 2-.3 2.4-.7 2.7-2.7z" fill="currentColor" opacity=".55"/></symbol>
+  <symbol id="ic-send" viewBox="0 0 24 24"><path d="M4 11.5L20 4l-7 16-2.5-6.5z" fill="currentColor" opacity=".16"/><path d="M4 11.5L20 4l-7 16-2.5-6.5L4 11.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10.5 13.5L20 4" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="ic-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4a8 8 0 010 16z" fill="currentColor"/></symbol>
+  <symbol id="ic-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="12" rx="2" fill="currentColor" opacity=".16"/><rect x="8" y="8" width="11" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 15.5V5.5A1.6 1.6 0 016.6 4H15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="ic-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5" fill="currentColor" opacity=".16"/><rect x="3" y="6" width="18" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18" stroke="currentColor" stroke-width="1.8"/><circle cx="16.5" cy="13.5" r="1.4" fill="currentColor"/></symbol>
+  <symbol id="ic-tg" viewBox="0 0 24 24"><path d="M9.8 16.5l-.37 4.1c.53 0 .76-.23 1.03-.5l2.48-2.37 5.14 3.76c.94.52 1.6.25 1.85-.87l3.36-15.7c.3-1.4-.5-1.95-1.42-1.6L1.1 9.3c-1.36.53-1.34 1.3-.23 1.64l5.1 1.6L17.8 5.3c.56-.37 1.07-.17.65.2z" fill="currentColor"/></symbol>
+  <symbol id="ic-bot" viewBox="0 0 24 24"><rect x="5" y="8" width="14" height="11" rx="3.2" fill="currentColor" opacity=".16"/><rect x="5" y="8" width="14" height="11" rx="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 8V5.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="4" r="1.4" fill="currentColor"/><circle cx="9.6" cy="13" r="1.35" fill="currentColor"/><circle cx="14.4" cy="13" r="1.35" fill="currentColor"/><path d="M9.8 16.2h4.4M3.2 12v3M20.8 12v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-link" viewBox="0 0 24 24"><path d="M9.5 14.5l5-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M8.2 12.2l-2 2a3 3 0 004.3 4.2l2-2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.8 11.8l2-2a3 3 0 00-4.3-4.2l-2 2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
 <div class="aura a1"></div>
 <div class="aura a2"></div>
 
@@ -217,15 +258,15 @@
       <a class="btn big" href="#cara">Lihat cara kerja</a>
     </div>
     <div class="hnote">
-      <span>✅ Tanpa biaya</span><span class="dot"></span>
-      <span>🔒 Verifikasi aman via <b>Telegram</b></span><span class="dot"></span>
-      <span>⚡ Daftar &lt; 1 menit</span>
+      <span><svg class="ic"><use href="#ic-check"></use></svg> Tanpa biaya</span><span class="dot"></span>
+      <span><svg class="ic"><use href="#ic-lock"></use></svg> Verifikasi aman via <b>Telegram</b></span><span class="dot"></span>
+      <span><svg class="ic"><use href="#ic-target"></use></svg> Daftar &lt; 1 menit</span>
     </div>
   </div>
 
   <div class="reveal heroart" style="transition-delay:.1s">
-    <div class="float f1">🏆 <span>Level up!</span></div>
-    <div class="float f2">💸 <span>+2.000 poin</span></div>
+    <div class="float f1"><svg class="ic" style="width:18px;height:18px"><use href="#ic-trophy"></use></svg> <span>Level up!</span></div>
+    <div class="float f2"><svg class="ic" style="width:18px;height:18px"><use href="#ic-wallet"></use></svg> <span>+2.000 poin</span></div>
     <div class="ha-head">
       <span class="av">K</span>
       <div>
@@ -234,9 +275,9 @@
       </div>
     </div>
     <div class="mock">
-      <div class="mrow"><span class="mic" style="background:color-mix(in srgb,var(--mint) 24%,#fff)">📅</span><div><small>Misi harian</small><b>Check-in hari ini</b></div><span class="amt">+500</span></div>
-      <div class="mrow"><span class="mic" style="background:color-mix(in srgb,var(--sky) 24%,#fff)">📣</span><div><small>Sosial</small><b>Gabung channel</b></div><span class="amt">+1.500</span></div>
-      <div class="mrow"><span class="mic" style="background:color-mix(in srgb,var(--yellow) 40%,#fff)">👥</span><div><small>Ajak teman</small><b>Referral terverifikasi</b></div><span class="chk">✓</span></div>
+      <div class="mrow"><span class="mic" style="background:color-mix(in srgb,var(--mint) 24%,#fff)"><svg class="ic"><use href="#ic-fire"></use></svg></span><div><small>Misi harian</small><b>Check-in hari ini</b></div><span class="amt">+500</span></div>
+      <div class="mrow"><span class="mic" style="background:color-mix(in srgb,var(--sky) 24%,#fff)"><svg class="ic"><use href="#ic-megaphone"></use></svg></span><div><small>Sosial</small><b>Gabung channel</b></div><span class="amt">+1.500</span></div>
+      <div class="mrow"><span class="mic" style="background:color-mix(in srgb,var(--yellow) 40%,#fff)"><svg class="ic"><use href="#ic-users"></use></svg></span><div><small>Ajak teman</small><b>Referral terverifikasi</b></div><span class="chk">✓</span></div>
     </div>
   </div>
 </header>
@@ -244,32 +285,32 @@
 <!-- MARQUEE -->
 <div class="marquee" aria-hidden="true">
   <div class="track" id="mqTrack">
-    <span>🎁 Reward nyata</span><span>⚡ Misi harian</span><span>👥 Bonus referral</span><span>🔒 Login via Telegram</span><span>💸 Tarik saldo</span><span>🏆 Naik level</span>
-    <span>🎁 Reward nyata</span><span>⚡ Misi harian</span><span>👥 Bonus referral</span><span>🔒 Login via Telegram</span><span>💸 Tarik saldo</span><span>🏆 Naik level</span>
+    <span><svg class="ic"><use href="#ic-gift"></use></svg> Reward nyata</span><span><svg class="ic"><use href="#ic-target"></use></svg> Misi harian</span><span><svg class="ic"><use href="#ic-users"></use></svg> Bonus referral</span><span><svg class="ic"><use href="#ic-lock"></use></svg> Login via Telegram</span><span><svg class="ic"><use href="#ic-wallet"></use></svg> Tarik saldo</span><span><svg class="ic"><use href="#ic-trophy"></use></svg> Naik level</span>
+    <span><svg class="ic"><use href="#ic-gift"></use></svg> Reward nyata</span><span><svg class="ic"><use href="#ic-target"></use></svg> Misi harian</span><span><svg class="ic"><use href="#ic-users"></use></svg> Bonus referral</span><span><svg class="ic"><use href="#ic-lock"></use></svg> Login via Telegram</span><span><svg class="ic"><use href="#ic-wallet"></use></svg> Tarik saldo</span><span><svg class="ic"><use href="#ic-trophy"></use></svg> Naik level</span>
   </div>
 </div>
 
 <!-- STATS -->
 <section class="stats">
   <div class="stat reveal"><div class="num" data-count="4" data-suffix="+">0</div><div class="lab">Jenis misi untuk dikerjakan</div></div>
-  <div class="stat reveal" style="transition-delay:.08s"><div class="num" data-count="10000" data-sep>0</div><div class="lab">Bonus poin per referral</div></div>
+  <div class="stat reveal" style="transition-delay:.08s"><div class="num" data-count="10000" data-sep>0</div><div class="lab">Bonus poin tiap ajak teman</div></div>
   <div class="stat reveal" style="transition-delay:.16s"><div class="num" data-count="100" data-suffix="%">0</div><div class="lab">Poin tersimpan aman di akunmu</div></div>
 </section>
 
 <!-- FEATURES -->
 <section class="block wrap" id="fitur">
   <div class="shead reveal">
-    <span class="kicker">Kenapa KODO</span>
+    <span class="kicker">Kenapa REWARDEX</span>
     <h2>Semua yang kamu butuh, tanpa ribet</h2>
     <p>Dibuat simpel supaya siapa pun bisa langsung paham dan mulai mengumpulkan poin.</p>
   </div>
   <div class="lfeatures">
-    <div class="lfeat reveal"><div class="ib" style="background:color-mix(in srgb,var(--mint) 22%,#fff)">⚡</div><h3>Misi harian</h3><p>Check-in, gabung channel, start bot, dan tugas lain dari admin. Setiap misi menambah poinmu.</p></div>
-    <div class="lfeat reveal" style="transition-delay:.06s"><div class="ib" style="background:color-mix(in srgb,var(--violet) 24%,#fff)">🎁</div><h3>Reward nyata</h3><p>Tukar poin dengan reward pilihan. Permintaan diproses langsung oleh admin.</p></div>
-    <div class="lfeat reveal" style="transition-delay:.12s"><div class="ib" style="background:color-mix(in srgb,var(--yellow) 42%,#fff)">👥</div><h3>Referral cuan</h3><p>Ajak teman: kamu dapat 10.000 poin, teman dapat 2.000 poin setelah terverifikasi.</p></div>
-    <div class="lfeat reveal"><div class="ib" style="background:color-mix(in srgb,var(--sky) 26%,#fff)">🔒</div><h3>Login aman</h3><p>Masuk cukup lewat Telegram dengan kode OTP. Tanpa password ribet, tanpa data berlebih.</p></div>
-    <div class="lfeat reveal" style="transition-delay:.06s"><div class="ib" style="background:color-mix(in srgb,var(--pink) 32%,#fff)">💸</div><h3>Penarikan jelas</h3><p>Ajukan penarikan, admin cek lalu transfer manual. Ditolak? Poin otomatis kembali.</p></div>
-    <div class="lfeat reveal" style="transition-delay:.12s"><div class="ib" style="background:color-mix(in srgb,var(--mint) 30%,#fff)">🛡️</div><h3>Poin aman</h3><p>Logout hanya mengakhiri sesi di perangkat itu — poinmu tetap tersimpan di akun.</p></div>
+    <div class="lfeat reveal"><div class="ib" style="background:color-mix(in srgb,var(--mint) 22%,#fff)"><svg class="ic"><use href="#ic-target"></use></svg></div><h3>Misi harian</h3><p>Check-in, gabung channel, start bot, dan tugas lain dari admin. Setiap misi menambah poinmu.</p></div>
+    <div class="lfeat reveal" style="transition-delay:.06s"><div class="ib" style="background:color-mix(in srgb,var(--violet) 24%,#fff)"><svg class="ic"><use href="#ic-gift"></use></svg></div><h3>Reward nyata</h3><p>Tukar poin dengan reward pilihan. Permintaan diproses langsung oleh admin.</p></div>
+    <div class="lfeat reveal" style="transition-delay:.12s"><div class="ib" style="background:color-mix(in srgb,var(--yellow) 42%,#fff)"><svg class="ic"><use href="#ic-users"></use></svg></div><h3>Referral cuan</h3><p>Ajak teman: kamu dapat 10.000 poin, teman dapat 2.000 poin setelah terverifikasi.</p></div>
+    <div class="lfeat reveal"><div class="ib" style="background:color-mix(in srgb,var(--sky) 26%,#fff)"><svg class="ic"><use href="#ic-lock"></use></svg></div><h3>Login aman</h3><p>Masuk cukup lewat Telegram dengan kode OTP. Tanpa password ribet, tanpa data berlebih.</p></div>
+    <div class="lfeat reveal" style="transition-delay:.06s"><div class="ib" style="background:color-mix(in srgb,var(--pink) 32%,#fff)"><svg class="ic"><use href="#ic-wallet"></use></svg></div><h3>Penarikan jelas</h3><p>Ajukan penarikan, admin cek lalu transfer manual. Ditolak? Poin otomatis kembali.</p></div>
+    <div class="lfeat reveal" style="transition-delay:.12s"><div class="ib" style="background:color-mix(in srgb,var(--mint) 30%,#fff)"><svg class="ic"><use href="#ic-medal"></use></svg></div><h3>Poin aman</h3><p>Logout hanya mengakhiri sesi di perangkat itu — poinmu tetap tersimpan di akun.</p></div>
   </div>
 </section>
 
@@ -281,24 +322,24 @@
     <p>Dari daftar sampai dapat poin, prosesnya kurang dari satu menit.</p>
   </div>
   <div class="steps">
-    <div class="step reveal"><h3>Masuk via Telegram</h3><p>Masukkan username Telegram-mu, terima kode OTP, selesai. Akun langsung jadi.</p></div>
-    <div class="step reveal" style="transition-delay:.08s"><h3>Kerjakan misi</h3><p>Selesaikan misi harian dan tugas dari admin untuk menambah poin ke saldomu.</p></div>
-    <div class="step reveal" style="transition-delay:.16s"><h3>Tukar atau tarik</h3><p>Tukar poin jadi reward, atau ajukan penarikan saldo. Diproses oleh admin.</p></div>
+    <div class="step reveal"><h3>Login Simpel dengan Telegram</h3><p>Masuk cukup dengan nomor Telegram-mu. Dapatkan <b>komisi pertama senilai Rp 20.000</b> sebagai apresiasi member baru.</p></div>
+    <div class="step reveal" style="transition-delay:.08s"><h3>Kerjakan Misi</h3><p>Dapatkan hingga <b>jutaan rupiah</b> dengan menyelesaikan misi, mengundang teman, dan reward harian hingga <b>Rp 500.000</b>.</p></div>
+    <div class="step reveal" style="transition-delay:.16s"><h3>Tarik Jadi Saldo DANA</h3><p>Penarikan cepat <b>otomatis 24/7</b>, anti-delay. Poinmu langsung jadi saldo.</p></div>
   </div>
 </section>
 
 <!-- REWARDS SHOWCASE -->
 <section class="block wrap">
   <div class="shead reveal">
-    <span class="kicker">Reward</span>
-    <h2>Poinmu, hadiahmu</h2>
-    <p>Beberapa contoh reward yang bisa ditukar dengan poin.</p>
+    <span class="kicker">Penghasilan</span>
+    <h2>Rebahan Dapat Cuan</h2>
+    <p>Contoh beberapa reward hingga jutaan rupiah.</p>
   </div>
   <div class="rewards-row reveal">
-    <span class="rchip"><span class="em">☕</span> Voucher kopi <span class="cost">8.000 poin</span></span>
-    <span class="rchip"><span class="em">🛍️</span> Diskon belanja 25% <span class="cost">15.000 poin</span></span>
-    <span class="rchip"><span class="em">💳</span> Saldo belanja Rp50rb <span class="cost">60.000 poin</span></span>
-    <span class="rchip"><span class="em">🎧</span> & lainnya <span class="cost">dari admin</span></span>
+    <span class="rchip"><svg class="ic"><use href="#ic-users"></use></svg> Undang 1 Teman <span class="cost">Rp 25.000</span></span>
+    <span class="rchip"><svg class="ic"><use href="#ic-users"></use></svg> Undang 5 Teman <span class="cost">Rp 150.000</span></span>
+    <span class="rchip"><svg class="ic"><use href="#ic-trophy"></use></svg> Undang 100 Teman <span class="cost">Rp 2.500.000</span></span>
+    <span class="rchip"><svg class="ic"><use href="#ic-fire"></use></svg> Misi Absen Harian <span class="cost">hingga Rp 500.000</span></span>
   </div>
 </section>
 
@@ -309,7 +350,7 @@
     <h2>Pertanyaan umum</h2>
   </div>
   <div class="faq">
-    <details class="reveal" open><summary>Bagaimana cara masuk? <span class="tog">+</span></summary><div class="body">Cukup masukkan username (atau nomor) Telegram-mu. Kode verifikasi 6 digit dikirim ke Telegram, masukkan kodenya, dan kamu langsung masuk. Tidak perlu password di awal.</div></details>
+    <details class="reveal" open><summary>Bagaimana cara masuk? <span class="tog">+</span></summary><div class="body">Cukup masukkan nomor Telegram-mu. Kode verifikasi 6 digit dikirim langsung ke Telegram, masukkan kodenya, dan kamu langsung masuk — tanpa password ribet.</div></details>
     <details class="reveal"><summary>Bagaimana penarikan diproses? <span class="tog">+</span></summary><div class="body">Kamu mengajukan penarikan di aplikasi. Admin memeriksa lalu mentransfer secara manual. Jika ditolak, poin dikembalikan penuh ke akunmu.</div></details>
     <details class="reveal"><summary>Apakah poin hilang kalau saya logout? <span class="tog">+</span></summary><div class="body">Tidak. Poin tersimpan di akunmu. Logout hanya mengakhiri sesi di perangkat itu, dan kamu bisa masuk lagi kapan saja lewat Telegram.</div></details>
     <details class="reveal"><summary>Dari mana kode verifikasi datang? <span class="tog">+</span></summary><div class="body">Dikirim langsung ke akun Telegram-mu. Jangan pernah membagikan kode itu ke siapa pun, termasuk yang mengaku admin.</div></details>
@@ -329,7 +370,7 @@
 <footer>
   <div class="inner">
     <a class="brand" href="#top" aria-label="REWARDEX"><span class="logo-chip"><picture><source srcset="/logo-rewardex-sm.webp" type="image/webp"><img src="/logo-rewardex.png" alt="REWARDEX"></picture></span></a>
-    <span>© <span id="yr"></span> KODO Rewards · Dibuat dengan ❤️</span>
+    <span>© <span id="yr"></span> REWARDEX · Dibuat dengan ❤️</span>
   </div>
 </footer>
 
