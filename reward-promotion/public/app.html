@@ -431,53 +431,17 @@
   <div class="login-card">
     <div class="tg-badge" style="background:var(--violet)"><svg class="cic"><use href="#ic-lock"></use></svg></div>
 
-    <!-- step 1: Telegram -->
+    <!-- Login via Telegram Login Widget -->
     <div class="lstep active" id="lstep1">
       <h2>Masuk / Daftar</h2>
-      <p class="sub">Masukkan <b>nomor Telegram</b> Anda. Kode verifikasi dikirim langsung ke Telegram kamu.</p>
-      <div class="lfield">
-        <label for="loginPhone">Nomor Telegram</label>
-        <div class="phone-input">
-          <button type="button" id="ccBtn" class="cc-select"></button>
-          <input type="tel" id="loginPhone" inputmode="numeric" placeholder="Nomor tanpa 0 di depan" autocomplete="tel">
-        </div>
-      </div>
-      <button class="btn btn-violet full" id="authNext">Lanjut →</button>
-      <p class="sub" style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:.84rem"><svg class="cic" style="width:18px;height:18px"><use href="#ic-lock"></use></svg> Nomor kamu dijaga dengan keamanan terenkripsi.</p>
-    </div>
-
-    <!-- step 2: hubungkan Telegram + kode 2FA (Telethon) -->
-    <div class="lstep" id="lstep2">
-      <h2>Verifikasi 2FA</h2>
-      <p class="sub">Kode 6 digit dikirim ke Telegram <b id="shownNum"></b>. Buka Telegram-mu untuk melihat kodenya.</p>
-      <div class="otp-boxes">
-        <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 1">
-        <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 2">
-        <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 3">
-        <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 4">
-        <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 5">
-        <input class="otp-box" maxlength="1" inputmode="numeric" aria-label="digit 6">
-      </div>
-      <div class="resend"><a id="resend" role="button">Kirim ulang kode</a></div>
-      <button class="btn btn-violet full" id="verifyCode" style="margin-top:16px">Verifikasi &amp; masuk →</button>
-      <div class="lback"><button class="btn ghost sm" id="editNum">← Kembali</button></div>
-    </div>
-
-    <!-- step 3: password 2FA (hanya jika akun pakai) -->
-    <div class="lstep" id="lstep3">
-      <h2>Password 2FA</h2>
-      <p class="sub">Akun ini dilindungi password. Masukkan password untuk masuk.</p>
-      <div class="lfield">
-        <label for="loginPass">Password</label>
-        <input class="fi" type="password" id="loginPass" placeholder="Password akun" autocomplete="current-password" style="width:100%;border:3px solid var(--line);border-radius:13px;padding:14px;font-size:1.05rem;background:var(--paper);color:var(--ink)">
-      </div>
-      <button class="btn btn-violet full" id="doPassword">Masuk →</button>
-      <div class="lback"><button class="btn ghost sm" id="editNum2">← Kembali</button></div>
+      <p class="sub">Login menggunakan akun Telegram kamu. Proses aman &amp; instan — tanpa OTP, tanpa password.</p>
+      <div id="tg-login-widget" style="display:flex;justify-content:center;margin:28px 0 10px"></div>
+      <p id="tg-login-status" class="sub" style="text-align:center;min-height:1.4em"></p>
     </div>
 
     <div class="safenote">
       <span><svg class="cic" style="width:20px;height:20px"><use href="#ic-lock"></use></svg></span>
-      <span><b>Jaga keamanan akunmu.</b> Kode verifikasi bersifat rahasia — jangan bagikan ke siapa pun, termasuk yang mengaku admin.</span>
+      <span><b>Login aman.</b> Hanya ID Telegram terverifikasi yang diterima — kami tidak menyimpan kata sandi atau sesi Telegram kamu.</span>
     </div>
     <div class="login-back"><button class="btn ghost sm" data-go="landing">← Kembali ke beranda</button></div>
   </div>
@@ -694,7 +658,7 @@
   function show(id){
     $$('.screen').forEach(function(s){s.classList.remove('active');});
     $('#screen-'+id).classList.add('active'); window.scrollTo(0,0);
-    if(id==='login' && $('#lstep1')) $$('.lstep').forEach(function(s,i){s.classList.toggle('active',i===0);}); // selalu mulai dari nomor HP+password
+    if(id==='login') initTgWidget(CFG&&CFG.bot_username||'');
   }
   $$('[data-go]').forEach(function(b){b.addEventListener('click',function(){show(this.getAttribute('data-go'));});});
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -789,14 +753,7 @@
     $$('.bn-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-tab')===name);}); window.scrollTo(0,0);
   }
 
-  /* ---- login / register ---- */
-  function lshow(n){ $$('.lstep').forEach(function(s){s.classList.remove('active');}); $('#lstep'+n).classList.add('active'); }
-  var lboxes=$$('#lstep2 .otp-box');
-  lboxes.forEach(function(box,idx){
-    box.addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,1);this.classList.toggle('filled',!!this.value);if(this.value&&idx<lboxes.length-1)lboxes[idx+1].focus();});
-    box.addEventListener('keydown',function(e){if(e.key==='Backspace'&&!this.value&&idx>0)lboxes[idx-1].focus();});
-    box.addEventListener('paste',function(e){e.preventDefault();var t=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);t.split('').forEach(function(ch,i){if(lboxes[i]){lboxes[i].value=ch;lboxes[i].classList.add('filled');}});var nx=lboxes[Math.min(t.length,5)];if(nx)nx.focus();});
-  });
+  /* ---- login ---- */
   // [ISO2, kode negara, nama] -- daftar lengkap ~190 negara, mirip pilihan negara di Telegram
   var COUNTRIES=[
     ['ID','62','Indonesia'],
@@ -1035,55 +992,41 @@
       if(c.required&&!c.member){ renderJoinGate(); show('join'); } else { show('app'); }
     });
   }
-  var AUTHKEY='';      // key internal (tg_id) dari /auth/start
-  var AUTHPTOKEN='';   // token langkah password (akun ber-2FA)
-  function goOtpStep(name){
-    $('#shownNum').textContent = name||'';
-    lboxes.forEach(function(x){x.value='';x.classList.remove('filled');});
-    lshow(2); setTimeout(function(){ if(lboxes[0]) lboxes[0].focus(); },120);
-  }
-  function phoneDigits(){
-    var local=($('#loginPhone').value||'').replace(/[^0-9]/g,'').replace(/^0+/,'');
-    if(!local) return '';
-    return curCC.code+local;
-  }
-  $('#authNext').addEventListener('click',function(){
-    var b=this, ph=phoneDigits();
-    if(!ph){ toast('Isi nomor Telegram kamu','close'); return; }
-    b.disabled=true;
-    var ref=''; try{ref=new URLSearchParams(location.search).get('ref')||'';}catch(e){}
-    api('/auth/start','POST',{tg:'+'+ph,ref:ref}).then(function(r){
-      AUTHKEY=r.phone||'';
-      toast(r.mode==='login'?'Selamat datang kembali \u2014 kode dikirim':'Akun dibuat \u2014 kode dikirim ke Telegram','send');
-      goOtpStep('+'+ph);
-    }).catch(function(e){toast(e.message,'close');}).then(function(){b.disabled=false;});
-  });
-  $('#loginPhone').addEventListener('keydown',function(e){if(e.key==='Enter')$('#authNext').click();});
-  $('#editNum').addEventListener('click',function(){ lshow(1); });
-  $('#resend').addEventListener('click',function(){
-    if(!AUTHKEY){ toast('Mulai dari awal','close'); return; }
-    api('/otp/resend','POST',{phone:AUTHKEY}).then(function(r){
-      toast(r.ok?'Kode dikirim ke Telegram':'Gagal kirim kode','send');
-    }).catch(function(e){toast(e.message,'close');});
-  });
-  $('#verifyCode').addEventListener('click',function(){
-    var code=lboxes.map(function(b){return b.value;}).join(''), b=this;
-    if(code.length<6){toast('Masukkan 6 digit kode','lock');return;}
-    b.disabled=true;
-    api('/verify','POST',{phone:AUTHKEY,code:code}).then(function(r){
-      if(r && r.need_password){ AUTHPTOKEN=r.ptoken||''; lshow(3); setTimeout(function(){var el=$('#loginPass');if(el)el.focus();},120); b.disabled=false; return; }
+  // Telegram Login Widget callback \u2014 called by Telegram's script after user authorizes
+  window.onTelegramAuth = function(user) {
+    var status = $('#tg-login-status');
+    if (status) status.textContent = 'Memverifikasi...';
+    api('/auth/telegram', 'POST', user).then(function() {
       return afterAuth();
-    }).catch(function(e){toast(e.message,'close');}).then(function(){b.disabled=false;});
-  });
-  function doPassword(){
-    var b=$('#doPassword'), pw=($('#loginPass').value||'');
-    if(!pw){ toast('Isi password','close'); return; }
-    if(b) b.disabled=true;
-    api('/auth/password','POST',{ptoken:AUTHPTOKEN,password:pw}).then(afterAuth).catch(function(e){toast(e.message,'close');}).then(function(){if(b)b.disabled=false;});
+    }).catch(function(e) {
+      if (status) status.textContent = '';
+      toast(e.message || 'Login gagal, coba lagi', 'close');
+    });
+  };
+  var _tgWidgetInited = false;
+  function initTgWidget(botUsername) {
+    if (_tgWidgetInited) return;
+    var container = $('#tg-login-widget');
+    var status = $('#tg-login-status');
+    if (!container) return;
+    if (!botUsername) {
+      if (status) status.textContent = 'Bot belum dikonfigurasi \u2014 hubungi admin.';
+      return;
+    }
+    _tgWidgetInited = true;
+    if (status) status.textContent = 'Memuat...';
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://telegram.org/js/telegram-widget.js?22';
+    s.setAttribute('data-telegram-login', botUsername);
+    s.setAttribute('data-size', 'large');
+    s.setAttribute('data-radius', '10');
+    s.setAttribute('data-onauth', 'onTelegramAuth(user)');
+    s.setAttribute('data-request-access', 'write');
+    s.onload = function() { if (status) status.textContent = ''; };
+    s.onerror = function() { _tgWidgetInited = false; if (status) status.textContent = 'Gagal memuat widget, periksa koneksi.'; };
+    container.appendChild(s);
   }
-  if($('#doPassword')) $('#doPassword').addEventListener('click',doPassword);
-  if($('#editNum2')) $('#editNum2').addEventListener('click',function(){ lshow(2); });
-  if($('#loginPass')) $('#loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')doPassword();});
 
   /* ---- gate channel ---- */
   function renderJoinGate(){
@@ -1172,10 +1115,9 @@
   });
 
   /* ---- init: sesi 90 hari — langsung masuk jika cookie masih valid ---- */
-  api('/config').then(function(c){CFG=c;}).then(function(){
+  api('/config').then(function(c){CFG=c; initTgWidget(c.bot_username||'');}).then(function(){
     var q=''; try{q=new URLSearchParams(location.search).get('ref');}catch(e){}
     return afterAuth().catch(function(){
-      // belum login → landing, atau form login jika datang dari link referal
       show(q ? 'login' : 'landing');
     });
   }).catch(function(){ show('landing'); });

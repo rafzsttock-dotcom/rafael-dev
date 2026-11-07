@@ -10,6 +10,8 @@ const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || "admin").trim();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || ""; // hanya untuk membuat admin pertama; setelah itu dikelola di dashboard
 const SESSION_DAYS = +process.env.SESSION_DAYS || 90;
 const SECURE_COOKIE = process.env.SECURE_COOKIE === "1";
+const TELEGRAM_BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || "").trim();
+const TELEGRAM_BOT_USERNAME = (process.env.TELEGRAM_BOT_USERNAME || "").trim();
 const slug = (v, d) => (String(v || d).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || d);
 const APP_PATH = slug(process.env.APP_PATH, "app");
 const ADMIN_PATH = slug(process.env.ADMIN_PATH, "admin");
@@ -263,9 +265,41 @@ app.post("/api/auth/password", async (req, res) => {
 });
 
 
+// Telegram Login Widget callback handler
+app.post("/api/auth/telegram", async (req, res) => {
+  if (!TELEGRAM_BOT_TOKEN) return res.status(503).json({ ok: false, error: "Bot token belum dikonfigurasi — hubungi admin" });
+  const { hash, ...rest } = req.body || {};
+  if (!hash || typeof hash !== "string" || !/^[0-9a-f]{64}$/.test(hash)) return res.status(400).json({ ok: false, error: "Data auth tidak valid" });
+  const authDate = parseInt(rest.auth_date, 10);
+  if (!authDate || (Date.now() / 1000 - authDate) > 86400) return res.status(401).json({ ok: false, error: "Data autentikasi kedaluwarsa, coba login ulang" });
+  const checkStr = Object.keys(rest).sort().map((k) => `${k}=${rest[k]}`).join("\n");
+  const secretKey = crypto.createHash("sha256").update(TELEGRAM_BOT_TOKEN).digest();
+  const computedHash = crypto.createHmac("sha256", secretKey).update(checkStr).digest("hex");
+  if (!crypto.timingSafeEqual(Buffer.from(computedHash, "hex"), Buffer.from(hash, "hex"))) return res.status(401).json({ ok: false, error: "Verifikasi gagal, coba login ulang" });
+  if (!limit("tgauth:" + req.ip, 20, 900)) return res.status(429).json({ ok: false, error: "Terlalu banyak percobaan, coba lagi nanti" });
+  const tgId = String(rest.id || "");
+  if (!tgId) return res.status(400).json({ ok: false, error: "Data auth tidak valid" });
+  const tgName = String(rest.username || rest.first_name || "");
+  let u = db.prepare("SELECT * FROM users WHERE tg_id=?").get(tgId);
+  if (!u) {
+    const phone = "tg:" + tgId; // synthetic key — colons can't appear in real phone numbers
+    const uname = uniqueUsername(rest.username || "", tgId);
+    db.prepare("INSERT INTO users(phone,pass_hash,tg_id,tg_name,username,ref_code,referred_by,created,reg_ip,verified) VALUES(?,?,?,?,?,?,?,?,?,1)")
+      .run(phone, "", tgId, tgName, uname, crypto.randomBytes(4).toString("hex"), null, now(), req.ip);
+    u = db.prepare("SELECT * FROM users WHERE tg_id=?").get(tgId);
+  } else {
+    db.prepare("UPDATE users SET tg_name=?,verified=1,last_login=?,last_ip=? WHERE id=?").run(tgName, now(), req.ip, u.id);
+    u = db.prepare("SELECT * FROM users WHERE id=?").get(u.id);
+  }
+  if (!u || u.banned) return res.status(403).json({ ok: false, error: "Akun tidak tersedia" });
+  newSession(res, u.id, req);
+  res.json({ ok: true });
+});
+
 app.get("/api/config", (_q, res) => res.json({
   bot: "",
   telethon: true,
+  bot_username: TELEGRAM_BOT_USERNAME,
   min_withdraw: +setting("min_withdraw"),
   point_value: +(setting("point_value") || 1),
   channel: setting("channel"),

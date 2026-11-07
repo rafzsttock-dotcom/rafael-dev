@@ -9,7 +9,8 @@ python telegram-service/make_session.py
 cd /path/ke/reward-promotion
 cp .env.example .env
 nano .env
-# isi: DOMAIN, ADMIN_*, TELEGRAM_API_ID, TELEGRAM_API_HASH, TELEGRAM_SESSION, TELEGRAM_SERVICE_SECRET
+# isi: DOMAIN, ADMIN_*, TELEGRAM_API_ID, TELEGRAM_API_HASH, TELEGRAM_SERVICE_SECRET
+# isi juga: TELEGRAM_BOT_TOKEN (dari @BotFather), TELEGRAM_BOT_USERNAME (username bot tanpa @)
 
 ## 3. Build & jalan
 sudo docker compose down

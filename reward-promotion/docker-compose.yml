@@ -23,6 +23,8 @@ services:
       SECURE_COOKIE: "${SECURE_COOKIE:-1}"
       TELEGRAM_SERVICE_URL: "http://telethon:8090"
       TELEGRAM_SERVICE_SECRET: "${TELEGRAM_SERVICE_SECRET:-kodo-internal}"
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
+      TELEGRAM_BOT_USERNAME: "${TELEGRAM_BOT_USERNAME}"
     volumes:
       - ./data:/data
     depends_on:
