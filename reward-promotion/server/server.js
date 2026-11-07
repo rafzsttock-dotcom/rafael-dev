@@ -3,6 +3,8 @@ const express = require("express");
 const crypto = require("node:crypto");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
+const { TelegramClient, Api } = require("telegram");
+const { StringSession } = require("telegram/sessions");
 
 const PORT = +process.env.PORT || 3000;
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, "data", "app.db");
@@ -114,6 +116,8 @@ async function tgStatus() {
 }
 
 /* ---- Telegram StringSession generator sidecar (GramJS) ---- */
+const TG_API_ID = parseInt(process.env.TELEGRAM_API_ID, 10);
+const TG_API_HASH = String(process.env.TELEGRAM_API_HASH || "").trim();
 const SESS_URL = (process.env.SESSION_GENERATOR_URL || "http://session-generator:8091").replace(/\/$/, "");
 const SESS_SECRET = process.env.SESSION_GENERATOR_SECRET || TG_SECRET;
 const SESSION_ENC_KEY = process.env.SESSION_ENC_KEY || "";
@@ -377,11 +381,30 @@ app.get("/api/me", auth, (req, res) => {
     referrals: refs, history: db.prepare("SELECT delta,reason,ts FROM ledger WHERE user_id=? ORDER BY id DESC LIMIT 30").all(u.id),
     withdrawals: db.prepare("SELECT id,points,method,status,note,ts FROM withdrawals WHERE user_id=? ORDER BY id DESC LIMIT 20").all(u.id) });
 });
+/** Cek keanggotaan channel pakai StringSession milik user itu sendiri (GramJS),
+ * bukan akun Telethon terpisah. Kalau user belum punya session tersimpan
+ * (mis. SESSION_ENC_KEY belum aktif saat dia daftar), dianggap belum join —
+ * gagal-tertutup, bukan loloskan begitu saja. */
+async function checkOwnMembership(uid, channel) {
+  if (!SESSION_ENC_READY || !Number.isInteger(TG_API_ID) || TG_API_ID <= 0 || !TG_API_HASH) return false;
+  const row = db.prepare("SELECT session_enc FROM tg_sessions WHERE user_id=?").get(uid);
+  if (!row) return false;
+  let client;
+  try {
+    const sessionString = decSession(row.session_enc);
+    client = new TelegramClient(new StringSession(sessionString), TG_API_ID, TG_API_HASH, { connectionRetries: 2 });
+    await client.connect();
+    await client.invoke(new Api.channels.GetParticipant({ channel: channel.replace(/^@/, ""), participant: "me" }));
+    return true;
+  } catch (e) {
+    return false; // termasuk session rusak, USER_NOT_PARTICIPANT, dan channel tidak ditemukan
+  } finally {
+    if (client) { try { await client.destroy(); } catch (e) {} }
+  }
+}
 async function isMember(u) {
   const ch = setting("channel"); if (!ch) return true;
-  if (!u.tg_id) return false;
-  const r = await tgService("/member", { tg_id: +u.tg_id, channel: ch });
-  return !!(r.ok && r.member);
+  return checkOwnMembership(u.id, ch);
 }
 app.get("/api/channel/status", auth, async (req, res) => res.json({ required: !!setting("channel"), member: await isMember(req.user) }));
 app.post("/api/missions/:id/tap", auth, (req, res) => {
@@ -393,10 +416,9 @@ app.post("/api/missions/:id/claim", auth, async (req, res) => {
   if (m.type === "join_channel") {
     const ch = m.link || setting("channel");
     if (!u.tg_id) return res.status(400).json({ error: "Akun Telegram belum terhubung" });
-    const r = ch ? await tgService("/member", { tg_id: +u.tg_id, channel: ch }) : { ok: true, member: true };
-    if (!r.ok || !r.member) return res.status(400).json({ error: "Kamu belum bergabung ke channel" });
+    if (ch && !(await checkOwnMembership(u.id, ch))) return res.status(400).json({ error: "Kamu belum bergabung ke channel" });
   } else if (m.type === "start_bot") {
-    // legacy tipe misi: cukup punya tg_id terhubung via Telethon
+    // legacy tipe misi: cukup punya tg_id terhubung
     if (!u.tg_id) return res.status(400).json({ error: "Akun Telegram belum terhubung" });
   } else if (m.type === "tap_link") {
     const t = db.prepare("SELECT ts FROM taps WHERE user_id=? AND mission_id=?").get(u.id, m.id);
