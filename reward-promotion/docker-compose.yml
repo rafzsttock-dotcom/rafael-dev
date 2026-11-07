@@ -28,6 +28,7 @@ services:
       SESSION_ENC_KEY: "${SESSION_ENC_KEY:-}"
     volumes:
       - ./data:/data
+      - ./public:/app/public:ro
     depends_on:
       - telethon
       - session-generator

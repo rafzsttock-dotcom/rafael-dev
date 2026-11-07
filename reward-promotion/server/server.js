@@ -672,17 +672,18 @@ app.post("/api/admin/settings", adminAuth, (req, res) => {
 /* ---- halaman: path acak dari .env, nama file asli tidak diekspos ---- */
 const fs = require("node:fs");
 const page = (f) => fs.readFileSync(path.join(STATIC_DIR, f), "utf8");
+// Dibaca ulang tiap request supaya perubahan di ./public langsung tampil tanpa rebuild/restart.
 const HTML = {
-  index: page("index.html").replace(/href="app\.html"/g, `href="/${APP_PATH}"`),
-  app: page("app.html"),
-  admin: page("admin.html"),
+  index: () => page("index.html").replace(/href="app\.html"/g, `href="/${APP_PATH}"`),
+  app: () => page("app.html"),
+  admin: () => page("admin.html"),
 };
 const assetBuf = (f) => { try { return fs.readFileSync(path.join(STATIC_DIR, f)); } catch (e) { return null; } };
 const sendAsset = (f, type) => { const buf = assetBuf(f); return (_q, res) => { if (!buf) return res.status(404).end(); res.set({ "Content-Type": type, "Cache-Control": "public, max-age=604800, immutable" }); res.send(buf); }; };
 app.get("/logo-rewardex.webp", sendAsset("logo-rewardex.webp", "image/webp"));
 app.get("/logo-rewardex.png", sendAsset("logo-rewardex.png", "image/png"));
 app.get("/logo-rewardex-sm.webp", sendAsset("logo-rewardex-sm.webp", "image/webp"));
-const send = (html, extra) => (_q, res) => { res.set({ "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", ...(extra || {}) }); res.send(html); };
+const send = (html, extra) => (_q, res) => { res.set({ "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", ...(extra || {}) }); res.send(html()); };
 app.get("/", send(HTML.index));
 app.get("/" + APP_PATH, send(HTML.app));
 app.get("/" + ADMIN_PATH, send(HTML.admin, { "X-Robots-Tag": "noindex, nofollow" }));
