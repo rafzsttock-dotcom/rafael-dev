@@ -1035,8 +1035,8 @@
       if(c.required&&!c.member){ renderJoinGate(); show('join'); } else { show('app'); }
     });
   }
-  var AUTHKEY='';      // key internal (tg_id) dari /auth/start
-  var AUTHPTOKEN='';   // token langkah password (akun ber-2FA)
+  var AUTHKEY='';      // key akun dari /auth/request-code
+  var CODE_LEN=lboxes.length; // jumlah kotak kode di UI
   function goOtpStep(name){
     $('#shownNum').textContent = name||'';
     lboxes.forEach(function(x){x.value='';x.classList.remove('filled');});
@@ -1047,14 +1047,14 @@
     if(!local) return '';
     return curCC.code+local;
   }
+  function devCodeNote(r){ if(r && r.dev_code) toast('Kode uji coba: '+r.dev_code,'lock'); }
   $('#authNext').addEventListener('click',function(){
     var b=this, ph=phoneDigits();
-    if(!ph){ toast('Isi nomor Telegram kamu','close'); return; }
+    if(ph.length<8){ toast('Nomor HP belum lengkap','close'); return; }
     b.disabled=true;
-    var ref=''; try{ref=new URLSearchParams(location.search).get('ref')||'';}catch(e){}
-    api('/auth/start','POST',{tg:'+'+ph,ref:ref}).then(function(r){
-      AUTHKEY=r.phone||'';
-      toast(r.mode==='login'?'Selamat datang kembali \u2014 kode dikirim':'Akun dibuat \u2014 kode dikirim ke Telegram','send');
+    api('/auth/request-code','POST',{phone:ph}).then(function(r){
+      AUTHKEY=r.phone||ph;
+      toast('Kode dikirim ke Telegram kamu','send'); devCodeNote(r);
       goOtpStep('+'+ph);
     }).catch(function(e){toast(e.message,'close');}).then(function(){b.disabled=false;});
   });
@@ -1062,28 +1062,22 @@
   $('#editNum').addEventListener('click',function(){ lshow(1); });
   $('#resend').addEventListener('click',function(){
     if(!AUTHKEY){ toast('Mulai dari awal','close'); return; }
-    api('/otp/resend','POST',{phone:AUTHKEY}).then(function(r){
-      toast(r.ok?'Kode dikirim ke Telegram':'Gagal kirim kode','send');
+    api('/auth/request-code','POST',{phone:AUTHKEY}).then(function(r){
+      lboxes.forEach(function(x){x.value='';x.classList.remove('filled');});
+      toast('Kode baru dikirim','send'); devCodeNote(r);
     }).catch(function(e){toast(e.message,'close');});
   });
   $('#verifyCode').addEventListener('click',function(){
     var code=lboxes.map(function(b){return b.value;}).join(''), b=this;
-    if(code.length<6){toast('Masukkan 6 digit kode','lock');return;}
+    if(code.length<CODE_LEN){toast('Masukkan '+CODE_LEN+' digit kode','lock');return;}
+    var ref=''; try{ref=new URLSearchParams(location.search).get('ref')||'';}catch(e){}
     b.disabled=true;
-    api('/verify','POST',{phone:AUTHKEY,code:code}).then(function(r){
-      if(r && r.need_password){ AUTHPTOKEN=r.ptoken||''; lshow(3); setTimeout(function(){var el=$('#loginPass');if(el)el.focus();},120); b.disabled=false; return; }
+    api('/auth/verify-code','POST',{phone:AUTHKEY,code:code,ref:ref}).then(function(r){
+      if(r.is_new){ toast(r.welcome_points?('Akun dibuat! +'+fmt(r.welcome_points)+' poin'):'Akun dibuat. Selamat datang!','party'); confetti(); }
+      else toast('Berhasil masuk','check');
       return afterAuth();
     }).catch(function(e){toast(e.message,'close');}).then(function(){b.disabled=false;});
   });
-  function doPassword(){
-    var b=$('#doPassword'), pw=($('#loginPass').value||'');
-    if(!pw){ toast('Isi password','close'); return; }
-    if(b) b.disabled=true;
-    api('/auth/password','POST',{ptoken:AUTHPTOKEN,password:pw}).then(afterAuth).catch(function(e){toast(e.message,'close');}).then(function(){if(b)b.disabled=false;});
-  }
-  if($('#doPassword')) $('#doPassword').addEventListener('click',doPassword);
-  if($('#editNum2')) $('#editNum2').addEventListener('click',function(){ lshow(2); });
-  if($('#loginPass')) $('#loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')doPassword();});
 
   /* ---- gate channel ---- */
   function renderJoinGate(){

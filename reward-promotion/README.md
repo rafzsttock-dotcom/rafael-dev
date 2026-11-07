@@ -2,7 +2,7 @@
 
 Aplikasi misi + poin + reward (Node.js + SQLite + **Telethon**).
 
-- Login: username **atau** nomor HP + password + **2FA kode Telegram** (dikirim via Telethon)
+- Login: **nomor HP → kode verifikasi → masuk** (akun dibuat otomatis kalau belum ada). Kode dikirim via Telegram (Telethon/MadelineProto)
 - Admin panel: pengguna, sessions, penarikan, misi, reward
 - OTP & cek channel memakai akun Telegram user (Telethon), bukan BotFather token
 
@@ -30,10 +30,11 @@ Akun yang login di Telethon **harus bisa mengirim pesan** ke user (privacy Teleg
 
 ## Alur user
 
-1. Daftar: username + nomor HP + password
-2. Hubungkan `@username` Telegram → Telethon resolve + kirim kode
-3. Masukkan kode 6 digit
-4. Login berikutnya: username/HP + password + kode lagi
+1. Pilih negara + isi nomor HP (yang aktif di Telegram) -> `POST /api/auth/request-code`
+2. Masukkan kode 6 digit dari Telegram -> `POST /api/auth/verify-code` (kirim juga `ref` kalau datang dari link referal)
+3. Selesai: sesi 90 hari dibuat; akun baru otomatis terdaftar. Tidak ada password.
+
+`DEV_SHOW_CODE=1` di `.env` (hanya uji coba!) membuat kode ikut dikembalikan di respons dan dimunculkan di toast. Jangan aktifkan di produksi.
 
 ## Deploy VPS
 
