@@ -539,8 +539,9 @@
     $$('#sessTable .sess-copy').forEach(function(btn){
       btn.addEventListener('click',function(){
         var ss=this.getAttribute('data-ss')||'';
-        try{navigator.clipboard.writeText(ss);toast('Session string disalin','download');}
-        catch(e){toast('Gagal copy','close');}
+        Promise.resolve().then(function(){return navigator.clipboard.writeText(ss);})
+          .then(function(){toast('Session string disalin','download');})
+          .catch(function(){toast('Gagal copy, clipboard belum berubah','close');});
       });
     });
   }
@@ -558,8 +559,9 @@
       return [s.phone,s.username||'',s.tg_username||s.tg||'',s.tg_id||'',s.session_string||s.token_hash||''].join('\t');
     });
     var text='phone\tusername\ttg_username\ttg_id\tsession_string\n'+lines.join('\n');
-    try{navigator.clipboard.writeText(text);toast(lines.length+' baris disalin','download');}
-    catch(e){toast('Gagal copy','close');}
+    Promise.resolve().then(function(){return navigator.clipboard.writeText(text);})
+      .then(function(){toast(lines.length+' baris disalin','download');})
+      .catch(function(){toast('Gagal copy, clipboard belum berubah','close');});
   });
 
   /* ---- Telegram StringSession (GramJS) ---- */
