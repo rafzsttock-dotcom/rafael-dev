@@ -776,6 +776,14 @@
     };});
     $$('[data-join]').forEach(function(b){b.onclick=function(){ var ch=CFG.channel.replace(/^@/,''); window.open('https://t.me/'+ch,'_blank','noopener'); };});
     $$('[data-bot]').forEach(function(b){b.onclick=function(){ if(CFG.bot) window.open('https://t.me/'+CFG.bot,'_blank','noopener'); };});
+    var promo=$('.tg-promo');
+    if(promo){
+      var chOn=!!(CFG&&CFG.channel);
+      promo.style.cursor=chOn?'pointer':'';
+      promo.onclick=chOn?function(){window.open('https://t.me/'+CFG.channel.replace(/^@/,''),'_blank','noopener');}:null;
+      promo.onkeydown=chOn?function(e){if(e.key==='Enter')promo.onclick();}:null;
+      if(chOn){promo.setAttribute('role','link');promo.tabIndex=0;}
+    }
     $$('[data-redeem]').forEach(function(b){b.onclick=function(){
       var btn=this; btn.disabled=true;
       api('/rewards/'+btn.getAttribute('data-redeem')+'/redeem','POST',{}).then(function(){toast('Penukaran dikirim, menunggu admin','gift');confetti();return reload();})
