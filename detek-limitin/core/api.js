@@ -142,6 +142,7 @@ function registerApiRoutes(app) {
                 { method: 'GET',    path: '/api/sessions',      auth: true,  description: 'Status sesi WhatsApp' },
                 { method: 'POST',   path: '/api/cek-bio',       auth: true,  description: 'Cek bio massal (butuh sesi WA aktif)' },
                 { method: 'POST',   path: '/api/detect',        auth: true,  description: 'Cek status OTP / cooldown nomor' },
+                { method: 'POST',   path: '/api/limitin',       auth: true,  description: 'Kirim OTP berulang ke nomor (limitin)' },
             ]
         });
     });
@@ -385,7 +386,76 @@ function registerApiRoutes(app) {
         }
     });
 
-    logger.add('SYSTEM', 'API routes registered: /api/docs, /api/generate-key, /api/revoke-key, /api/me, /api/sessions, /api/cek-bio, /api/detect');
+    // ── Limitin ───────────────────────────────────────────────────────────────
+    app.post('/api/limitin', apiAuth, async (req, res) => {
+        try {
+            const { number, method = 'sms', max_attempts = 5 } = req.body || {};
+
+            if (!number) {
+                return res.status(400).json({ success: false, error: 'Field "number" diperlukan.' });
+            }
+
+            const cleanNum = validatePhoneNumber(number);
+            if (!cleanNum) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Nomor tidak valid. Gunakan format internasional, contoh: 6281234567890'
+                });
+            }
+
+            const VALID_METHODS = ['sms', 'voice', 'wa_old', 'flash'];
+            if (!VALID_METHODS.includes(method)) {
+                return res.status(400).json({
+                    success: false,
+                    error: `Method tidak valid. Pilih: ${VALID_METHODS.join(', ')}`
+                });
+            }
+
+            const maxAttempts = Math.min(Math.max(Number(max_attempts) || 5, 1), 10);
+
+            // Timeout: 5 menit (worst case 10 attempts × ~30s cooldown)
+            const TIMEOUT_MS = 300_000;
+            const abortController = new AbortController();
+            const timeoutId = setTimeout(() => abortController.abort(), TIMEOUT_MS);
+
+            let results;
+            try {
+                results = await WaManager.sendOtpWithRetry(
+                    req.apiUser.userId,
+                    cleanNum,
+                    method,
+                    maxAttempts,
+                    null,
+                    abortController.signal
+                );
+            } finally {
+                clearTimeout(timeoutId);
+            }
+
+            const lastResult = results[results.length - 1] || {};
+            const sentCount = results.filter(r => r.sent).length;
+            const finalStatus = lastResult.sent ? 'sent'
+                : (lastResult.banned || lastResult.blocked) ? 'blocked'
+                : lastResult.disabled ? 'disabled'
+                : lastResult.status === 'aborted' ? 'timeout'
+                : 'cooldown';
+
+            res.json({
+                success: true,
+                number: cleanNum,
+                method,
+                status: finalStatus,
+                sent_count: sentCount,
+                total_attempts: results.length,
+                results
+            });
+        } catch (err) {
+            logger.add('ERROR', `API limitin: ${err.message}`);
+            res.status(500).json({ success: false, error: err.message });
+        }
+    });
+
+    logger.add('SYSTEM', 'API routes registered: /api/docs, /api/generate-key, /api/revoke-key, /api/me, /api/sessions, /api/cek-bio, /api/detect, /api/limitin');
 }
 
 module.exports = { registerApiRoutes };

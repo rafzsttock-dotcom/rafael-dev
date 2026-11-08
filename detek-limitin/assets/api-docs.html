@@ -434,6 +434,9 @@
       <a class="sidebar-link" href="#ep-detect">
         <span class="m-badge m-post">POST</span> /api/detect
       </a>
+      <a class="sidebar-link" href="#ep-limitin">
+        <span class="m-badge m-post">POST</span> /api/limitin
+      </a>
     </div>
 
     <div class="sidebar-section">
@@ -686,6 +689,55 @@
             <tr><td><code>400</code></td><td>Array kosong, nomor tidak valid, atau melebihi 50</td></tr>
             <tr><td><code>503</code></td><td>Sesi WA belum aktif</td></tr>
             <tr><td><code>504</code></td><td>Timeout — kurangi jumlah nomor</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- POST /api/limitin -->
+      <div class="ep" id="ep-limitin">
+        <div class="ep-header" onclick="toggle(this)">
+          <span class="method-badge bg-post">POST</span>
+          <span class="ep-path">/api/limitin</span>
+          <span class="ep-auth-chip chip-auth">Auth</span>
+          <span class="ep-toggle">▼</span>
+        </div>
+        <div class="ep-body">
+          <p class="ep-desc">Kirim OTP berulang ke nomor WhatsApp (limitin). Tidak butuh sesi WA.</p>
+          <div class="label">Request Body</div>
+          <pre>{
+  "number": "6281234567890",
+  "method": "sms",
+  "max_attempts": 5
+}</pre>
+          <div class="label">Parameter</div>
+          <table class="ep-table">
+            <tr><th>Field</th><th>Tipe</th><th>Wajib</th><th>Nilai</th></tr>
+            <tr><td><code>number</code></td><td>string</td><td><span class="req">✦ Wajib</span></td><td>Format internasional, contoh: <code>6281234567890</code></td></tr>
+            <tr><td><code>method</code></td><td>string</td><td><span class="opt">Opsional</span></td><td><code>sms</code> (default), <code>voice</code>, <code>wa_old</code>, <code>flash</code></td></tr>
+            <tr><td><code>max_attempts</code></td><td>number</td><td><span class="opt">Opsional</span></td><td>1–10, default <code>5</code></td></tr>
+          </table>
+          <div class="label">Response 200</div>
+          <pre>{
+  "success": true,
+  "number": "6281234567890",
+  "method": "sms",
+  "status": "sent",
+  "sent_count": 3,
+  "total_attempts": 3,
+  "results": [
+    { "attempt": 1, "sent": false, "waitSec": 60, "banned": false, "blocked": false, "status": "cooldown" },
+    { "attempt": 2, "sent": false, "waitSec": 60, "banned": false, "blocked": false, "status": "cooldown" },
+    { "attempt": 3, "sent": true,  "waitSec": 0,  "banned": false, "blocked": false, "status": "sent"    }
+  ]
+}</pre>
+          <div class="label">Nilai <code>status</code></div>
+          <table class="ep-table">
+            <tr><th>Nilai</th><th>Arti</th></tr>
+            <tr><td><code>sent</code></td><td>OTP berhasil dikirim minimal sekali</td></tr>
+            <tr><td><code>cooldown</code></td><td>Semua attempt kena cooldown, tidak ada yang terkirim</td></tr>
+            <tr><td><code>blocked</code></td><td>Nomor diblokir / banned</td></tr>
+            <tr><td><code>disabled</code></td><td>Method tidak tersedia untuk nomor ini</td></tr>
+            <tr><td><code>timeout</code></td><td>Melebihi batas waktu 5 menit</td></tr>
           </table>
         </div>
       </div>

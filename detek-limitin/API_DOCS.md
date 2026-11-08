@@ -216,6 +216,50 @@ Nilai `status`: `ready` | `cooldown` | `banned` | `invalid`
 
 ---
 
+### POST /api/limitin
+Kirim OTP berulang ke nomor WhatsApp (limitin). Tidak butuh sesi WA.
+
+**Header:** `X-API-Key: dl_xxx`
+
+**Body:**
+```json
+{
+  "number": "6281234567890",
+  "method": "sms",
+  "max_attempts": 5
+}
+```
+
+| Field | Tipe | Wajib | Nilai |
+|-------|------|-------|-------|
+| `number` | string | ✅ | Format internasional |
+| `method` | string | ❌ | `sms` (default), `voice`, `wa_old`, `flash` |
+| `max_attempts` | number | ❌ | 1–10, default `5` |
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "number": "6281234567890",
+  "method": "sms",
+  "status": "sent",
+  "sent_count": 3,
+  "total_attempts": 3,
+  "results": [
+    { "attempt": 1, "sent": false, "waitSec": 60, "banned": false, "blocked": false, "status": "cooldown" },
+    { "attempt": 2, "sent": false, "waitSec": 60, "banned": false, "blocked": false, "status": "cooldown" },
+    { "attempt": 3, "sent": true,  "waitSec": 0,  "banned": false, "blocked": false, "status": "sent" }
+  ]
+}
+```
+
+Nilai `status`: `sent` | `cooldown` | `blocked` | `disabled` | `timeout`
+
+**Error:**
+- `400` — Nomor tidak valid atau method tidak dikenali
+
+---
+
 ## Cara Dapat API Key
 
 1. Beli Premium lewat bot Telegram (`/start` → Beli Premium)
