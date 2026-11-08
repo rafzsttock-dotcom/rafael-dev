@@ -1597,27 +1597,14 @@ bot.action("menu_apidocs", async (ctx) => {
     try {
         const text = `<b>${EMOJIS.DOC} DOKUMENTASI API</b>
 
-<blockquote>${EMOJIS.GLOBE} Base URL: <code>https://api.wspro.dev</code>
-${EMOJIS.BOOK} Docs: <code>https://docs.wspro.dev</code></blockquote>
-
-<blockquote expandable><b>Endpoint Tersedia:</b>
-▸ <code>POST /api/cek-bio</code> — cek bio massal
-▸ <code>POST /api/detect</code> — cek cooldown OTP
-▸ <code>POST /api/limitin</code> — limitin OTP otomatis
-▸ <code>GET /api/sessions</code> — info sesi WA aktif
-▸ <code>GET /api/me</code> — info akun &amp; sisa limit
-▸ <code>POST /api/generate-key</code> — buat API Key
-▸ <code>DELETE /api/revoke-key</code> — hapus API Key
-
-Auth: <code>X-API-Key: dl_xxx</code>  ·  Rate limit: <b>30 req/menit</b></blockquote>
-
-<blockquote expandable><b>Cara Dapat API Key:</b>
+${EMOJIS.GLOBE} Link Documentasi : <code>https://docs.wspro.dev</code>
+<b>Cara Dapat API Key:</b>
 1. Beli <b>Akses API</b> (klik tombol di bawah)
 2. Buka menu <b>AMBIL APIKEY</b>
 3. Klik <b>Generate API Key</b>
 4. Simpan key — hanya tampil <b>sekali!</b>
 
-Telegram ID kamu: <code>${userId}</code></blockquote>`;
+Telegram ID kamu: <code>${userId}</code>`;
 
         const keyboard = {
             reply_markup: {
