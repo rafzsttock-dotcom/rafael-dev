@@ -1167,15 +1167,15 @@ Silakan pilih menu di bawah ini.`
 
     const keyboard = { reply_markup: { inline_keyboard: [
         [
-            { text: 'CEK BIO', callback_data: 'menu_cekbio', icon_custom_emoji_id: EMOJI_IDS.DOC },
-            { text: 'DETECT OTP', callback_data: 'menu_detect', icon_custom_emoji_id: EMOJI_IDS.SEARCH }
+            { text: 'CEK BIO', callback_data: 'menu_cekbio', icon_custom_emoji_id: EMOJI_IDS.DOC, style: 'primary' },
+            { text: 'DETECT OTP', callback_data: 'menu_detect', icon_custom_emoji_id: EMOJI_IDS.SEARCH, style: 'primary' }
         ],
         [
-            { text: 'LIMITIN CODE', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }
+            { text: 'LIMITIN CODE', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET, style: 'primary' }
         ],
         [
-            { text: 'BELI PREMIUM', callback_data: 'menu_buyprem', icon_custom_emoji_id: EMOJI_IDS.PREMIUM },
-            { text: 'REDEEM CODE', callback_data: 'menu_redeem', icon_custom_emoji_id: EMOJI_IDS.GIFT }
+            { text: 'BELI PREMIUM', callback_data: 'menu_buyprem', icon_custom_emoji_id: EMOJI_IDS.PREMIUM, style: 'success' },
+            { text: 'REDEEM CODE', callback_data: 'menu_redeem', icon_custom_emoji_id: EMOJI_IDS.GIFT, style: 'success' }
         ],
         [
             { text: 'REFERRAL', callback_data: 'menu_referral', icon_custom_emoji_id: EMOJI_IDS.USER },
@@ -1195,7 +1195,7 @@ Silakan pilih menu di bawah ini.`
 
     if (ctx.from.id === config.ownerId) {
         keyboard.reply_markup.inline_keyboard.push([
-            { text: 'OWNER PANEL', callback_data: 'action_ownermenu', icon_custom_emoji_id: EMOJI_IDS.OWNER }
+            { text: 'OWNER PANEL', callback_data: 'action_ownermenu', icon_custom_emoji_id: EMOJI_IDS.OWNER, style: 'danger' }
         ]);
     }
 
