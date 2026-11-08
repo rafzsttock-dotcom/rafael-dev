@@ -126,13 +126,22 @@ async function checkAndIncrementQuota(user, type, count = 1) {
         try { usage = JSON.parse(usage); } catch (_) { usage = {}; }
     }
 
-    // Reset if needed
-    const resetAt = usage.resetAt || 0;
     const now = Date.now();
-    const shouldReset = plan.quotaPeriod !== 'lifetime' && resetAt && now >= resetAt;
-    if (shouldReset || !usage.resetAt) {
-        const nextReset = getQuotaResetMs(plan.quotaPeriod);
-        usage = { cekBio: 0, detect: 0, limitin: 0, resetAt: nextReset };
+    const initialized = usage.cekBio !== undefined || usage.detect !== undefined || usage.limitin !== undefined;
+
+    if (plan.quotaPeriod === 'lifetime') {
+        // Quota jalan terus sampai plan expired — hanya init sekali di awal
+        if (!initialized) {
+            usage = { cekBio: 0, detect: 0, limitin: 0, resetAt: null };
+        }
+    } else {
+        // daily / monthly — reset kalau sudah lewat waktu reset
+        const resetAt = usage.resetAt || 0;
+        const shouldReset = resetAt && now >= resetAt;
+        if (!initialized || shouldReset) {
+            const nextReset = getQuotaResetMs(plan.quotaPeriod);
+            usage = { cekBio: 0, detect: 0, limitin: 0, resetAt: nextReset };
+        }
     }
 
     const used = Number(usage[type] || 0);

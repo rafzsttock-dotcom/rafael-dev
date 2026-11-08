@@ -99,11 +99,11 @@ const config = {
 
     apiPlans: [
         { id: 'api_starter', name: 'Starter (30 Hari)', days: 30, price: 25000, desc: 'Paket Starter API',
-          maxCekBio: 1000, maxDetect: 500, maxLimitin: 100, maxNumbers: 50, quotaPeriod: 'monthly' },
+          maxCekBio: 1000, maxDetect: 500, maxLimitin: 100, maxNumbers: 50, quotaPeriod: 'lifetime' },
         { id: 'api_pro', name: 'Pro (30 Hari)', days: 30, price: 75000, desc: 'Paket Pro API',
-          maxCekBio: 5000, maxDetect: 2000, maxLimitin: 500, maxNumbers: 50, quotaPeriod: 'monthly' },
+          maxCekBio: 5000, maxDetect: 2000, maxLimitin: 500, maxNumbers: 50, quotaPeriod: 'lifetime' },
         { id: 'api_unlimited', name: 'Unlimited (30 Hari)', days: 30, price: 150000, desc: 'Paket Unlimited API',
-          maxCekBio: -1, maxDetect: -1, maxLimitin: -1, maxNumbers: 50, quotaPeriod: 'monthly' }
+          maxCekBio: -1, maxDetect: -1, maxLimitin: -1, maxNumbers: 50, quotaPeriod: 'lifetime' }
     ]
 };
 
