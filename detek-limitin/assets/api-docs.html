@@ -270,7 +270,13 @@ body{
   font-size:.62rem;font-weight:700;text-transform:uppercase;
   letter-spacing:.08em;color:var(--muted);margin-bottom:5px;
 }
-.ic-val{font-family:var(--ffh);font-size:.88rem;font-weight:600;color:var(--ink)}
+.ic-val{font-family:var(--ffh);font-size:.88rem;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px;justify-content:space-between}
+.ic-copy{
+  flex-shrink:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;
+  background:var(--white);border:1.5px solid var(--ink);border-radius:6px;cursor:pointer;
+  color:var(--ink);transition:background .12s;
+}
+.ic-copy:hover{background:var(--teal)}
 code{
   font-family:'JetBrains Mono','Fira Code',monospace;
   font-size:.8em;background:#f0ece4;
@@ -604,7 +610,12 @@ tr:last-child td{border-bottom:none}
     <div class="info-row" id="auth">
       <div class="ic">
         <div class="ic-label">Base URL</div>
-        <div class="ic-val" style="font-size:.78rem"><code>https://api.wspro.dev</code></div>
+        <div class="ic-val" style="font-size:.78rem">
+          <code>https://api.wspro.dev</code>
+          <button class="ic-copy" onclick="cpText(this,'https://api.wspro.dev')" title="Copy">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
       </div>
       <div class="ic">
         <div class="ic-label">Rate Limit</div>
@@ -1007,6 +1018,15 @@ async function cpCode(btn){
     const s=window.getSelection(),r=document.createRange();
     r.selectNodeContents(pre);s.removeAllRanges();s.addRange(r);
   }
+}
+async function cpText(btn,text){
+  try{
+    await navigator.clipboard.writeText(text);
+    const old=btn.innerHTML;
+    btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+    btn.style.background='var(--teal)';
+    setTimeout(()=>{btn.innerHTML=old;btn.style.background=''},1800);
+  }catch{}
 }
 document.querySelectorAll('a[href^="#"]').forEach(a=>{
   a.addEventListener('click',e=>{
