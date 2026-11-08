@@ -148,16 +148,6 @@ async function checkAndIncrementQuota(user, type, count = 1) {
     return { allowed: true, remaining: max - usage[type], used: usage[type], max };
 }
 
-function sendQuotaExhaustedNotif(userId, featureName, used, max) {
-    if (!global.bot || !global.bot.telegram) return;
-    const maxStr = (max === null || max === -1) ? '∞' : max;
-    const text = `⚠️ <b>KUOTA ${featureName.toUpperCase()} HABIS!</b>\n\n<blockquote>Kuota <b>${featureName}</b> kamu sudah habis (${used}/${maxStr}).\n\nUpgrade atau perpanjang paket API untuk melanjutkan.</blockquote>`;
-    global.bot.telegram.sendMessage(userId, text, {
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: [[{ text: '🔄 LIHAT PAKET API', callback_data: 'menu_beli_api' }]] }
-    }).catch(() => {});
-}
-
 async function getUserByApiKey(apiKey) {
     if (!apiKey || typeof apiKey !== 'string') return null;
     return User.findOne({ apiKey: apiKey.trim() }).lean();
@@ -426,7 +416,6 @@ function registerApiRoutes(app) {
             // Quota check — per nomor (bukan per request)
             const quotaCheck = await checkAndIncrementQuota(req.apiUser, 'cekBio', cleanNumbers.length);
             if (!quotaCheck.allowed) {
-                sendQuotaExhaustedNotif(req.apiUser.userId, 'Cek Bio', quotaCheck.used, quotaCheck.max);
                 return res.status(429).json({
                     success: false,
                     error: `Kuota Cek Bio habis. Tersisa: ${quotaCheck.remaining} nomor dari ${quotaCheck.max}`,
@@ -516,7 +505,6 @@ function registerApiRoutes(app) {
 
             const quotaCheck = await checkAndIncrementQuota(req.apiUser, 'detect', 1);
             if (!quotaCheck.allowed) {
-                sendQuotaExhaustedNotif(req.apiUser.userId, 'Detect', quotaCheck.used, quotaCheck.max);
                 return res.status(429).json({
                     success: false,
                     error: `Kuota Detect habis (${quotaCheck.used}/${quotaCheck.max} nomor terpakai).`,
@@ -560,7 +548,6 @@ function registerApiRoutes(app) {
 
             const quotaCheckLimitin = await checkAndIncrementQuota(req.apiUser, 'limitin', 1);
             if (!quotaCheckLimitin.allowed) {
-                sendQuotaExhaustedNotif(req.apiUser.userId, 'Limitin', quotaCheckLimitin.used, quotaCheckLimitin.max);
                 return res.status(429).json({
                     success: false,
                     error: `Kuota Limitin habis (${quotaCheckLimitin.used}/${quotaCheckLimitin.max} terpakai).`,
