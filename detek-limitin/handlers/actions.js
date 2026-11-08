@@ -1595,9 +1595,8 @@ bot.action("menu_apidocs", async (ctx) => {
     if (userLocks.get(lockKey)) return ctx.answerCbQuery("Mohon tunggu...", { show_alert: true });
     userLocks.set(lockKey, true);
     try {
-        const text = `<b>${EMOJIS.DOC} DOKUMENTASI API</b>
+        const text = `<b>${EMOJIS.DOC} DOKUMENTASI INTEGRASI API</b>
 
-${EMOJIS.GLOBE} Link Documentasi : <code>https://docs.wspro.dev</code>
 <b>Cara Dapat API Key:</b>
 1. Beli <b>Akses API</b> (klik tombol di bawah)
 2. Buka menu <b>AMBIL APIKEY</b>
@@ -1609,6 +1608,7 @@ Telegram ID kamu: <code>${userId}</code>`;
         const keyboard = {
             reply_markup: {
                 inline_keyboard: [
+                    [{ text: "Link Documentasi", url: "https://docs.wspro.dev" }],
                     [{ text: "Beli Akses Apikey", callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
                     [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                 ]
