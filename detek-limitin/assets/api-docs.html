@@ -14,6 +14,7 @@
     --accent: #00c853;
     --accent2: #00e676;
     --code-bg: #0d1117;
+    --del-bg: #3a1a1a;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -59,9 +60,14 @@
   }
   .card h3 {
     font-size: 1.05rem;
-    margin: 16px 0 8px;
+    margin: 20px 0 8px;
     color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
+  .card h3:first-of-type { margin-top: 8px; }
+  .endpoint-desc { color: var(--muted); font-size: 0.95rem; margin-bottom: 8px; }
   code, pre {
     font-family: "SF Mono", Monaco, Consolas, monospace;
     background: var(--code-bg);
@@ -75,10 +81,11 @@
   pre {
     padding: 16px;
     overflow-x: auto;
-    margin: 12px 0;
-    font-size: 0.85rem;
-    line-height: 1.5;
+    margin: 10px 0;
+    font-size: 0.83rem;
+    line-height: 1.55;
     border: 1px solid var(--border);
+    color: #c9d1d9;
   }
   .method {
     display: inline-block;
@@ -86,14 +93,21 @@
     border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 700;
-    margin-right: 8px;
+    flex-shrink: 0;
   }
-  .get { background: #238636; color: #fff; }
-  .post { background: #1f6feb; color: #fff; }
+  .get    { background: #238636; color: #fff; }
+  .post   { background: #1f6feb; color: #fff; }
+  .delete { background: #b91c1c; color: #fff; }
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
   table {
     width: 100%;
     border-collapse: collapse;
     margin: 12px 0;
+    font-size: 0.9rem;
   }
   th, td {
     text-align: left;
@@ -102,12 +116,22 @@
   }
   th { color: var(--muted); font-weight: 500; }
   .note {
-    background: rgba(0, 200, 83, 0.1);
+    background: rgba(0, 200, 83, 0.08);
     border-left: 3px solid var(--accent);
     padding: 12px 16px;
     border-radius: 0 8px 8px 0;
     margin: 12px 0;
-    font-size: 0.95rem;
+    font-size: 0.93rem;
+    color: var(--muted);
+  }
+  .note b { color: var(--text); }
+  .label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 12px;
+    margin-bottom: 4px;
   }
   footer {
     text-align: center;
@@ -121,92 +145,222 @@
 <div class="container">
   <header>
     <h1>DetekLimitin API</h1>
-    <p>REST API untuk Cek Bio, Detect OTP, dan Limitin</p>
-    <div class="badge">API Key wajib beli Premium</div>
+    <p>REST API untuk Cek Bio, Detect OTP Status, dan manajemen API Key</p>
+    <div class="badge">Hanya tersedia untuk user Premium</div>
   </header>
 
+  <!-- Auth -->
   <div class="card">
     <h2>Autentikasi</h2>
-    <p>Semua endpoint (kecuali docs & generate-key) butuh API Key.</p>
-    <pre>Header: X-API-Key: dl_xxxxxxxxxxxxxxxx
-atau query: ?api_key=dl_xxx
-atau body: "api_key": "dl_xxx"</pre>
-    <div class="note">API Key hanya bisa digenerate setelah user beli Premium lewat bot Telegram.</div>
+    <p>Semua endpoint (kecuali <code>/api/docs</code> dan <code>/api/generate-key</code>) butuh API Key.</p>
+    <pre>// Pilih salah satu cara
+Header:      X-API-Key: dl_xxxxxxxxxxxxxxxx
+Query param: ?api_key=dl_xxx
+Request body: "api_key": "dl_xxx"</pre>
+    <div class="note"><b>Rate limit:</b> 30 request per menit per API Key. Melebihi limit → HTTP 429.</div>
   </div>
 
+  <!-- Base URL -->
   <div class="card">
     <h2>Base URL</h2>
-    <pre>http://localhost:5055/api</pre>
-    <p style="color:var(--muted);margin-top:8px;">Ganti dengan domain / IP server kamu.</p>
+    <pre>http://your-server:5055</pre>
+    <p style="color:var(--muted);margin-top:8px;">Ganti dengan domain atau IP server kamu.</p>
   </div>
 
+  <!-- Endpoints -->
   <div class="card">
-    <h2>Endpoint</h2>
+    <h2>Endpoints</h2>
 
+    <!-- GET /api/docs -->
     <h3><span class="method get">GET</span> /api/docs</h3>
-    <p>Dokumentasi ini (JSON).</p>
+    <p class="endpoint-desc">Dokumentasi JSON ini. Tidak butuh autentikasi.</p>
 
+    <hr class="divider">
+
+    <!-- POST /api/generate-key -->
     <h3><span class="method post">POST</span> /api/generate-key</h3>
-    <p>Generate API Key baru. User harus sudah Premium.</p>
-    <pre>{
-  "telegram_id": 31303135
-}</pre>
-    <p>Response:</p>
+    <p class="endpoint-desc">Generate atau regenerate API Key. Butuh akun Premium. Jika sudah punya key, key lama langsung tidak berlaku.</p>
+    <div class="label">Request Body</div>
+    <pre>{ "telegram_id": 123456789 }</pre>
+    <div class="label">Response 200</div>
     <pre>{
   "success": true,
-  "api_key": "dl_xxxxxxxx...",
-  "message": "Simpan API Key ini. Hanya ditampilkan sekali."
+  "api_key": "dl_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "regenerated": false,
+  "message": "Simpan API Key ini — hanya ditampilkan sekali. Jangan bagikan ke siapapun."
+}</pre>
+    <div class="label">Errors</div>
+    <table>
+      <tr><th>Kode</th><th>Penyebab</th></tr>
+      <tr><td>400</td><td><code>telegram_id</code> kosong atau bukan angka</td></tr>
+      <tr><td>403</td><td>User belum atau sudah tidak Premium</td></tr>
+      <tr><td>404</td><td>User tidak ditemukan (belum pernah <code>/start</code> bot)</td></tr>
+    </table>
+
+    <hr class="divider">
+
+    <!-- DELETE /api/revoke-key -->
+    <h3><span class="method delete">DELETE</span> /api/revoke-key</h3>
+    <p class="endpoint-desc">Revoke API Key aktif. Setelah ini key tidak bisa dipakai lagi.</p>
+    <div class="label">Header</div>
+    <pre>X-API-Key: dl_xxx</pre>
+    <div class="label">Response 200</div>
+    <pre>{ "success": true, "message": "API Key berhasil di-revoke." }</pre>
+
+    <hr class="divider">
+
+    <!-- GET /api/me -->
+    <h3><span class="method get">GET</span> /api/me</h3>
+    <p class="endpoint-desc">Info akun dan sisa rate limit dari API Key yang dipakai.</p>
+    <div class="label">Response 200</div>
+    <pre>{
+  "success": true,
+  "userId": 123456789,
+  "username": "namauser",
+  "premium": true,
+  "premiumUntil": "2025-01-01T00:00:00.000Z",
+  "limit": 5,
+  "apiKeyCreatedAt": "2024-11-08T10:00:00.000Z",
+  "rateLimit": {
+    "remaining": 28,
+    "max": 30,
+    "window": "60s"
+  }
 }</pre>
 
-    <h3><span class="method get">GET</span> /api/me</h3>
-    <p>Info user dari API Key.</p>
-    <pre>curl -H "X-API-Key: dl_xxx" http://localhost:5055/api/me</pre>
+    <hr class="divider">
 
+    <!-- GET /api/sessions -->
+    <h3><span class="method get">GET</span> /api/sessions</h3>
+    <p class="endpoint-desc">Status sesi WhatsApp yang terhubung ke akun kamu.</p>
+    <div class="label">Response 200</div>
+    <pre>{
+  "success": true,
+  "status": "CONNECTED",
+  "ready": true,
+  "sessions": [
+    { "sessionId": 1, "phone": "628123456789" }
+  ],
+  "hint": "Sesi aktif. Siap untuk Cek Bio."
+}</pre>
+    <div class="note">Jika <code>ready: false</code>, connect WA dulu lewat bot Telegram sebelum pakai <code>/api/cek-bio</code>.</div>
+
+    <hr class="divider">
+
+    <!-- POST /api/cek-bio -->
     <h3><span class="method post">POST</span> /api/cek-bio</h3>
-    <p>Cek bio massal. Max 50 nomor. Butuh session WA aktif.</p>
+    <p class="endpoint-desc">Cek bio massal. <b>Butuh sesi WhatsApp aktif</b> (connect dulu lewat bot Telegram).</p>
+    <div class="label">Request Body</div>
     <pre>{
   "numbers": ["6281234567890", "6289876543210"],
   "mode": "simple"
 }</pre>
-
-    <h3><span class="method post">POST</span> /api/detect</h3>
-    <p>Detect status / OTP endpoint.</p>
+    <table>
+      <tr><th>Field</th><th>Tipe</th><th>Wajib</th><th>Nilai</th></tr>
+      <tr><td><code>numbers</code></td><td>array string</td><td>✅</td><td>Maks 50 nomor</td></tr>
+      <tr><td><code>mode</code></td><td>string</td><td>❌</td><td><code>simple</code> (default) atau <code>detail</code></td></tr>
+      <tr><td><code>speed</code></td><td>string</td><td>❌</td><td><code>normal</code> (default) atau <code>brutal</code></td></tr>
+    </table>
+    <div class="label">Response 200</div>
     <pre>{
-  "number": "6281234567890",
-  "method": "sms"
+  "success": true,
+  "mode": "simple",
+  "summary": {
+    "total": 2,
+    "registered": 1,
+    "unregistered": 1,
+    "business": 0,
+    "private": 1,
+    "repe": 0,
+    "cancelled": false,
+    "interrupted": false
+  },
+  "results": {
+    "business": [],
+    "private": [
+      {
+        "number": "6281234567890",
+        "registered": true,
+        "type": "private",
+        "name": null,
+        "bio": "Halo!",
+        "hasBio": true,
+        "profilePic": true,
+        "isVerified": false
+      }
+    ],
+    "repe": [],
+    "unregistered": [
+      { "number": "6289876543210", "registered": false }
+    ]
+  }
 }</pre>
-    <p>Method: <code>sms</code>, <code>voice</code>, <code>wa</code></p>
+    <div class="label">Errors</div>
+    <table>
+      <tr><th>Kode</th><th>Penyebab</th></tr>
+      <tr><td>400</td><td>Array kosong, nomor tidak valid, atau melebihi 50</td></tr>
+      <tr><td>503</td><td>Sesi WA belum aktif</td></tr>
+      <tr><td>504</td><td>Timeout — kurangi jumlah nomor</td></tr>
+    </table>
+
+    <hr class="divider">
+
+    <!-- POST /api/detect -->
+    <h3><span class="method post">POST</span> /api/detect</h3>
+    <p class="endpoint-desc">Cek status cooldown OTP nomor WhatsApp. Tidak butuh sesi WA.</p>
+    <div class="label">Request Body</div>
+    <pre>{ "number": "6281234567890" }</pre>
+    <div class="label">Response 200</div>
+    <pre>{
+  "success": true,
+  "number": "6281234567890",
+  "status": "ready",
+  "formatted": "6281234567890 — SMS: READY | WA OLD: COOLDOWN 2m 30s",
+  "sms": {
+    "status": "ready",
+    "waitSec": 0,
+    "cooldownFmt": "READY"
+  },
+  "wa_old": {
+    "available": true,
+    "status": "cooldown",
+    "waitSec": 150,
+    "cooldownFmt": "COOLDOWN 2m 30s"
+  },
+  "isWaOldAvailable": true
+}</pre>
+    <p style="color:var(--muted);margin-top:8px;font-size:0.9rem;">Nilai <code>status</code>: <code>ready</code> | <code>cooldown</code> | <code>banned</code> | <code>invalid</code></p>
   </div>
 
+  <!-- How to get API Key -->
   <div class="card">
     <h2>Cara Dapat API Key</h2>
-    <ol style="padding-left:20px;color:var(--muted);">
-      <li>Buka bot Telegram → klik <b>Beli Premium</b></li>
-      <li>Bayar via QRIS</li>
-      <li>Setelah aktif, call endpoint <code>/api/generate-key</code> dengan telegram_id kamu</li>
-      <li>Simpan API Key yang dikasih</li>
+    <ol style="padding-left:20px;color:var(--muted);line-height:2;">
+      <li>Beli Premium lewat bot Telegram (<code>/start</code> → <b>Beli Premium</b>)</li>
+      <li>Panggil <code>POST /api/generate-key</code> dengan <code>telegram_id</code> kamu</li>
+      <li>Simpan API Key yang diberikan — <b>tidak bisa dilihat lagi</b></li>
+      <li>Kalau lupa / mau ganti, panggil endpoint yang sama lagi (key lama langsung tidak berlaku)</li>
     </ol>
   </div>
 
-  <div class="card">
-    <h2>Rate Limit</h2>
-    <p>30 request per menit per API Key.</p>
-  </div>
-
+  <!-- Error Codes -->
   <div class="card">
     <h2>Error Codes</h2>
     <table>
-      <tr><th>Code</th><th>Arti</th></tr>
-      <tr><td>401</td><td>API Key missing / invalid</td></tr>
-      <tr><td>403</td><td>Belum Premium</td></tr>
-      <tr><td>429</td><td>Rate limit</td></tr>
-      <tr><td>400</td><td>Bad request</td></tr>
+      <tr><th>Kode</th><th>Arti</th></tr>
+      <tr><td>400</td><td>Bad request — input salah atau tidak lengkap</td></tr>
+      <tr><td>401</td><td>API Key tidak ada atau tidak valid</td></tr>
+      <tr><td>403</td><td>Belum Premium atau Premium sudah kadaluarsa</td></tr>
+      <tr><td>404</td><td>User tidak ditemukan</td></tr>
+      <tr><td>429</td><td>Rate limit (30 req/menit per API Key)</td></tr>
       <tr><td>500</td><td>Server error</td></tr>
+      <tr><td>503</td><td>Layanan tidak tersedia (sesi WA belum aktif)</td></tr>
+      <tr><td>504</td><td>Gateway timeout</td></tr>
     </table>
   </div>
 
   <footer>
-    DetekLimitin API Docs • Built for @oziwl
+    DetekLimitin API v1.1 &nbsp;•&nbsp; Docs versi terbaru
   </footer>
 </div>
 </body>

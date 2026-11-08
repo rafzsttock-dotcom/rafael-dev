@@ -4,56 +4,119 @@ const { User } = require('../database');
 const WaManager = require('../core/wa');
 const logger = require('../core/logger');
 
-// In-memory rate limit for API
+// ─── Rate limit ────────────────────────────────────────────────────────────────
+// Map<userId, number[]> — timestamps of recent requests
 const apiRateLimit = new Map();
+const RATE_LIMIT_MAX = 30;
+const RATE_LIMIT_WINDOW_MS = 60_000;
 
+// Cleanup stale entries every 5 minutes to avoid memory leak
+setInterval(() => {
+    const now = Date.now();
+    for (const [uid, timestamps] of apiRateLimit.entries()) {
+        const fresh = timestamps.filter(ts => now - ts < RATE_LIMIT_WINDOW_MS);
+        if (fresh.length === 0) {
+            apiRateLimit.delete(uid);
+        } else {
+            apiRateLimit.set(uid, fresh);
+        }
+    }
+}, 5 * 60_000);
+
+function consumeRateLimit(userId) {
+    const now = Date.now();
+    const window = (apiRateLimit.get(userId) || []).filter(ts => now - ts < RATE_LIMIT_WINDOW_MS);
+    if (window.length >= RATE_LIMIT_MAX) return false;
+    window.push(now);
+    apiRateLimit.set(userId, window);
+    return true;
+}
+
+function getRateLimitRemaining(userId) {
+    const now = Date.now();
+    const window = (apiRateLimit.get(userId) || []).filter(ts => now - ts < RATE_LIMIT_WINDOW_MS);
+    return Math.max(0, RATE_LIMIT_MAX - window.length);
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
 function generateApiKey() {
     return 'dl_' + crypto.randomBytes(24).toString('hex');
 }
 
+function isPremiumActive(user) {
+    if (!user || !user.premium) return false;
+    if (!user.premiumUntil) return true; // lifetime
+    return user.premiumUntil > Date.now();
+}
+
 async function getUserByApiKey(apiKey) {
-    if (!apiKey) return null;
-    const user = await User.findOne({ apiKey }).lean();
-    return user;
+    if (!apiKey || typeof apiKey !== 'string') return null;
+    return User.findOne({ apiKey: apiKey.trim() }).lean();
 }
 
-function rateLimit(userId, maxPerMinute = 30) {
-    const now = Date.now();
-    const window = apiRateLimit.get(userId) || [];
-    const recent = window.filter(ts => now - ts < 60000);
-    if (recent.length >= maxPerMinute) return false;
-    recent.push(now);
-    apiRateLimit.set(userId, recent);
-    return true;
+function validatePhoneNumber(num) {
+    const clean = String(num || '').replace(/\D/g, '');
+    if (clean.length < 7 || clean.length > 15) return null;
+    return clean;
 }
 
-function apiAuth(req, res, next) {
-    const key = req.headers['x-api-key'] || req.query.api_key || req.body.api_key;
+// ─── Middleware ─────────────────────────────────────────────────────────────────
+async function apiAuth(req, res, next) {
+    const key = (
+        req.headers['x-api-key'] ||
+        req.query.api_key ||
+        (req.body && req.body.api_key)
+    );
+
     if (!key) {
-        return res.status(401).json({ success: false, error: 'API Key required. Get it by purchasing premium.' });
+        return res.status(401).json({
+            success: false,
+            error: 'API Key diperlukan.',
+            hint: 'Kirim header X-API-Key atau query ?api_key=dl_xxx'
+        });
     }
-    getUserByApiKey(key).then(user => {
-        if (!user) {
-            return res.status(401).json({ success: false, error: 'Invalid API Key' });
-        }
-        if (!user.premium) {
-            return res.status(403).json({ success: false, error: 'API Key requires active Premium. Buy premium first.' });
-        }
-        if (!rateLimit(user.userId)) {
-            return res.status(429).json({ success: false, error: 'Rate limit exceeded (30 req/min)' });
-        }
-        req.apiUser = user;
-        next();
-    }).catch(err => {
-        logger.add('ERROR', `API Auth error: ${err.message}`);
-        res.status(500).json({ success: false, error: 'Auth error' });
-    });
+
+    let user;
+    try {
+        user = await getUserByApiKey(key);
+    } catch (err) {
+        logger.add('ERROR', `API Auth DB error: ${err.message}`);
+        return res.status(500).json({ success: false, error: 'Auth error' });
+    }
+
+    if (!user) {
+        return res.status(401).json({ success: false, error: 'API Key tidak valid.' });
+    }
+
+    const isOwner = String(user.userId) === String(config.ownerId);
+
+    if (!isOwner && !isPremiumActive(user)) {
+        // Premium expired — revoke api key access (don't remove the key itself, just reject)
+        return res.status(403).json({
+            success: false,
+            error: 'Premium tidak aktif atau sudah kadaluarsa.',
+            hint: 'Perpanjang premium lewat bot Telegram.'
+        });
+    }
+
+    if (!consumeRateLimit(user.userId)) {
+        return res.status(429).json({
+            success: false,
+            error: `Rate limit: maks ${RATE_LIMIT_MAX} request per menit per API Key.`,
+            retry_after: 60
+        });
+    }
+
+    req.apiUser = user;
+    req.apiIsOwner = isOwner;
+    next();
 }
 
+// ─── Routes ───────────────────────────────────────────────────────────────────
 function registerApiRoutes(app) {
     const path = require('path');
 
-    // Serve beautiful HTML docs
+    // ── Docs HTML ────────────────────────────────────────────────────────────
     app.get('/docs', (req, res) => {
         res.sendFile(path.join(__dirname, '..', 'assets', 'api-docs.html'));
     });
@@ -61,129 +124,266 @@ function registerApiRoutes(app) {
         res.sendFile(path.join(__dirname, '..', 'assets', 'api-docs.html'));
     });
 
-    // Documentation JSON
+    // ── Docs JSON ────────────────────────────────────────────────────────────
     app.get('/api/docs', (req, res) => {
         res.json({
             name: 'DetekLimitin API',
-            version: '1.0',
-            base_url: `http://localhost:${process.env.PORT || 5055}/api`,
-            auth: 'Header: X-API-Key or query/body api_key',
+            version: '1.1',
+            auth: 'Header X-API-Key atau query ?api_key=dl_xxx',
+            rate_limit: `${RATE_LIMIT_MAX} request per menit`,
             note: 'API Key hanya bisa didapat setelah beli Premium.',
             endpoints: [
-                {
-                    method: 'GET',
-                    path: '/api/docs',
-                    description: 'Dokumentasi ini'
-                },
-                {
-                    method: 'POST',
-                    path: '/api/generate-key',
-                    description: 'Generate API Key (harus login sebagai owner atau user premium via telegram id)',
-                    body: { telegram_id: 'number (wajib premium)' }
-                },
-                {
-                    method: 'POST',
-                    path: '/api/cek-bio',
-                    description: 'Cek bio massal',
-                    auth: true,
-                    body: { numbers: ['628xxx', '628yyy'], mode: 'simple|detail' }
-                },
-                {
-                    method: 'POST',
-                    path: '/api/detect',
-                    description: 'Detect status / OTP endpoint',
-                    auth: true,
-                    body: { number: '628xxx', method: 'sms|voice|wa' }
-                },
-                {
-                    method: 'GET',
-                    path: '/api/me',
-                    description: 'Info user dari API Key',
-                    auth: true
-                }
+                { method: 'GET',    path: '/api/docs',          auth: false, description: 'Dokumentasi ini' },
+                { method: 'POST',   path: '/api/generate-key',  auth: false, description: 'Generate API Key (wajib Premium)' },
+                { method: 'DELETE', path: '/api/revoke-key',    auth: true,  description: 'Revoke API Key aktif' },
+                { method: 'GET',    path: '/api/me',            auth: true,  description: 'Info akun & sisa limit' },
+                { method: 'GET',    path: '/api/sessions',      auth: true,  description: 'Status sesi WhatsApp' },
+                { method: 'POST',   path: '/api/cek-bio',       auth: true,  description: 'Cek bio massal (butuh sesi WA aktif)' },
+                { method: 'POST',   path: '/api/detect',        auth: true,  description: 'Cek status OTP / cooldown nomor' },
             ]
         });
     });
 
-    // Generate API Key (for premium users)
+    // ── Generate API Key ──────────────────────────────────────────────────────
     app.post('/api/generate-key', async (req, res) => {
         try {
-            const { telegram_id } = req.body;
-            if (!telegram_id) {
-                return res.status(400).json({ success: false, error: 'telegram_id required' });
+            const telegramId = Number(req.body && req.body.telegram_id);
+            if (!telegramId || isNaN(telegramId)) {
+                return res.status(400).json({ success: false, error: 'telegram_id (number) diperlukan.' });
             }
-            const user = await User.findOne({ userId: Number(telegram_id) });
+
+            const user = await User.findOne({ userId: telegramId });
             if (!user) {
-                return res.status(404).json({ success: false, error: 'User not found. Start the bot first.' });
+                return res.status(404).json({
+                    success: false,
+                    error: 'User tidak ditemukan. Buka bot Telegram dulu dengan /start.'
+                });
             }
-            if (!user.premium && Number(telegram_id) !== Number(config.ownerId)) {
-                return res.status(403).json({ success: false, error: 'Must have Premium to generate API Key. Buy premium first.' });
+
+            const isOwner = String(telegramId) === String(config.ownerId);
+            if (!isOwner && !isPremiumActive(user)) {
+                return res.status(403).json({
+                    success: false,
+                    error: 'Hanya user Premium yang bisa generate API Key.',
+                    hint: 'Beli premium lewat bot Telegram.'
+                });
             }
+
+            const alreadyHasKey = Boolean(user.apiKey);
             const newKey = generateApiKey();
             user.apiKey = newKey;
+            user.apiKeyCreatedAt = Date.now();
             await user.save();
-            logger.add('API', `API Key generated for user ${telegram_id}`);
-            res.json({ success: true, api_key: newKey, message: 'Simpan API Key ini. Hanya ditampilkan sekali.' });
+
+            logger.add('API', `API Key ${alreadyHasKey ? 'di-regenerate' : 'dibuat'} untuk user ${telegramId}`);
+
+            res.json({
+                success: true,
+                api_key: newKey,
+                regenerated: alreadyHasKey,
+                message: 'Simpan API Key ini — hanya ditampilkan sekali. Jangan bagikan ke siapapun.'
+            });
         } catch (err) {
-            logger.add('ERROR', `Generate key error: ${err.message}`);
-            res.status(500).json({ success: false, error: err.message });
+            logger.add('ERROR', `Generate API Key error: ${err.message}`);
+            res.status(500).json({ success: false, error: 'Server error.' });
         }
     });
 
-    // Me
+    // ── Revoke API Key ────────────────────────────────────────────────────────
+    app.delete('/api/revoke-key', apiAuth, async (req, res) => {
+        try {
+            await User.updateOne(
+                { userId: req.apiUser.userId },
+                { $set: { apiKey: '', apiKeyCreatedAt: null } }
+            );
+            logger.add('API', `API Key di-revoke oleh user ${req.apiUser.userId}`);
+            res.json({ success: true, message: 'API Key berhasil di-revoke.' });
+        } catch (err) {
+            logger.add('ERROR', `Revoke API Key error: ${err.message}`);
+            res.status(500).json({ success: false, error: 'Server error.' });
+        }
+    });
+
+    // ── Me ────────────────────────────────────────────────────────────────────
     app.get('/api/me', apiAuth, (req, res) => {
         const u = req.apiUser;
+        const premiumExp = u.premiumUntil
+            ? new Date(u.premiumUntil).toISOString()
+            : (u.premium ? 'lifetime' : null);
+
         res.json({
             success: true,
             userId: u.userId,
-            username: u.username,
-            premium: u.premium,
-            premiumUntil: u.premiumUntil,
-            limit: u.limit
+            username: u.username || null,
+            premium: isPremiumActive(u),
+            premiumUntil: premiumExp,
+            limit: u.limit,
+            apiKeyCreatedAt: u.apiKeyCreatedAt
+                ? new Date(u.apiKeyCreatedAt).toISOString()
+                : null,
+            rateLimit: {
+                remaining: getRateLimitRemaining(u.userId),
+                max: RATE_LIMIT_MAX,
+                window: '60s'
+            }
         });
     });
 
-    // Cek Bio
+    // ── Sessions ──────────────────────────────────────────────────────────────
+    app.get('/api/sessions', apiAuth, (req, res) => {
+        const userId = req.apiUser.userId;
+        const status = WaManager.getSessionStatus(userId);
+        const isReady = WaManager.isSessionReady(userId);
+        const activeSessions = typeof WaManager.getActiveSessions === 'function'
+            ? WaManager.getActiveSessions(userId)
+            : [];
+
+        res.json({
+            success: true,
+            status,
+            ready: isReady,
+            sessions: activeSessions.map(s => ({
+                sessionId: s.sessionId,
+                phone: s.phoneNumber || null
+            })),
+            hint: isReady
+                ? 'Sesi aktif. Siap untuk Cek Bio.'
+                : 'Belum ada sesi WA. Connect lewat bot Telegram dulu.'
+        });
+    });
+
+    // ── Cek Bio ───────────────────────────────────────────────────────────────
     app.post('/api/cek-bio', apiAuth, async (req, res) => {
         try {
-            const { numbers, mode = 'simple' } = req.body;
+            const { numbers, mode = 'simple', speed = 'normal' } = req.body || {};
+
             if (!Array.isArray(numbers) || numbers.length === 0) {
-                return res.status(400).json({ success: false, error: 'numbers array required' });
+                return res.status(400).json({
+                    success: false,
+                    error: 'Field "numbers" harus array dan tidak boleh kosong.'
+                });
             }
             if (numbers.length > 50) {
-                return res.status(400).json({ success: false, error: 'Max 50 numbers per request' });
+                return res.status(400).json({
+                    success: false,
+                    error: 'Maksimum 50 nomor per request.'
+                });
             }
-            // Note: This is a simplified call. Full implementation needs active WA session.
-            // For now return placeholder if no session, or call the real function.
-            const results = await WaManager.executeCheckBio(req.apiUser.userId, numbers, mode === 'detail' ? 'brutal' : 'normal', null, false).catch(() => null);
+
+            const cleanNumbers = numbers
+                .map(n => validatePhoneNumber(n))
+                .filter(Boolean);
+
+            if (cleanNumbers.length === 0) {
+                return res.status(400).json({ success: false, error: 'Tidak ada nomor valid dalam array.' });
+            }
+
+            if (!WaManager.isSessionReady(req.apiUser.userId)) {
+                return res.status(503).json({
+                    success: false,
+                    error: 'Sesi WhatsApp belum aktif.',
+                    hint: 'Connect WhatsApp dulu lewat bot Telegram, lalu coba lagi.'
+                });
+            }
+
+            // speedMode: 'brutal' = detail mode, 'normal' = simple
+            const speedMode = (mode === 'detail' || speed === 'brutal') ? 'brutal' : 'normal';
+
+            // Timeout 120 detik untuk 50 nomor
+            const TIMEOUT_MS = 120_000;
+            const result = await Promise.race([
+                WaManager.checkBio(req.apiUser.userId, cleanNumbers, speedMode, null, false),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('timeout')), TIMEOUT_MS)
+                )
+            ]);
+
+            const summary = {
+                total: cleanNumbers.length,
+                registered: (result.business || []).length + (result.private || []).length + (result.repe || []).length,
+                unregistered: (result.invalid || []).length,
+                business: (result.business || []).length,
+                private: (result.private || []).length,
+                repe: (result.repe || []).length,
+                cancelled: result.isCancelled || false,
+                interrupted: result.senderLoggedOut || false
+            };
+
+            const formatEntry = (entry) => ({
+                number: entry.number,
+                registered: true,
+                type: entry.isBusiness ? 'business' : (entry.isRepe ? 'repe' : 'private'),
+                name: entry.name || null,
+                bio: entry.bio || null,
+                hasBio: Boolean(entry.hasBio),
+                profilePic: entry.hasPP || false,
+                isVerified: entry.isVerified || false,
+            });
+
             res.json({
                 success: true,
                 mode,
-                count: numbers.length,
-                results: results || { message: 'Cek Bio membutuhkan session WA aktif. Connect WA dulu lewat bot.' }
+                summary,
+                results: {
+                    business: (result.business || []).map(formatEntry),
+                    private: (result.private || []).map(formatEntry),
+                    repe: (result.repe || []).map(formatEntry),
+                    unregistered: (result.invalid || []).map(n => ({
+                        number: typeof n === 'string' ? n : n.number,
+                        registered: false
+                    }))
+                }
             });
         } catch (err) {
+            if (err.message === 'timeout') {
+                return res.status(504).json({
+                    success: false,
+                    error: 'Timeout: Cek Bio membutuhkan waktu terlalu lama. Kurangi jumlah nomor.'
+                });
+            }
             logger.add('ERROR', `API cek-bio: ${err.message}`);
             res.status(500).json({ success: false, error: err.message });
         }
     });
 
-    // Detect
+    // ── Detect ────────────────────────────────────────────────────────────────
     app.post('/api/detect', apiAuth, async (req, res) => {
         try {
-            const { number, method = 'sms' } = req.body;
+            const { number } = req.body || {};
+
             if (!number) {
-                return res.status(400).json({ success: false, error: 'number required' });
+                return res.status(400).json({
+                    success: false,
+                    error: 'Field "number" diperlukan.'
+                });
             }
-            const result = await WaManager.cekOtpRealtimeDirect(null, number, method).catch(e => ({ error: e.message }));
-            res.json({ success: true, number, method, result });
+
+            const cleanNum = validatePhoneNumber(number);
+            if (!cleanNum) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Nomor tidak valid. Gunakan format internasional, contoh: 6281234567890'
+                });
+            }
+
+            const result = await WaManager.detectRealtimeStatus(cleanNum);
+
+            res.json({
+                success: true,
+                number: cleanNum,
+                status: result.status,
+                formatted: result.formatted,
+                sms: result.sms,
+                wa_old: result.wa_old,
+                isWaOldAvailable: result.isWaOldAvailable
+            });
         } catch (err) {
             logger.add('ERROR', `API detect: ${err.message}`);
             res.status(500).json({ success: false, error: err.message });
         }
     });
 
-    logger.add('SYSTEM', 'API routes registered: /api/docs, /api/generate-key, /api/me, /api/cek-bio, /api/detect');
+    logger.add('SYSTEM', 'API routes registered: /api/docs, /api/generate-key, /api/revoke-key, /api/me, /api/sessions, /api/cek-bio, /api/detect');
 }
 
 module.exports = { registerApiRoutes };
