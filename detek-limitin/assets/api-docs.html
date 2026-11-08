@@ -272,11 +272,12 @@ body{
 }
 .ic-val{font-family:var(--ffh);font-size:.88rem;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px;justify-content:space-between}
 .ic-copy{
-  flex-shrink:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;
-  background:var(--white);border:1.5px solid var(--ink);border-radius:6px;cursor:pointer;
-  color:var(--ink);transition:background .12s;
+  flex-shrink:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+  background:var(--indigo);border:1.5px solid var(--ink);border-radius:7px;cursor:pointer;
+  color:#fff;box-shadow:2px 2px 0 var(--ink);transition:transform .12s,box-shadow .12s,background .12s;
 }
-.ic-copy:hover{background:var(--teal)}
+.ic-copy:hover{background:var(--teal);color:var(--ink);transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+.ic-copy:active{transform:translate(0,0);box-shadow:1px 1px 0 var(--ink)}
 code{
   font-family:'JetBrains Mono','Fira Code',monospace;
   font-size:.8em;background:#f0ece4;
@@ -377,12 +378,14 @@ code{
 }
 .copy-btn{
   position:absolute;right:9px;top:9px;
-  padding:3px 9px;font-size:.62rem;font-family:var(--ffh);
-  font-weight:600;color:var(--ink);background:var(--white);
-  border:1.5px solid var(--ink);border-radius:5px;cursor:pointer;
-  transition:background .12s;
+  padding:4px 10px;font-size:.62rem;font-family:var(--ffh);
+  font-weight:700;color:#fff;background:var(--indigo);
+  border:1.5px solid var(--ink);border-radius:6px;cursor:pointer;
+  box-shadow:2px 2px 0 rgba(0,0,0,.35);
+  transition:transform .12s,box-shadow .12s,background .12s,color .12s;
 }
-.copy-btn:hover{background:var(--teal)}
+.copy-btn:hover{background:var(--teal);color:var(--ink);transform:translate(-1px,-1px);box-shadow:3px 3px 0 rgba(0,0,0,.4)}
+.copy-btn:active{transform:translate(0,0);box-shadow:1px 1px 0 rgba(0,0,0,.4)}
 
 .flbl{
   font-size:.62rem;font-weight:700;text-transform:uppercase;
