@@ -437,6 +437,7 @@ const invoiceDefaults = {
     userId: 0,
     planId: '',
     planName: '',
+    planType: 'premium',
     days: 0,
     amount: 0,
     payAmount: 0,

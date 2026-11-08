@@ -32,9 +32,16 @@ class PaymentManager {
      * POST /api/deposit/create
      * Response: { success, deposit: { transaction_id, amount, qr_string, qr_image, expired_at, status } }
      */
-    async createInvoice(userId, planId, ctx = null) {
-        const plan = this.getPlan(planId);
-        if (!plan) throw new Error('Paket premium tidak ditemukan.');
+    async createInvoice(userId, planId, ctx = null, planType = 'premium') {
+        let plan;
+        if (planType === 'api') {
+            const { getApiPlans } = require('./api');
+            const apiPlansList = await getApiPlans();
+            plan = apiPlansList.find(p => p.id === planId) || null;
+        } else {
+            plan = this.getPlan(planId);
+        }
+        if (!plan) throw new Error('Paket tidak ditemukan.');
 
         logger.add('PAYMENT', `Membuat deposit AustinPay untuk User ${userId} (${plan.name}, Rp${plan.price})...`);
 
@@ -80,6 +87,7 @@ class PaymentManager {
             userId: userId,
             planId: plan.id,
             planName: plan.name,
+            planType: planType,
             days: plan.days,
             amount: plan.price,
             payAmount: amount,
@@ -171,7 +179,11 @@ class PaymentManager {
         }
 
         if (status === 'PAID' && inv) {
-            await this.activatePremium(inv.userId, inv.days, inv.invoiceId, inv.planName);
+            if (inv.planType === 'api') {
+                await this.activateApiPlan(inv.userId, inv.planId, inv.invoiceId, inv.planName, inv.days);
+            } else {
+                await this.activatePremium(inv.userId, inv.days, inv.invoiceId, inv.planName);
+            }
         }
 
         return {
@@ -293,6 +305,72 @@ ${priceNominal ? `${EMOJIS.KEY} Total Pembayaran: <b>${priceStr}</b>\n` : ''}${E
                         uniqueCode: invDoc?.uniqueCode,
                         expiredStr: expiredStr,
                         method: isPurchase ? 'AustinPay (QRIS Otomatis)' : 'Admin / Sistem'
+                    }
+                }).catch(() => {});
+            }
+        }
+
+        return true;
+    }
+
+    async activateApiPlan(userId, planId, invoiceId = '', planName = '', days = 30) {
+        let user = await User.findOne({ userId });
+        if (!user && typeof global.checkUser === 'function') {
+            user = await global.checkUser(userId);
+        }
+        if (!user) return false;
+
+        const now = Date.now();
+        const newExpiry = now + (Number(days) * 86400 * 1000);
+
+        await User.updateOne({ userId }, {
+            $set: {
+                apiPlanId: planId,
+                apiPlanExpiry: newExpiry,
+                apiUsage: null,
+                apiExpiryNotifiedAt: null,
+                lastInteraction: now
+            }
+        });
+
+        if (global.userCache) global.userCache.delete(userId);
+
+        if (invoiceId) {
+            await Invoice.updateOne({ invoiceId }, { $set: { status: 'PAID', paidAt: new Date() } });
+        }
+
+        const formatWaktu = typeof global.formatWaktuGaul === 'function'
+            ? global.formatWaktuGaul
+            : (d) => new Date(d).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+        const expiredStr = formatWaktu(new Date(newExpiry));
+
+        logger.add('PAYMENT', `[API PLAN] User ${userId} (${user.username ? '@' + user.username : user.firstName}) aktif paket API "${planName}" s/d ${expiredStr}`);
+
+        if (global.bot && global.bot.telegram) {
+            const successText = `<b>${EMOJIS.CHECK} PEMBAYARAN BERHASIL & API AKTIF!</b>
+
+<blockquote>${EMOJIS.KEY} Paket API: <b>${planName}</b>
+${EMOJIS.CALENDAR} Aktif s/d: <b>${expiredStr}</b></blockquote>
+
+Sekarang kamu bisa generate API Key lewat menu <b>AMBIL APIKEY</b>.`.trim();
+
+            global.bot.telegram.sendMessage(userId, successText, {
+                parse_mode: 'HTML',
+                reply_markup: {
+                    inline_keyboard: [[{ text: 'AMBIL API KEY', callback_data: 'menu_ambilapikey', icon_custom_emoji_id: EMOJI_IDS.KEY }]]
+                }
+            }).catch(() => {});
+
+            if (typeof global.sendChannelReport === 'function') {
+                global.sendChannelReport({
+                    type: 'API_PLAN',
+                    user: { id: userId, username: user.username, firstName: user.firstName },
+                    count: days,
+                    meta: {
+                        planName,
+                        invoiceId,
+                        expiredStr,
+                        method: 'AustinPay (QRIS Otomatis)'
                     }
                 }).catch(() => {});
             }

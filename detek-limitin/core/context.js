@@ -237,6 +237,20 @@ async function sendChannelReport({ type, user, count = 1, meta = {} }) {
                            expBlock +
                            invBlock + `\n` +
                            `${EMOJIS.TIME} Waktu: <code>${waktuStr}</code></blockquote>`;
+        } else if (type === 'API_PLAN') {
+            const planLabel = meta.planName || `${jumlahNum} Hari`;
+            const methodBlock = meta.method ? `\n${EMOJIS.FIRE} Metode: <b>${meta.method}</b>` : '';
+            const expBlock = meta.expiredStr ? `\n${EMOJIS.CALENDAR} Aktif s/d: <b>${meta.expiredStr}</b>` : '';
+            const invBlock = meta.invoiceId ? `\n${EMOJIS.ID} Invoice: <code>${meta.invoiceId}</code>` : '';
+
+            title = `${EMOJIS.KEY} LAPORAN PEMBAYARAN PAKET API`;
+            detailsBlock = `<blockquote>${EMOJIS.KEY} Layanan: <b>Akses API</b>\n` +
+                           `${EMOJIS.STAR} Paket: <b>${planLabel}</b>\n` +
+                           `${EMOJIS.CHECK} Status: <b>LUNAS / BERHASIL (PAID)</b>` +
+                           methodBlock +
+                           expBlock +
+                           invBlock + `\n` +
+                           `${EMOJIS.TIME} Waktu: <code>${waktuStr}</code></blockquote>`;
         } else if (type === 'REDEEM') {
             const codeLabel = meta.code || '-';
             title = `${EMOJIS.GIFT} LAPORAN KLAIM REDEEM`;

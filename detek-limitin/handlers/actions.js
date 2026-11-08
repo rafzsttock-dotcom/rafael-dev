@@ -1804,45 +1804,57 @@ bot.action(/^buy_api_(.+)$/, async (ctx) => {
         const loadingMsg = await ctx.reply(`<b>${EMOJIS.REFRESH} Menyiapkan tagihan QRIS...</b>`, { parse_mode: "HTML" });
 
         try {
-            const { getApiPlans } = require('../core/api');
-            const apiPlansList = await getApiPlans();
-            const plan = apiPlansList.find(p => p.id === planId);
-            if (!plan) throw new Error("Paket tidak ditemukan");
-
+            const { invoice, qrBuffer } = await PaymentManager.createInvoice(userId, planId, ctx, 'api');
             await bot.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id).catch(() => {});
 
-            const quotaLines = [
-                plan.maxCekBio === -1 ? 'Cek Bio: Unlimited' : `Cek Bio: ${plan.maxCekBio?.toLocaleString('id-ID')} req`,
-                plan.maxDetect === -1 ? 'Detect: Unlimited' : `Detect: ${plan.maxDetect?.toLocaleString('id-ID')} req`,
-                plan.maxLimitin === -1 ? 'Limitin: Unlimited' : `Limitin: ${plan.maxLimitin?.toLocaleString('id-ID')} req`,
-            ].join('\n• ');
+            const caption = `<b>${EMOJIS.KEY} TAGIHAN AKSES API (PAYQRIS)</b>
 
-            const text = `<b>${EMOJIS.PREMIUM} TAGIHAN AKSES API</b>
+<blockquote>${EMOJIS.TAG} Paket: <b>${invoice.planName}</b>
+${EMOJIS.CALENDAR} Durasi: <b>${invoice.days} Hari</b>
+${EMOJIS.STAR} Total Bayar: <code>Rp ${invoice.payAmount.toLocaleString('id-ID')}</code>
+${EMOJIS.KEY} Kode Unik: <b>${invoice.uniqueCode}</b>
+${EMOJIS.ID} Invoice ID: <code>${invoice.invoiceId}</code>
+${EMOJIS.TIME} Batas Waktu: <b>15 Menit</b></blockquote>
 
-<blockquote>Paket: <b>${plan.name}</b>
-Harga: <code>Rp ${plan.price.toLocaleString('id-ID')}</code>
-Durasi: <b>${plan.days} Hari</b>
-Reset Kuota: <b>${plan.quotaPeriod || 'monthly'}</b></blockquote>
+<blockquote expandable><b>${EMOJIS.WARN} PENTING & INSTRUKSI:</b>
+1. Buka aplikasi M-Banking atau E-Wallet apa saja (BCA, Mandiri, BRI, BNI, Dana, OVO, GoPay, ShopeePay).
+2. Scan QRIS di atas.
+3. <b>PASTIKAN TRANSFER TEPAT Rp ${invoice.payAmount.toLocaleString('id-ID')}</b> (termasuk kode unik agar otomatis terverifikasi).
+4. Klik tombol <b>CEK STATUS PEMBAYARAN</b> setelah transfer, atau tunggu beberapa saat hingga terdeteksi otomatis.</blockquote>`.trim();
 
-<blockquote><b>Kuota Paket:</b>
-• ${quotaLines}</blockquote>
+            const buttons = [
+                [{ text: "CEK STATUS PEMBAYARAN", callback_data: `check_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CHECK }],
+                [{ text: "BATALKAN PEMBAYARAN", callback_data: `cancel_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CROSS }]
+            ];
 
-<blockquote>Pembayaran via QRIS. Hubungi owner jika pembayaran manual.</blockquote>
+            if (invoice.checkoutUrl) {
+                buttons.splice(1, 0, [{ text: "LINK PEMBAYARAN (WEB)", url: invoice.checkoutUrl, icon_custom_emoji_id: EMOJI_IDS.GLOBE }]);
+            }
 
-<blockquote>Setelah bayar, akses API aktif dan kamu bisa generate API Key.</blockquote>`;
-
-            const keyboard = {
-                reply_markup: {
-                    inline_keyboard: [
-                        [{ text: "KEMBALI", callback_data: "menu_beli_api", icon_custom_emoji_id: EMOJI_IDS.BACK }]
-                    ]
-                }
-            };
-
-            await ctx.reply(text, { parse_mode: "HTML", ...keyboard });
+            if (qrBuffer) {
+                await ctx.replyWithPhoto({ source: qrBuffer }, {
+                    caption,
+                    parse_mode: "HTML",
+                    reply_markup: { inline_keyboard: buttons }
+                });
+            } else if (invoice.qrisUrl) {
+                await ctx.replyWithPhoto(invoice.qrisUrl, {
+                    caption,
+                    parse_mode: "HTML",
+                    reply_markup: { inline_keyboard: buttons }
+                });
+            } else {
+                await ctx.reply(caption, {
+                    parse_mode: "HTML",
+                    reply_markup: { inline_keyboard: buttons }
+                });
+            }
         } catch (err) {
             await bot.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id).catch(() => {});
-            await ctx.reply(`<b>${EMOJIS.CROSS} Gagal membuat tagihan: ${err.message}</b>`, { parse_mode: "HTML" });
+            await ctx.reply(`<b>${EMOJIS.CROSS} Gagal membuat tagihan: ${escapeHTML(err.message)}</b>`, {
+                parse_mode: "HTML",
+                reply_markup: { inline_keyboard: [[{ text: "COBA LAGI", callback_data: "menu_beli_api", icon_custom_emoji_id: EMOJI_IDS.REFRESH }]] }
+            });
         }
     } finally {
         userLocks.delete(lockKey);
