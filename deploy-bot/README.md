@@ -60,3 +60,12 @@ Format project di `data/config.json`:
   "deployScript": "git pull && npm ci && npm run build && pm2 restart portfolio"
 }
 ```
+
+## Timpa Code lewat Telegram
+
+Kirim file `.zip` (maks 20 MB) langsung ke bot di chat, lalu:
+
+1. Pilih VPS → pilih project
+2. Pilih **✅ Timpa & Deploy** (timpa file + jalanin script deploy) atau **📂 Timpa saja**
+
+Aturan timpa: file dengan nama sama ditimpa, file lama yang tidak ada di ZIP dibiarkan, `.env` dan `data/` yang sudah ada di server tidak disentuh, `node_modules/` dan `.git` dilewati. Satu folder induk di dalam ZIP otomatis dibuka. Untuk file sampai 100 MB pakai Panel.

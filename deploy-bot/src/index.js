@@ -15,12 +15,14 @@ const { registerVpsHandlers } = await import('./handlers/vps.js')
 const { registerDeployHandlers } = await import('./handlers/deploy.js')
 const { registerStatusHandlers } = await import('./handlers/status.js')
 const { registerCmdHandlers } = await import('./handlers/cmd.js')
+const { registerUploadHandlers } = await import('./handlers/upload.js')
 
 registerMenuHandlers(bot)
 registerVpsHandlers(bot)
 registerDeployHandlers(bot)
 registerStatusHandlers(bot)
 registerCmdHandlers(bot)
+registerUploadHandlers(bot)
 
 // Stale callback guard — must be last
 bot.on('callback_query', async (ctx) => {
