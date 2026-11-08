@@ -43,3 +43,16 @@ test('removeVPS removes vps', () => {
   removeVPS(vps.id)
   expect(listVPS()).toHaveLength(0)
 })
+
+describe('first run (config.json belum ada)', () => {
+  test('loadConfig bikin file kosong otomatis', async () => {
+    const { mkdtempSync, existsSync } = await import('fs')
+    const { tmpdir } = await import('os')
+    const { join } = await import('path')
+    const dir = mkdtempSync(join(tmpdir(), 'cfg-'))
+    process.env.CONFIG_PATH = join(dir, 'nested', 'config.json')
+    const { listVPS } = await import('../src/services/storage.js')
+    expect(listVPS()).toEqual([])
+    expect(existsSync(process.env.CONFIG_PATH)).toBe(true)
+  })
+})

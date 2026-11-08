@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { join, dirname } from 'path'
 import { randomUUID } from 'crypto'
@@ -9,11 +9,17 @@ function getConfigPath() {
 }
 
 export function loadConfig() {
-  return JSON.parse(readFileSync(getConfigPath(), 'utf-8'))
+  const path = getConfigPath()
+  // Run pertama: data/config.json belum ada (di-gitignore), bikin otomatis.
+  if (!existsSync(path)) saveConfig({ vps: [] })
+  return JSON.parse(readFileSync(path, 'utf-8'))
 }
 
 export function saveConfig(config) {
-  writeFileSync(getConfigPath(), JSON.stringify(config, null, 2))
+  const path = getConfigPath()
+  mkdirSync(dirname(path), { recursive: true })
+  // File ini berisi password/path key VPS, jadi cuma boleh dibaca owner.
+  writeFileSync(path, JSON.stringify(config, null, 2), { mode: 0o600 })
 }
 
 export function addVPS(vpsData) {

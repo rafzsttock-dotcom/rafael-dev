@@ -1,5 +1,6 @@
 import { getVPS } from '../services/storage.js'
 import { connectSSH, runCommand, disconnectSSH } from '../services/ssh.js'
+import { safe } from '../services/text.js'
 import {
   deployProjectKeyboard,
   confirmDeployKeyboard,
@@ -18,7 +19,7 @@ export function registerDeployHandlers(bot) {
     }
     if (vps.projects.length === 0) {
       await ctx.editMessageText(
-        `📭 *${vps.name}* belum punya project.\n\nTambah project dulu lewat /addproject.`,
+        `📭 *${vps.name}* belum punya project.\n\nTambah project dulu lewat tombol 🚀 Panel di menu utama.`,
         { parse_mode: 'Markdown', reply_markup: vpsDetailKeyboard(vpsId) }
       )
       return
@@ -72,12 +73,12 @@ export function registerDeployHandlers(bot) {
       const elapsed = Math.round((Date.now() - startTime) / 1000)
 
       if (result.code !== 0) {
-        const errOut = (result.stderr || result.stdout || 'No output').slice(0, 800)
+        const errOut = safe(result.stderr || result.stdout || 'No output').slice(-800)
         await ctx.api.editMessageText(ctx.chat.id, msgId,
           `❌ Deploy *gagal* (exit ${result.code}) — ${elapsed}s\n\n\`\`\`\n${errOut}\n\`\`\``,
           { parse_mode: 'Markdown', reply_markup: backToMainKeyboard() })
       } else {
-        const out = (result.stdout || 'Done').slice(0, 800)
+        const out = safe(result.stdout || 'Done').slice(-800)
         await ctx.api.editMessageText(ctx.chat.id, msgId,
           `✅ Deploy *selesai!* — ${elapsed}s\n\n\`\`\`\n${out}\n\`\`\``,
           { parse_mode: 'Markdown', reply_markup: backToMainKeyboard() })

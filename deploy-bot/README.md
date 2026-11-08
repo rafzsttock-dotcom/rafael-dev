@@ -40,14 +40,14 @@ npm start
 ## Jalanin dengan pm2
 
 ```bash
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 pm2 save
 pm2 startup   # supaya auto-start setelah reboot
 ```
 
 ## Tambah Project ke VPS
 
-Setelah VPS terdaftar, buka detail VPS dan tambah project via `/addproject` command (feature coming soon — untuk sekarang langsung edit `data/config.json`).
+Setelah VPS terdaftar, tambah project lewat tombol **🚀 Buka Panel** (butuh `PANEL_URL` di `.env`), atau langsung edit `data/config.json` (dibuat otomatis saat bot pertama jalan).
 
 Format project di `data/config.json`:
 

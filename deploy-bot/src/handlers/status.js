@@ -7,7 +7,13 @@ async function getPm2Status(vps) {
   try {
     ssh = await connectSSH(vps)
     const result = await runCommand(ssh, 'pm2 jlist', '/')
-    const processes = JSON.parse(result.stdout || '[]')
+    if (result.code !== 0) {
+      const msg = result.stderr || result.stdout || ''
+      if (result.code === 127 || /not found/i.test(msg)) return '⚠️ pm2 tidak terinstall di VPS ini.'
+      return `❌ pm2 error (exit ${result.code}): ${msg.slice(0, 200).replace(/[`*_]/g, '')}`
+    }
+    const start = result.stdout.indexOf('[')
+    const processes = start >= 0 ? JSON.parse(result.stdout.slice(start)) : []
     if (processes.length === 0) return '📭 Tidak ada proses pm2.'
     return processes.map(p => {
       const icon = p.pm2_env?.status === 'online' ? '✅' : '❌'
