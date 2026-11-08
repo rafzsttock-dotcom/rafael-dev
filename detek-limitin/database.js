@@ -418,7 +418,8 @@ const userDefaults = {
     apiKeyCreatedAt: null,
     apiPlanId: '',
     apiPlanExpiry: null,
-    apiUsage: null
+    apiUsage: null,
+    apiExpiryNotifiedAt: null
 };
 
 // Setting Schema Defaults

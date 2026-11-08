@@ -413,12 +413,12 @@ function registerApiRoutes(app) {
                 });
             }
 
-            // Quota check — counted as 1 request (the batch)
-            const quotaCheck = await checkAndIncrementQuota(req.apiUser, 'cekBio', 1);
+            // Quota check — per nomor (bukan per request)
+            const quotaCheck = await checkAndIncrementQuota(req.apiUser, 'cekBio', cleanNumbers.length);
             if (!quotaCheck.allowed) {
                 return res.status(429).json({
                     success: false,
-                    error: `Kuota Cek Bio habis. Tersisa: ${quotaCheck.remaining}/${quotaCheck.max}`,
+                    error: `Kuota Cek Bio habis. Tersisa: ${quotaCheck.remaining} nomor dari ${quotaCheck.max}`,
                     quota: { used: quotaCheck.used, max: quotaCheck.max, remaining: quotaCheck.remaining }
                 });
             }
@@ -507,7 +507,7 @@ function registerApiRoutes(app) {
             if (!quotaCheck.allowed) {
                 return res.status(429).json({
                     success: false,
-                    error: `Kuota Detect habis. Tersisa: ${quotaCheck.remaining}/${quotaCheck.max}`,
+                    error: `Kuota Detect habis (${quotaCheck.used}/${quotaCheck.max} nomor terpakai).`,
                     quota: { used: quotaCheck.used, max: quotaCheck.max, remaining: quotaCheck.remaining }
                 });
             }
@@ -550,7 +550,7 @@ function registerApiRoutes(app) {
             if (!quotaCheckLimitin.allowed) {
                 return res.status(429).json({
                     success: false,
-                    error: `Kuota Limitin habis. Tersisa: ${quotaCheckLimitin.remaining}/${quotaCheckLimitin.max}`,
+                    error: `Kuota Limitin habis (${quotaCheckLimitin.used}/${quotaCheckLimitin.max} terpakai).`,
                     quota: { used: quotaCheckLimitin.used, max: quotaCheckLimitin.max, remaining: quotaCheckLimitin.remaining }
                 });
             }

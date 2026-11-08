@@ -627,6 +627,51 @@ async function startAll() {
 
     setInterval(updateStatsCache, 60000);
 
+    // Notifikasi API plan mau expired (5 jam sebelum)
+    setInterval(async () => {
+        if (!bot || !bot.telegram) return;
+        try {
+            const now = Date.now();
+            const fiveHours = 5 * 60 * 60 * 1000;
+            // Cari user yang plan-nya expired dalam 5 jam dan belum dinotif
+            const expiringUsers = await User.find({
+                apiPlanExpiry: { $gt: now, $lte: now + fiveHours },
+                apiPlanId: { $ne: '' }
+            }).lean();
+
+            for (const u of expiringUsers) {
+                // Skip kalau sudah dinotif dalam 5 jam terakhir
+                if (u.apiExpiryNotifiedAt && now - u.apiExpiryNotifiedAt < fiveHours) continue;
+
+                const msLeft = u.apiPlanExpiry - now;
+                const hLeft = Math.floor(msLeft / 3600000);
+                const mLeft = Math.floor((msLeft % 3600000) / 60000);
+                const timeStr = hLeft > 0 ? `${hLeft} jam ${mLeft} menit` : `${mLeft} menit`;
+
+                const notifText = `<b>⚠️ API PLAN HAMPIR EXPIRED!</b>
+
+<blockquote>Paket API kamu akan expired dalam <b>${timeStr}</b>!</blockquote>
+
+<blockquote>Perpanjang sekarang agar akses API tidak terputus.
+Jika tidak diperpanjang, API Key otomatis nonaktif saat expired.</blockquote>`;
+
+                try {
+                    await bot.telegram.sendMessage(u.userId, notifText, {
+                        parse_mode: 'HTML',
+                        reply_markup: {
+                            inline_keyboard: [[
+                                { text: "🔄 PERPANJANG SEKARANG", callback_data: "menu_beli_api" }
+                            ]]
+                        }
+                    });
+                    await User.updateOne({ userId: u.userId }, { $set: { apiExpiryNotifiedAt: now } });
+                } catch (_) { /* user mungkin blokir bot */ }
+            }
+        } catch (e) {
+            logger.add('ERROR', `API expiry notif error: ${e.message}`);
+        }
+    }, 30 * 60 * 1000); // cek setiap 30 menit
+
     setInterval(() => {
         userCache.clear();
         logger.add("SYSTEM", "User Cache Cleared");
