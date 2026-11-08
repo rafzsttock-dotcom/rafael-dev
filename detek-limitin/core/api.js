@@ -278,11 +278,11 @@ function registerApiRoutes(app) {
             }
 
             const isOwner = String(telegramId) === String(config.ownerId);
-            if (!isOwner && !isPremiumActive(user)) {
+            if (!isOwner && !isPremiumActive(user) && !isApiPlanActive(user)) {
                 return res.status(403).json({
                     success: false,
-                    error: 'Hanya user Premium yang bisa generate API Key.',
-                    hint: 'Beli premium lewat bot Telegram.'
+                    error: 'Hanya user Premium atau yang punya paket API aktif yang bisa generate API Key.',
+                    hint: 'Beli Premium atau paket API lewat bot Telegram.'
                 });
             }
 
