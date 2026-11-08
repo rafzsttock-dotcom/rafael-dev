@@ -1136,17 +1136,6 @@ async function showMainMenu(ctx) {
         ? `${days}d ${hours}h ${minutes}m` 
         : `${hours}h ${minutes}m`
 
-    let activeSessionsCount = 0
-    try {
-        if (WaManager && WaManager.sessions) {
-            for (const userSessions of WaManager.sessions.values()) {
-                activeSessionsCount += userSessions.size;
-            }
-        }
-    } catch (e) {
-        activeSessionsCount = 0
-    }
-
     const user = await checkUser(ctx.from.id, ctx.from);
     const isOwner = ctx.from.id === config.ownerId;
     const isPremium = Boolean(user && user.premium);
@@ -1161,6 +1150,8 @@ async function showMainMenu(ctx) {
         statusLabel = `${EMOJIS.FREE} <b>FREE</b> — Limit: <b>${user?.limit ?? 5}/5</b>`;
     }
 
+    const totalUsersCount = statsCache.totalUsers || await User.countDocuments({}).lean();
+
     const textWelcome = `<b>${EMOJIS.BOT} Whatsapp Tools Wspro Untility.</b>
 
 Selamat datang, <b>${fullName}</b>.
@@ -1169,7 +1160,7 @@ ${EMOJIS.ID} ID: <code>${ctx.from.id}</code>
 ${EMOJIS.USER} Username: ${username}
 ${EMOJIS.STAR} Status: ${statusLabel}
 
-${EMOJIS.PHONE} Sesi WA Aktif: <b>${activeSessionsCount}</b>
+${EMOJIS.PHONE} User Aktif: <b>${totalUsersCount}</b>
 ${EMOJIS.TIME} Uptime: <b>${uptimeString}</b>
 
 Silakan pilih menu di bawah ini.`
