@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DetekLimitin API Docs</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --card: #1a2332;
+    --border: #2d3a4f;
+    --text: #e7ecf3;
+    --muted: #8b9bb4;
+    --accent: #00c853;
+    --accent2: #00e676;
+    --code-bg: #0d1117;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 40px 20px; }
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  header h1 {
+    font-size: 2.4rem;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  header p { color: var(--muted); font-size: 1.1rem; }
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #000;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 12px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .card h2 {
+    font-size: 1.3rem;
+    margin-bottom: 12px;
+    color: var(--accent);
+  }
+  .card h3 {
+    font-size: 1.05rem;
+    margin: 16px 0 8px;
+    color: var(--text);
+  }
+  code, pre {
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+    background: var(--code-bg);
+    border-radius: 6px;
+  }
+  code {
+    padding: 2px 6px;
+    font-size: 0.9em;
+    color: #7ee787;
+  }
+  pre {
+    padding: 16px;
+    overflow-x: auto;
+    margin: 12px 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    border: 1px solid var(--border);
+  }
+  .method {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .get { background: #238636; color: #fff; }
+  .post { background: #1f6feb; color: #fff; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  th { color: var(--muted); font-weight: 500; }
+  .note {
+    background: rgba(0, 200, 83, 0.1);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 12px 0;
+    font-size: 0.95rem;
+  }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    margin-top: 48px;
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>DetekLimitin API</h1>
+    <p>REST API untuk Cek Bio, Detect OTP, dan Limitin</p>
+    <div class="badge">API Key wajib beli Premium</div>
+  </header>
+
+  <div class="card">
+    <h2>Autentikasi</h2>
+    <p>Semua endpoint (kecuali docs & generate-key) butuh API Key.</p>
+    <pre>Header: X-API-Key: dl_xxxxxxxxxxxxxxxx
+atau query: ?api_key=dl_xxx
+atau body: "api_key": "dl_xxx"</pre>
+    <div class="note">API Key hanya bisa digenerate setelah user beli Premium lewat bot Telegram.</div>
+  </div>
+
+  <div class="card">
+    <h2>Base URL</h2>
+    <pre>http://localhost:5055/api</pre>
+    <p style="color:var(--muted);margin-top:8px;">Ganti dengan domain / IP server kamu.</p>
+  </div>
+
+  <div class="card">
+    <h2>Endpoint</h2>
+
+    <h3><span class="method get">GET</span> /api/docs</h3>
+    <p>Dokumentasi ini (JSON).</p>
+
+    <h3><span class="method post">POST</span> /api/generate-key</h3>
+    <p>Generate API Key baru. User harus sudah Premium.</p>
+    <pre>{
+  "telegram_id": 31303135
+}</pre>
+    <p>Response:</p>
+    <pre>{
+  "success": true,
+  "api_key": "dl_xxxxxxxx...",
+  "message": "Simpan API Key ini. Hanya ditampilkan sekali."
+}</pre>
+
+    <h3><span class="method get">GET</span> /api/me</h3>
+    <p>Info user dari API Key.</p>
+    <pre>curl -H "X-API-Key: dl_xxx" http://localhost:5055/api/me</pre>
+
+    <h3><span class="method post">POST</span> /api/cek-bio</h3>
+    <p>Cek bio massal. Max 50 nomor. Butuh session WA aktif.</p>
+    <pre>{
+  "numbers": ["6281234567890", "6289876543210"],
+  "mode": "simple"
+}</pre>
+
+    <h3><span class="method post">POST</span> /api/detect</h3>
+    <p>Detect status / OTP endpoint.</p>
+    <pre>{
+  "number": "6281234567890",
+  "method": "sms"
+}</pre>
+    <p>Method: <code>sms</code>, <code>voice</code>, <code>wa</code></p>
+  </div>
+
+  <div class="card">
+    <h2>Cara Dapat API Key</h2>
+    <ol style="padding-left:20px;color:var(--muted);">
+      <li>Buka bot Telegram → klik <b>Beli Premium</b></li>
+      <li>Bayar via QRIS</li>
+      <li>Setelah aktif, call endpoint <code>/api/generate-key</code> dengan telegram_id kamu</li>
+      <li>Simpan API Key yang dikasih</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>Rate Limit</h2>
+    <p>30 request per menit per API Key.</p>
+  </div>
+
+  <div class="card">
+    <h2>Error Codes</h2>
+    <table>
+      <tr><th>Code</th><th>Arti</th></tr>
+      <tr><td>401</td><td>API Key missing / invalid</td></tr>
+      <tr><td>403</td><td>Belum Premium</td></tr>
+      <tr><td>429</td><td>Rate limit</td></tr>
+      <tr><td>400</td><td>Bad request</td></tr>
+      <tr><td>500</td><td>Server error</td></tr>
+    </table>
+  </div>
+
+  <footer>
+    DetekLimitin API Docs • Built for @oziwl
+  </footer>
+</div>
+</body>
+</html>

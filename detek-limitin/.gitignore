@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Environment variables (JANGAN PERNAH commit file ini)
+.env
+.env.local
+.env.production
+
+# WhatsApp sessions (berisi credential WA)
+sessions/
+session/
+*.session
+
+# Data user dan transaksi (berisi data pribadi, dibuat otomatis)
+data/users.json
+data/invoices.json
+data/redeems.json
+# settings.json di-track karena berisi konfigurasi default
+
+# Log files
+*.log
+logs/
+
+# PM2 logs
+.pm2/
+
+# Temp files
+*.tmp
+*.bak
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+
+# Report files yang digenerate bot
+reports/
+temp/

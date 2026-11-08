@@ -1,0 +1,39 @@
+{
+  "name": "detek-limitin",
+  "version": "1.0.0",
+  "description": "Bot Telegram + WhatsApp — Cek Bio, Detect Realtime, Limitin, Premium System",
+  "main": "index.js",
+  "scripts": {
+    "start": "pm2 start ecosystem.config.js",
+    "restart": "pm2 restart bot-cekbio",
+    "stop": "pm2 stop bot-cekbio",
+    "logs": "pm2 logs bot-cekbio",
+    "status": "pm2 status bot-cekbio",
+    "node": "node index.js"
+  },
+  "author": "laku jr",
+  "license": "ISC",
+  "dependencies": {
+    "@dannteam/baileys": "^7.1.9",
+    "@whiskeysockets/baileys": "^7.0.0-rc13",
+    "adm-zip": "^0.5.18",
+    "axios": "^1.18.1",
+    "debug": "^4.4.3",
+    "dotenv": "^16.4.7",
+    "express": "^5.2.1",
+    "form-data": "^4.0.6",
+    "https-proxy-agent": "^7.0.6",
+    "moment": "^2.30.1",
+    "node-html-to-image": "^5.0.0",
+    "p-queue": "^9.3.3",
+    "pino": "^10.3.1",
+    "qrcode": "^1.5.4",
+    "socks-proxy-agent": "^8.0.5",
+    "telegraf": "^4.16.3",
+    "xlsx": "^0.18.5"
+  },
+  "overrides": {
+    "handlebars": "^4.7.8",
+    "protobufjs": "^7.0.0"
+  }
+}

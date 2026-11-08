@@ -1,0 +1,11 @@
+[
+  { "key": "channel_log", "value": true },
+  { "key": "free_access", "value": true },
+  { "key": "max_prem_slots", "value": 35 },
+  { "key": "maintenance_mode", "value": false },
+  { "key": "force_sub_enabled", "value": true },
+  { "key": "force_sub_channels", "value": [] },
+  { "key": "total_detect_all", "value": 0 },
+  { "key": "total_checked_all", "value": 0 },
+  { "key": "total_limitin_all", "value": 0 }
+]
