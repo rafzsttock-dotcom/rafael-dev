@@ -98,11 +98,17 @@ const config = {
     ],
 
     apiPlans: [
-        { id: 'api_starter', name: 'Starter (30 Hari)', days: 30, price: 25000, desc: 'Paket Starter API',
-          maxCekBio: 1000, maxDetect: 500, maxLimitin: 100, maxNumbers: 50, quotaPeriod: 'lifetime' },
-        { id: 'api_pro', name: 'Pro (30 Hari)', days: 30, price: 75000, desc: 'Paket Pro API',
-          maxCekBio: 5000, maxDetect: 2000, maxLimitin: 500, maxNumbers: 50, quotaPeriod: 'lifetime' },
-        { id: 'api_unlimited', name: 'Unlimited (30 Hari)', days: 30, price: 150000, desc: 'Paket Unlimited API',
+        { id: 'api_ujicoba', name: 'Uji Coba (1 Hari)', days: 1, price: 10000, desc: 'Paket Uji Coba API',
+          maxCekBio: 2000, maxDetect: 100, maxLimitin: 20, maxNumbers: 50, quotaPeriod: 'lifetime' },
+        { id: 'api_tester', name: 'Tester (3 Hari)', days: 3, price: 25000, desc: 'Paket Tester API',
+          maxCekBio: 3000, maxDetect: 150, maxLimitin: 30, maxNumbers: 50, quotaPeriod: 'lifetime' },
+        { id: 'api_basic', name: 'Basic (1 Minggu)', days: 7, price: 55000, desc: 'Paket Basic API',
+          maxCekBio: 10000, maxDetect: 500, maxLimitin: 100, maxNumbers: 50, quotaPeriod: 'lifetime' },
+        { id: 'api_plush', name: 'Plush (1 Bulan)', days: 30, price: 155000, desc: 'Paket Plush API',
+          maxCekBio: 50000, maxDetect: 10000, maxLimitin: 500, maxNumbers: 50, quotaPeriod: 'lifetime' },
+        { id: 'api_pro', name: 'Pro (1 Bulan)', days: 30, price: 255000, desc: 'Paket Pro API',
+          maxCekBio: -1, maxDetect: 50000, maxLimitin: 5000, maxNumbers: 50, quotaPeriod: 'daily' },
+        { id: 'api_promax', name: 'ProMax (3 Bulan)', days: 90, price: 355000, desc: 'Paket ProMax API',
           maxCekBio: -1, maxDetect: -1, maxLimitin: -1, maxNumbers: 50, quotaPeriod: 'lifetime' }
     ]
 };
