@@ -334,6 +334,7 @@ code{
 .bg-get   {background:var(--teal);color:var(--ink)}
 .bg-post  {background:var(--indigo);color:#fff}
 .bg-del   {background:var(--pink);color:var(--ink)}
+.bg-patch {background:var(--amber);color:var(--ink)}
 
 .ep-path{
   font-family:'JetBrains Mono','Fira Code',monospace;
@@ -528,7 +529,7 @@ tr:last-child td{border-bottom:none}
       <div class="stat-label">Nomor / request</div>
     </div>
     <div class="stat-card">
-      <div class="stat-num">8</div>
+      <div class="stat-num">9</div>
       <div class="stat-label">Endpoints</div>
     </div>
   </div>
@@ -597,6 +598,7 @@ tr:last-child td{border-bottom:none}
         <a class="sb-link" href="#ep-generate" onclick="closeSb()"><span class="mpill mp">POST</span>/api/generate-key</a>
         <a class="sb-link" href="#ep-revoke" onclick="closeSb()"><span class="mpill md">DEL</span>/api/revoke-key</a>
         <a class="sb-link" href="#ep-me" onclick="closeSb()"><span class="mpill mg">GET</span>/api/me</a>
+        <a class="sb-link" href="#ep-quota" onclick="closeSb()"><span class="mpill" style="background:var(--amber);color:var(--ink);border:1.5px solid var(--ink)">PAT</span>/api/quota</a>
         <a class="sb-link" href="#ep-sessions" onclick="closeSb()"><span class="mpill mg">GET</span>/api/sessions</a>
         <a class="sb-link" href="#ep-cekbio" onclick="closeSb()"><span class="mpill mp">POST</span>/api/cek-bio</a>
         <a class="sb-link" href="#ep-detect" onclick="closeSb()"><span class="mpill mp">POST</span>/api/detect</a>
@@ -742,11 +744,65 @@ tr:last-child td{border-bottom:none}
   "success": true,
   "userId": 123456789,
   "username": "namauser",
-  "premium": true,
-  "premiumUntil": "2025-01-01T00:00:00.000Z",
-  "limit": 5,
+  "premium": false,
+  "apiPlan": { "id": "api_starter", "expiresAt": "2025-02-01T00:00:00.000Z" },
+  "quota": {
+    "planId": "api_starter",
+    "planName": "Starter (30 Hari)",
+    "expiresAt": "2025-02-01T00:00:00.000Z",
+    "quotaPeriod": "lifetime",
+    "cekBio":  { "used": 250, "max": 500, "planMax": 1000, "custom": 500 },
+    "detect":  { "used": 80,  "max": 500, "planMax": 500,  "custom": null },
+    "limitin": { "used": 10,  "max": 100, "planMax": 100,  "custom": null }
+  },
   "rateLimit": { "remaining": 28, "max": 30, "window": "60s" }
 }</pre></div>
+            <div class="callout callout-i" style="margin-top:10px">
+              <span class="ci"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+              <span><code>max</code> = limit efektif (custom jika di-set, planMax jika tidak). <code>custom: null</code> = pakai default plan.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PATCH /api/quota -->
+        <div class="ep" id="ep-quota">
+          <div class="ep-hdr" onclick="toggle(this)">
+            <span class="mbadge bg-patch">PATCH</span>
+            <span class="ep-path">/api/quota</span>
+            <span class="ep-auth auth-y">Auth</span>
+            <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="ep-body">
+            <p class="ep-desc">Set limit custom per fitur — boleh lebih rendah dari batas plan. Kirim <code>"default"</code> atau <code>null</code> untuk reset ke default plan. Hanya field yang dikirim yang berubah.</p>
+            <div class="flbl">Request Body</div>
+            <div class="cw"><button class="copy-btn" onclick="cpCode(this)">copy</button><pre>{
+  "cekBio": 500,
+  "detect": null,
+  "limitin": "default"
+}</pre></div>
+            <div class="flbl">Parameter</div>
+            <div class="tw"><table>
+              <tr><th>Field</th><th>Tipe</th><th>Wajib</th><th>Keterangan</th></tr>
+              <tr><td class="tm">cekBio</td><td>number | "default"</td><td><span class="opt">Opsional</span></td><td>Maks sesuai plan. <code>null</code> / <code>"default"</code> = reset ke planMax</td></tr>
+              <tr><td class="tm">detect</td><td>number | "default"</td><td><span class="opt">Opsional</span></td><td>Sama seperti di atas</td></tr>
+              <tr><td class="tm">limitin</td><td>number | "default"</td><td><span class="opt">Opsional</span></td><td>Sama seperti di atas</td></tr>
+            </table></div>
+            <div class="flbl">Response 200</div>
+            <div class="cw"><pre>{
+  "success": true,
+  "message": "Custom limit berhasil diupdate.",
+  "customLimits": {
+    "cekBio": 500,
+    "detect": null,
+    "limitin": null
+  }
+}</pre></div>
+            <div class="flbl">Error Codes</div>
+            <div class="tw"><table>
+              <tr><th>Kode</th><th>Penyebab</th></tr>
+              <tr class="e4"><td class="tm">400</td><td>Nilai bukan integer ≥ 0 atau melebihi planMax</td></tr>
+              <tr class="e4"><td class="tm">403</td><td>Tidak ada plan API aktif</td></tr>
+            </table></div>
           </div>
         </div>
 
@@ -928,9 +984,9 @@ tr:last-child td{border-bottom:none}
         <tr><th>Kode</th><th>Arti</th></tr>
         <tr class="e4"><td class="tm">400</td><td>Bad request — input salah atau tidak lengkap</td></tr>
         <tr class="e4"><td class="tm">401</td><td>API Key tidak ada atau tidak valid</td></tr>
-        <tr class="e4"><td class="tm">403</td><td>Belum Premium atau Premium sudah kadaluarsa</td></tr>
+        <tr class="e4"><td class="tm">403</td><td>Belum Premium / plan API tidak aktif</td></tr>
         <tr class="e4"><td class="tm">404</td><td>User tidak ditemukan</td></tr>
-        <tr class="e429"><td class="tm">429</td><td>Rate limit — 30 req/menit per API Key</td></tr>
+        <tr class="e429"><td class="tm">429</td><td>Rate limit (30 req/menit) atau kuota fitur habis</td></tr>
         <tr class="e5"><td class="tm">500</td><td>Server error</td></tr>
         <tr class="e5"><td class="tm">503</td><td>Layanan tidak tersedia (sesi WA belum aktif)</td></tr>
         <tr class="e5"><td class="tm">504</td><td>Gateway timeout</td></tr>
