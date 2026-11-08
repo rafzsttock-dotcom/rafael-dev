@@ -57,7 +57,13 @@ bot.action("menu_cekbio", async (ctx) => {
 
         const textCek = `<b>${EMOJIS.DOC} CEK BIO WHATSAPP</b>
 
-<blockquote>Status: ${statLabel}${sessionsText}</blockquote>`
+<blockquote>Status Sender: ${statLabel}${sessionsText}</blockquote>
+
+<blockquote expandable><b>Panduan Cepat:</b>
+▸ Hubungkan sender WA terlebih dahulu
+▸ Klik <b>MULAI CEK</b> dan kirim list nomor
+▸ Format nomor: <code>628xxx</code> (1 per baris)
+▸ Mendukung file <code>.xlsx</code> / <code>.csv</code> / <code>.txt</code></blockquote>`
 
         const buttons = [
             [
@@ -121,8 +127,12 @@ bot.action(["wa_connect", "wa_connect_menu"], async (ctx) => {
 
         const menuText = `<b>${EMOJIS.PHONE} TAMBAH SENDER WHATSAPP</b>
 
-<blockquote>Slot: <b>Sesi ${newSessionId}</b> (${activeCount}/${maxLimit} aktif)
-Pilih metode koneksi:</blockquote>`
+<blockquote>Slot: <b>Sesi ${newSessionId}</b>  ·  Aktif: <b>${activeCount}/${maxLimit}</b>
+Pilih metode koneksi di bawah:</blockquote>
+
+<blockquote expandable><b>Panduan Metode:</b>
+${EMOJIS.QR} <b>Scan QR</b> — Buka WA &gt; Perangkat Tertaut &gt; Scan
+${EMOJIS.KEY} <b>Pairing Code</b> — Masukkan kode 8 digit di WA kamu</blockquote>`
 
         const buttons = [
             [{ text: "SCAN QR CODE", callback_data: `wa_connect_qr_${newSessionId}`, icon_custom_emoji_id: EMOJI_IDS.QR }],
@@ -182,10 +192,17 @@ bot.action(/^wa_connect_pairing(?:_(\d+))?$/, async (ctx) => {
 
         userState[userId] = { status: "WAITING_WA_PHONE", sessionId: newSessionId }
         await ctx.reply(
-            `<b>${EMOJIS.KEY} PAIRING SENDER (SESI ${newSessionId})</b>
+            `<b>${EMOJIS.KEY} PAIRING CODE — SESI ${newSessionId}</b>
 
-<blockquote>Kirim nomor WhatsApp kamu.
-Format: <code>628xxx</code> (tanpa tanda +)</blockquote>`,
+<blockquote>Kirim nomor WhatsApp kamu untuk mendapat pairing code.
+Format: <code>628xxx</code> (tanpa tanda +)</blockquote>
+
+<blockquote expandable><b>Cara Pakai Pairing Code:</b>
+1. Dapatkan kode dari bot ini
+2. Buka WhatsApp &gt; Pengaturan
+3. Perangkat Tertaut &gt; Tautkan Perangkat
+4. Pilih <b>Tautkan dengan nomor telepon</b>
+5. Masukkan kode 8 digit</blockquote>`,
             { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "wa_connect_menu", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] } }
         )
     } finally {
@@ -377,7 +394,7 @@ Buka WhatsApp > Perangkat Tertaut > Scan QR.</blockquote>`
                     await bot.telegram.deleteMessage(ctx.chat.id, lastQrMsgId).catch(() => { })
                 }
                 const phone = WaManager.sessions?.get(String(uid))?.get(Number(sid))?.user?.id?.split(":")[0]?.split("@")[0] || "Terhubung"
-                await bot.telegram.sendMessage(uid, `<b>${EMOJIS.CHECK} WA TERHUBUNG (SESI ${sid})</b>\n\n<blockquote>Nomor: <code>+${phone}</code>\nStatus: Siap Digunakan</blockquote>`, {
+                await bot.telegram.sendMessage(uid, `<b>${EMOJIS.CHECK} WA TERHUBUNG — SESI ${sid}</b>\n\n<blockquote>${EMOJIS.DOT_GREEN} Status: <b>Siap Digunakan</b>\n${EMOJIS.PHONE} Nomor: <code>+${phone}</code></blockquote>`, {
                     parse_mode: "HTML",
                     reply_markup: {
                         inline_keyboard: [
@@ -473,7 +490,7 @@ bot.action("wa_check", async (ctx) => {
         if (userState[userId]) delete userState[userId]
 
         const sent = await ctx.reply(
-            `<b>${EMOJIS.FOLDER} KIRIM DATA NOMOR</b>\n\n<blockquote>Kirim file (.xlsx / .csv / .txt) atau list nomor (1 per baris).\nFormat: <code>628xxx</code></blockquote>`,
+            `<b>${EMOJIS.FOLDER} KIRIM DATA NOMOR</b>\n\n<blockquote>Kirim file (<code>.xlsx</code> / <code>.csv</code> / <code>.txt</code>) atau list nomor (1 per baris, maks <b>50 nomor</b>).\nFormat: <code>628xxx</code></blockquote>`,
             { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] } }
         )
 
@@ -638,10 +655,16 @@ bot.action(["menu_detect", "detect_realtime", "detect_start", "detect_sms_only",
         await ctx.deleteMessage().catch(() => { })
         if (userState[userId]) delete userState[userId]
 
-        const textMenu = `<b>${EMOJIS.SEARCH} DETECT STATUS & COOLDOWN</b>
+        const textMenu = `<b>${EMOJIS.SEARCH} DETECT STATUS OTP</b>
 
-<blockquote>Kirim nomor (1 per baris, maks 10 nomor).
-Format: <code>628xxx</code></blockquote>`
+<blockquote>Cek apakah nomor WA sedang <b>cooldown</b> atau <b>siap</b> terima OTP.
+Kirim nomor (maks <b>10 nomor</b>, 1 per baris).
+Format: <code>628xxx</code></blockquote>
+
+<blockquote expandable><b>Status yang dicek:</b>
+${EMOJIS.SMS} <b>SMS</b> — OTP via pesan teks
+${EMOJIS.DEVICE} <b>WA Old</b> — via akun WhatsApp lama
+${EMOJIS.PHONE_VOICE} <b>Voice</b> — OTP via telepon otomatis</blockquote>`
 
         const buttons = [
             [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
@@ -674,9 +697,15 @@ bot.action("menu_limitin", async (ctx) => {
         await ctx.deleteMessage().catch(() => { })
         if (userState[userId]) delete userState[userId]
 
-        const textMenu = `<b>${EMOJIS.ROCKET} LIMITIN / REQUEST CODE</b>
+        const textMenu = `<b>${EMOJIS.ROCKET} LIMITIN — REQUEST CODE</b>
 
-<blockquote>Pilih metode request code:</blockquote>`
+<blockquote>Kirim OTP berulang ke nomor WhatsApp target.
+Pilih metode request di bawah:</blockquote>
+
+<blockquote expandable><b>Info Metode:</b>
+${EMOJIS.DEVICE} <b>WA OLD</b> — Request via akun WA perangkat lama
+${EMOJIS.SMS} <b>SMS</b> — Request via kode pesan teks
+${EMOJIS.PHONE_VOICE} <b>PANGGILAN</b> — Request via telepon otomatis</blockquote>`
 
         const buttons = [
             [{ text: "WA OLD / PERANGKAT", callback_data: "limitin_method_wa_old", icon_custom_emoji_id: EMOJI_IDS.DEVICE }],
@@ -711,12 +740,15 @@ bot.action(/^limitin_method_(wa_old|sms|voice)$/, async (ctx) => {
         if (userState[userId]) delete userState[userId]
 
         const sent = await ctx.reply(
-            `<b>${EMOJIS.ROCKET} LIMITIN (${methodName})</b>
+            `<b>${EMOJIS.ROCKET} LIMITIN — ${methodName}</b>
 
-<blockquote>Kirim daftar nomor (1 per baris, maks 5 nomor).
-Format: <code>628xxx</code>
+<blockquote>Kirim daftar nomor target (maks <b>5 nomor</b>, 1 per baris).
+Format: <code>628xxx</code></blockquote>
 
-Sistem akan request code hingga 5x percobaan di background.</blockquote>`,
+<blockquote expandable><b>Detail Proses:</b>
+▸ Sistem request OTP hingga <b>5x percobaan</b>
+▸ Proses berjalan di <b>background</b> otomatis
+▸ Laporan dikirim setelah tiap nomor selesai</blockquote>`,
             { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "menu_limitin", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] } }
         )
         userState[userId] = { status: "WAITING_LIMITIN", method: method, methodName: methodName, menuId: sent.message_id }
@@ -1466,26 +1498,27 @@ bot.action("menu_apidocs", async (ctx) => {
     try {
         const text = `<b>${EMOJIS.DOC} DOKUMENTASI API</b>
 
-<blockquote>API Key hanya bisa didapat setelah beli <b>Akses API</b>.</blockquote>
+<blockquote>${EMOJIS.GLOBE} Base URL: <code>https://api.wspro.id</code>
+${EMOJIS.BOOK} Docs: <code>https://docs.wspro.dev</code></blockquote>
+
+<blockquote expandable><b>Endpoint Tersedia:</b>
+▸ <code>POST /api/cek-bio</code> — cek bio massal
+▸ <code>POST /api/detect</code> — cek cooldown OTP
+▸ <code>POST /api/limitin</code> — limitin OTP otomatis
+▸ <code>GET /api/sessions</code> — info sesi WA aktif
+▸ <code>GET /api/me</code> — info akun &amp; sisa limit
+▸ <code>POST /api/generate-key</code> — buat API Key
+▸ <code>DELETE /api/revoke-key</code> — hapus API Key
+
+Auth: <code>X-API-Key: dl_xxx</code>  ·  Rate limit: <b>30 req/menit</b></blockquote>
 
 <blockquote expandable><b>Cara Dapat API Key:</b>
-1. Klik tombol <b>Beli Akses Apikey</b> di bawah
-2. Setelah pembayaran berhasil, buka browser / curl:
-<code>POST /api/generate-key</code>
-Body: <code>{"telegram_id": ${userId}}</code>
-3. Simpan API Key yang dikasih</blockquote>
+1. Beli <b>Akses API</b> (klik tombol di bawah)
+2. Buka menu <b>AMBIL APIKEY</b>
+3. Klik <b>Generate API Key</b>
+4. Simpan key — hanya tampil <b>sekali!</b>
 
-<blockquote expandable><b>Endpoint:</b>
-• <code>GET /api/docs</code> — dokumentasi lengkap
-• <code>GET /api/me</code> — info user
-• <code>POST /api/cek-bio</code> — cek bio
-• <code>POST /api/detect</code> — detect/OTP
-
-Header: <code>X-API-Key: dl_xxx</code></blockquote>
-
-<blockquote>Base URL: <code>http://localhost:5055/api</code>
-Docs Web: <code>http://localhost:5055/docs</code>
-(Ganti dengan domain/IP server kamu)</blockquote>`;
+Telegram ID kamu: <code>${userId}</code></blockquote>`;
 
         const keyboard = {
             reply_markup: {
@@ -1519,9 +1552,9 @@ bot.action("menu_ambilapikey", async (ctx) => {
         if (hasApiAccess) {
             const text = `<b>${EMOJIS.KEY} AMBIL API KEY</b>
 
-<blockquote>Kamu sudah punya akses API.</blockquote>
-
-<blockquote>Klik tombol di bawah untuk generate API Key baru.</blockquote>`;
+<blockquote>${EMOJIS.CHECK} Akses API kamu <b>aktif</b>!
+Klik tombol di bawah untuk generate atau regenerate API Key.
+${EMOJIS.WARN} Key lama akan <b>langsung tidak berlaku</b> setelah generate baru.</blockquote>`;
             const keyboard = {
                 reply_markup: {
                     inline_keyboard: [
@@ -1538,9 +1571,15 @@ bot.action("menu_ambilapikey", async (ctx) => {
         } else {
             const text = `<b>${EMOJIS.KEY} AMBIL API KEY</b>
 
-<blockquote>Kamu belum punya akses API.</blockquote>
+<blockquote>${EMOJIS.CROSS} Belum punya akses API.
+Beli <b>Akses API</b> terlebih dahulu untuk bisa generate API Key.</blockquote>
 
-<blockquote>Beli dulu akses API untuk bisa generate API Key.</blockquote>`;
+<blockquote expandable><b>Benefit Akses API:</b>
+▸ Cek bio massal via REST API
+▸ Detect status OTP otomatis
+▸ Limitin via API (OTP bomber)
+▸ Kelola sesi WA via endpoint
+▸ Rate limit <b>30 req/menit</b> per key</blockquote>`;
             const keyboard = {
                 reply_markup: {
                     inline_keyboard: [
@@ -1584,14 +1623,16 @@ bot.action("generate_apikey", async (ctx) => {
 
         logger.add('API', `API Key generated via Telegram for user ${userId}`);
 
-        const text = `<b>${EMOJIS.KEY} API KEY BERHASIL DIBUAT</b>
+        const text = `<b>${EMOJIS.CHECK} API KEY BERHASIL DIBUAT</b>
 
-<blockquote>Simpan key ini baik-baik. Hanya ditampilkan sekali.</blockquote>
+<blockquote>${EMOJIS.WARN} Simpan sekarang! Key ini <b>hanya tampil sekali</b>.
+Generate ulang akan menginvalidasi key lama.</blockquote>
 
 <code>${newKey}</code>
 
 <blockquote>Cara pakai:
-Header: <code>X-API-Key: ${newKey}</code></blockquote>`;
+Header: <code>X-API-Key: ${newKey}</code>
+Docs: <code>https://docs.wspro.dev</code></blockquote>`;
 
         const keyboard = {
             reply_markup: {

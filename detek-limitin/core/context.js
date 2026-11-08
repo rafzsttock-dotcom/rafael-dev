@@ -1153,21 +1153,21 @@ async function showMainMenu(ctx) {
 
     let statusLabel = '';
     if (isOwner) {
-        statusLabel = `${EMOJIS.OWNER} OWNER`;
+        statusLabel = `${EMOJIS.OWNER} <b>OWNER</b>`;
     } else if (isPremium) {
         const expStr = user.premiumUntil ? formatWaktuGaul(new Date(user.premiumUntil)) : 'LIFETIME';
-        statusLabel = `${EMOJIS.PREMIUM} PREMIUM (s/d ${expStr})`;
+        statusLabel = `${EMOJIS.PREMIUM} <b>PREMIUM</b> — s/d <i>${expStr}</i>`;
     } else {
-        statusLabel = `${EMOJIS.FREE} FREE (Sisa Limit: ${user?.limit ?? 5}/5)`;
+        statusLabel = `${EMOJIS.FREE} <b>FREE</b> — Limit: <b>${user?.limit ?? 5}/5</b>`;
     }
 
-    const textWelcome = `<b>${EMOJIS.BOT} Hai, ${fullName}!</b>
+    const textWelcome = `<b>${EMOJIS.BOT} DETEKLIMITIN</b>
 
-<blockquote>${EMOJIS.ID} ID: <code>${ctx.from.id}</code>
-${EMOJIS.USER} User: ${username}
-${EMOJIS.STAR} Status: ${statusLabel}
-${EMOJIS.PHONE} WA Aktif: ${activeSessionsCount}
-${EMOJIS.TIME} Uptime: ${uptimeString}</blockquote>`
+<blockquote>Halo, <b>${fullName}</b>!
+${EMOJIS.ID} <code>${ctx.from.id}</code>  ${EMOJIS.USER} ${username}
+${EMOJIS.STAR} ${statusLabel}</blockquote>
+
+<blockquote>${EMOJIS.PHONE} <b>${activeSessionsCount}</b> WA Aktif  ·  ${EMOJIS.TIME} Uptime <b>${uptimeString}</b></blockquote>`
 
     const keyboard = { reply_markup: { inline_keyboard: [
         [
