@@ -1597,7 +1597,7 @@ bot.action("menu_apidocs", async (ctx) => {
     try {
         const text = `<b>${EMOJIS.DOC} DOKUMENTASI API</b>
 
-<blockquote>${EMOJIS.GLOBE} Base URL: <code>https://api.wspro.id</code>
+<blockquote>${EMOJIS.GLOBE} Base URL: <code>https://api.wspro.dev</code>
 ${EMOJIS.BOOK} Docs: <code>https://docs.wspro.dev</code></blockquote>
 
 <blockquote expandable><b>Endpoint Tersedia:</b>

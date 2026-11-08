@@ -5,7 +5,7 @@ REST API untuk fitur Cek Bio, Detect OTP Status, dan manajemen API Key.
 
 **Syarat:** Hanya user Premium atau Owner yang bisa menggunakan API.
 
-Base URL: `https://api.wspro.id`
+Base URL: `https://api.wspro.dev`
 
 ---
 
