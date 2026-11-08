@@ -873,6 +873,105 @@ bot.action("owner_menu_broadcast", async (ctx) => {
     await ctx.reply(text, { parse_mode: 'HTML', disable_web_page_preview: true, ...keyboard });
 });
 
+// ── Owner: API Plans Management ───────────────────────────────────────────────
+bot.action("owner_menu_api_plans", async (ctx) => {
+    if (!ctx) return;
+    lastBotActivity = Date.now();
+    if (String(ctx.from.id) !== String(config.ownerId)) return ctx.answerCbQuery("Akses Ditolak!", { show_alert: true });
+
+    await ctx.deleteMessage().catch(() => {});
+    if (userState[ctx.from.id]) delete userState[ctx.from.id];
+    const { text, keyboard } = await getOwnerApiPlansMenuMessage();
+    await ctx.reply(text, { parse_mode: 'HTML', disable_web_page_preview: true, ...keyboard });
+});
+
+bot.action(/^owner_api_edit_(.+)$/, async (ctx) => {
+    if (!ctx) return;
+    lastBotActivity = Date.now();
+    if (String(ctx.from.id) !== String(config.ownerId)) return ctx.answerCbQuery("Akses Ditolak!", { show_alert: true });
+
+    const planId = ctx.match[1];
+    const { getApiPlans } = require('../core/api');
+    const plans = await getApiPlans();
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) return ctx.answerCbQuery("Paket tidak ditemukan.", { show_alert: true });
+
+    await ctx.deleteMessage().catch(() => {});
+    userState[ctx.from.id] = { status: "WAITING_OWNER_API_EDIT", planId };
+
+    const promptText = `<b>${EMOJIS.GEAR} EDIT PAKET API</b>
+
+<blockquote>Paket: <b>${plan.name}</b> (ID: <code>${plan.id}</code>)</blockquote>
+
+<blockquote>Kirim data baru dalam format:
+<code>NAMA|HARGA|HARI|MAX_CEK_BIO|MAX_DETECT|MAX_LIMITIN|QUOTA_PERIOD</code>
+
+Contoh:
+<code>Starter 30 Hari|25000|30|1000|500|100|monthly</code>
+
+Untuk unlimited, isi dengan <code>-1</code>
+quotaPeriod: <code>daily</code> / <code>monthly</code> / <code>lifetime</code></blockquote>`;
+
+    const sent = await ctx.reply(promptText, {
+        parse_mode: "HTML",
+        reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "owner_menu_api_plans", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
+    });
+    userState[ctx.from.id].menuId = sent.message_id;
+});
+
+bot.action("owner_api_add", async (ctx) => {
+    if (!ctx) return;
+    lastBotActivity = Date.now();
+    if (String(ctx.from.id) !== String(config.ownerId)) return ctx.answerCbQuery("Akses Ditolak!", { show_alert: true });
+
+    await ctx.deleteMessage().catch(() => {});
+    userState[ctx.from.id] = { status: "WAITING_OWNER_API_ADD" };
+
+    const promptText = `<b>${EMOJIS.GEAR} TAMBAH PAKET API BARU</b>
+
+<blockquote>Kirim data paket baru dalam format:
+<code>ID|NAMA|HARGA|HARI|MAX_CEK_BIO|MAX_DETECT|MAX_LIMITIN|QUOTA_PERIOD</code>
+
+Contoh:
+<code>api_vip|VIP (30 Hari)|200000|30|10000|5000|1000|monthly</code>
+
+Untuk unlimited, isi dengan <code>-1</code>
+quotaPeriod: <code>daily</code> / <code>monthly</code> / <code>lifetime</code></blockquote>`;
+
+    const sent = await ctx.reply(promptText, {
+        parse_mode: "HTML",
+        reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "owner_menu_api_plans", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
+    });
+    userState[ctx.from.id].menuId = sent.message_id;
+});
+
+bot.action("owner_api_grant", async (ctx) => {
+    if (!ctx) return;
+    lastBotActivity = Date.now();
+    if (String(ctx.from.id) !== String(config.ownerId)) return ctx.answerCbQuery("Akses Ditolak!", { show_alert: true });
+
+    await ctx.deleteMessage().catch(() => {});
+    userState[ctx.from.id] = { status: "WAITING_OWNER_API_GRANT" };
+
+    const { getApiPlans } = require('../core/api');
+    const plans = await getApiPlans();
+    const planList = plans.map(p => `• <code>${p.id}</code> — ${p.name}`).join('\n');
+
+    const promptText = `<b>${EMOJIS.USER} BERI PAKET API KE USER</b>
+
+<blockquote>Paket tersedia:
+${planList}</blockquote>
+
+<blockquote>Kirim format: <code>ID_USER PLAN_ID</code>
+Contoh: <code>12345678 api_starter</code></blockquote>`;
+
+    const sent = await ctx.reply(promptText, {
+        parse_mode: "HTML",
+        reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "owner_menu_api_plans", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
+    });
+    userState[ctx.from.id].menuId = sent.message_id;
+});
+
 bot.action("owner_menu_redeem", async (ctx) => {
     if (!ctx) return;
     lastBotActivity = Date.now();
@@ -1663,18 +1762,24 @@ bot.action("menu_beli_api", async (ctx) => {
     if (userLocks.get(lockKey)) return ctx.answerCbQuery("Mohon tunggu...", { show_alert: true });
     userLocks.set(lockKey, true);
     try {
-        const plans = config.apiPlans || [];
+        const { getApiPlans } = require('../core/api');
+        const plans = await getApiPlans();
+
+        const planLines = plans.map(p => {
+            const q = [
+                p.maxCekBio === -1 ? 'Cek Bio: ∞' : `Cek Bio: ${p.maxCekBio?.toLocaleString('id-ID')}`,
+                p.maxDetect === -1 ? 'Detect: ∞' : `Detect: ${p.maxDetect?.toLocaleString('id-ID')}`,
+                p.maxLimitin === -1 ? 'Limitin: ∞' : `Limitin: ${p.maxLimitin?.toLocaleString('id-ID')}`,
+            ].join(' | ');
+            return `• <b>${p.name}</b> — Rp ${p.price.toLocaleString('id-ID')}\n  <i>${q} (${p.quotaPeriod})</i>`;
+        }).join('\n\n');
+
         const text = `<b>${EMOJIS.PREMIUM} BELI AKSES API</b>
 
-<blockquote>Pilih paket akses API:</blockquote>
+<blockquote>Pilih paket akses API yang sesuai kebutuhanmu:</blockquote>
 
-<blockquote expandable>
-• 1 Hari — Rp 8.000
-• 3 Hari — Rp 20.000
-• 1 Minggu — Rp 50.000
-• 1 Bulan — Rp 130.000
-• 3 Bulan — Rp 300.000
-</blockquote>`;
+<blockquote expandable><b>Detail Paket:</b>
+${planLines}</blockquote>`;
 
         const buttons = plans.map(p => ([{
             text: `${p.name} — Rp${p.price.toLocaleString('id-ID')}`,
@@ -1712,22 +1817,30 @@ bot.action(/^buy_api_(.+)$/, async (ctx) => {
         const loadingMsg = await ctx.reply(`<b>${EMOJIS.REFRESH} Menyiapkan tagihan QRIS...</b>`, { parse_mode: "HTML" });
 
         try {
-            // Reuse existing payment system — it will treat api_* plans if added to premiumPlans or handle separately
-            // For now, map to existing createInvoice if possible, or show placeholder
-            const plan = (config.apiPlans || []).find(p => p.id === planId);
+            const { getApiPlans } = require('../core/api');
+            const apiPlansList = await getApiPlans();
+            const plan = apiPlansList.find(p => p.id === planId);
             if (!plan) throw new Error("Paket tidak ditemukan");
 
-            // Temporary: use existing premium invoice flow if PaymentManager supports custom plans
-            // Otherwise inform user
             await bot.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id).catch(() => {});
+
+            const quotaLines = [
+                plan.maxCekBio === -1 ? 'Cek Bio: Unlimited' : `Cek Bio: ${plan.maxCekBio?.toLocaleString('id-ID')} req`,
+                plan.maxDetect === -1 ? 'Detect: Unlimited' : `Detect: ${plan.maxDetect?.toLocaleString('id-ID')} req`,
+                plan.maxLimitin === -1 ? 'Limitin: Unlimited' : `Limitin: ${plan.maxLimitin?.toLocaleString('id-ID')} req`,
+            ].join('\n• ');
 
             const text = `<b>${EMOJIS.PREMIUM} TAGIHAN AKSES API</b>
 
 <blockquote>Paket: <b>${plan.name}</b>
 Harga: <code>Rp ${plan.price.toLocaleString('id-ID')}</code>
-Durasi: <b>${plan.days} Hari</b></blockquote>
+Durasi: <b>${plan.days} Hari</b>
+Reset Kuota: <b>${plan.quotaPeriod || 'monthly'}</b></blockquote>
 
-<blockquote>Pembayaran via QRIS akan dibuat. Hubungi owner jika pembayaran manual.</blockquote>
+<blockquote><b>Kuota Paket:</b>
+• ${quotaLines}</blockquote>
+
+<blockquote>Pembayaran via QRIS. Hubungi owner jika pembayaran manual.</blockquote>
 
 <blockquote>Setelah bayar, akses API aktif dan kamu bisa generate API Key.</blockquote>`;
 

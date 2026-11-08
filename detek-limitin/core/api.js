@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const config = require('../config');
-const { User } = require('../database');
+const { User, Setting } = require('../database');
 const WaManager = require('../core/wa');
 const logger = require('../core/logger');
 
@@ -49,6 +49,105 @@ function isPremiumActive(user) {
     return user.premiumUntil > Date.now();
 }
 
+// ─── API Plan helpers ──────────────────────────────────────────────────────────
+let _apiPlansCache = null;
+let _apiPlansCacheAt = 0;
+const API_PLANS_CACHE_TTL = 60_000; // 1 minute
+
+async function getApiPlans() {
+    if (_apiPlansCache && Date.now() - _apiPlansCacheAt < API_PLANS_CACHE_TTL) {
+        return _apiPlansCache;
+    }
+    try {
+        const setting = await Setting.findOne({ key: 'api_plans' });
+        if (setting && Array.isArray(setting.value) && setting.value.length > 0) {
+            _apiPlansCache = setting.value;
+            _apiPlansCacheAt = Date.now();
+            return _apiPlansCache;
+        }
+    } catch (_) { /* fall through */ }
+    _apiPlansCache = config.apiPlans || [];
+    _apiPlansCacheAt = Date.now();
+    return _apiPlansCache;
+}
+
+function invalidateApiPlansCache() {
+    _apiPlansCache = null;
+    _apiPlansCacheAt = 0;
+}
+
+function isApiPlanActive(user) {
+    if (!user || !user.apiPlanId) return false;
+    if (!user.apiPlanExpiry) return false;
+    return user.apiPlanExpiry > Date.now();
+}
+
+async function getActivePlanConfig(user) {
+    const plans = await getApiPlans();
+    if (!user.apiPlanId) return null;
+    return plans.find(p => p.id === user.apiPlanId) || null;
+}
+
+function getQuotaResetMs(quotaPeriod) {
+    const now = new Date();
+    if (quotaPeriod === 'daily') {
+        const next = new Date(now);
+        next.setHours(0, 0, 0, 0);
+        next.setDate(next.getDate() + 1);
+        return next.getTime();
+    }
+    if (quotaPeriod === 'monthly') {
+        const next = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
+        return next.getTime();
+    }
+    // 'lifetime' — never reset (use plan expiry)
+    return null;
+}
+
+async function checkAndIncrementQuota(user, type, count = 1) {
+    // Returns { allowed: bool, remaining: number|null, used: number, max: number|null }
+    const isOwner = String(user.userId) === String(config.ownerId);
+    if (isOwner) return { allowed: true, remaining: null, used: 0, max: null };
+
+    const plan = await getActivePlanConfig(user);
+    if (!plan) {
+        // No API plan — if premium active, allow unlimited
+        if (isPremiumActive(user)) return { allowed: true, remaining: null, used: 0, max: null };
+        return { allowed: false, remaining: 0, used: 0, max: 0 };
+    }
+
+    const maxKey = type === 'cekBio' ? 'maxCekBio' : type === 'detect' ? 'maxDetect' : 'maxLimitin';
+    const max = plan[maxKey] ?? -1;
+    if (max === -1) return { allowed: true, remaining: null, used: 0, max: null }; // unlimited
+
+    // Load / initialise usage
+    let usage = user.apiUsage || {};
+    if (typeof usage === 'string') {
+        try { usage = JSON.parse(usage); } catch (_) { usage = {}; }
+    }
+
+    // Reset if needed
+    const resetAt = usage.resetAt || 0;
+    const now = Date.now();
+    const shouldReset = plan.quotaPeriod !== 'lifetime' && resetAt && now >= resetAt;
+    if (shouldReset || !usage.resetAt) {
+        const nextReset = getQuotaResetMs(plan.quotaPeriod);
+        usage = { cekBio: 0, detect: 0, limitin: 0, resetAt: nextReset };
+    }
+
+    const used = Number(usage[type] || 0);
+    if (used + count > max) {
+        return { allowed: false, remaining: Math.max(0, max - used), used, max };
+    }
+
+    // Commit increment
+    usage[type] = used + count;
+    user.apiUsage = usage;
+    await user.save();
+
+    return { allowed: true, remaining: max - usage[type], used: usage[type], max };
+}
+
 async function getUserByApiKey(apiKey) {
     if (!apiKey || typeof apiKey !== 'string') return null;
     return User.findOne({ apiKey: apiKey.trim() }).lean();
@@ -90,12 +189,11 @@ async function apiAuth(req, res, next) {
 
     const isOwner = String(user.userId) === String(config.ownerId);
 
-    if (!isOwner && !isPremiumActive(user)) {
-        // Premium expired — revoke api key access (don't remove the key itself, just reject)
+    if (!isOwner && !isPremiumActive(user) && !isApiPlanActive(user)) {
         return res.status(403).json({
             success: false,
-            error: 'Premium tidak aktif atau sudah kadaluarsa.',
-            hint: 'Perpanjang premium lewat bot Telegram.'
+            error: 'Akses API tidak aktif. Beli paket API atau Premium lewat bot Telegram.',
+            hint: 'Gunakan /start di bot untuk membeli paket.'
         });
     }
 
@@ -208,28 +306,54 @@ function registerApiRoutes(app) {
     });
 
     // ── Me ────────────────────────────────────────────────────────────────────
-    app.get('/api/me', apiAuth, (req, res) => {
-        const u = req.apiUser;
-        const premiumExp = u.premiumUntil
-            ? new Date(u.premiumUntil).toISOString()
-            : (u.premium ? 'lifetime' : null);
+    app.get('/api/me', apiAuth, async (req, res) => {
+        try {
+            const u = req.apiUser;
+            const premiumExp = u.premiumUntil
+                ? new Date(u.premiumUntil).toISOString()
+                : (u.premium ? 'lifetime' : null);
 
-        res.json({
-            success: true,
-            userId: u.userId,
-            username: u.username || null,
-            premium: isPremiumActive(u),
-            premiumUntil: premiumExp,
-            limit: u.limit,
-            apiKeyCreatedAt: u.apiKeyCreatedAt
-                ? new Date(u.apiKeyCreatedAt).toISOString()
-                : null,
-            rateLimit: {
-                remaining: getRateLimitRemaining(u.userId),
-                max: RATE_LIMIT_MAX,
-                window: '60s'
+            const apiPlanActive = isApiPlanActive(u);
+            const plan = apiPlanActive ? await getActivePlanConfig(u) : null;
+
+            let usage = u.apiUsage || {};
+            if (typeof usage === 'string') {
+                try { usage = JSON.parse(usage); } catch (_) { usage = {}; }
             }
-        });
+
+            const quota = plan ? {
+                planId: plan.id,
+                planName: plan.name,
+                expiresAt: u.apiPlanExpiry ? new Date(u.apiPlanExpiry).toISOString() : null,
+                quotaPeriod: plan.quotaPeriod,
+                resetAt: usage.resetAt ? new Date(usage.resetAt).toISOString() : null,
+                cekBio: { used: Number(usage.cekBio || 0), max: plan.maxCekBio === -1 ? null : plan.maxCekBio },
+                detect: { used: Number(usage.detect || 0), max: plan.maxDetect === -1 ? null : plan.maxDetect },
+                limitin: { used: Number(usage.limitin || 0), max: plan.maxLimitin === -1 ? null : plan.maxLimitin }
+            } : null;
+
+            res.json({
+                success: true,
+                userId: u.userId,
+                username: u.username || null,
+                premium: isPremiumActive(u),
+                premiumUntil: premiumExp,
+                apiPlan: apiPlanActive ? { id: u.apiPlanId, expiresAt: u.apiPlanExpiry ? new Date(u.apiPlanExpiry).toISOString() : null } : null,
+                limit: u.limit,
+                apiKeyCreatedAt: u.apiKeyCreatedAt
+                    ? new Date(u.apiKeyCreatedAt).toISOString()
+                    : null,
+                quota,
+                rateLimit: {
+                    remaining: getRateLimitRemaining(u.userId),
+                    max: RATE_LIMIT_MAX,
+                    window: '60s'
+                }
+            });
+        } catch (err) {
+            logger.add('ERROR', `API me: ${err.message}`);
+            res.status(500).json({ success: false, error: 'Server error.' });
+        }
     });
 
     // ── Sessions ──────────────────────────────────────────────────────────────
@@ -286,6 +410,16 @@ function registerApiRoutes(app) {
                     success: false,
                     error: 'Sesi WhatsApp belum aktif.',
                     hint: 'Connect WhatsApp dulu lewat bot Telegram, lalu coba lagi.'
+                });
+            }
+
+            // Quota check — counted as 1 request (the batch)
+            const quotaCheck = await checkAndIncrementQuota(req.apiUser, 'cekBio', 1);
+            if (!quotaCheck.allowed) {
+                return res.status(429).json({
+                    success: false,
+                    error: `Kuota Cek Bio habis. Tersisa: ${quotaCheck.remaining}/${quotaCheck.max}`,
+                    quota: { used: quotaCheck.used, max: quotaCheck.max, remaining: quotaCheck.remaining }
                 });
             }
 
@@ -369,6 +503,15 @@ function registerApiRoutes(app) {
                 });
             }
 
+            const quotaCheck = await checkAndIncrementQuota(req.apiUser, 'detect', 1);
+            if (!quotaCheck.allowed) {
+                return res.status(429).json({
+                    success: false,
+                    error: `Kuota Detect habis. Tersisa: ${quotaCheck.remaining}/${quotaCheck.max}`,
+                    quota: { used: quotaCheck.used, max: quotaCheck.max, remaining: quotaCheck.remaining }
+                });
+            }
+
             const result = await WaManager.detectRealtimeStatus(cleanNum);
 
             res.json({
@@ -400,6 +543,15 @@ function registerApiRoutes(app) {
                 return res.status(400).json({
                     success: false,
                     error: 'Nomor tidak valid. Gunakan format internasional, contoh: 6281234567890'
+                });
+            }
+
+            const quotaCheckLimitin = await checkAndIncrementQuota(req.apiUser, 'limitin', 1);
+            if (!quotaCheckLimitin.allowed) {
+                return res.status(429).json({
+                    success: false,
+                    error: `Kuota Limitin habis. Tersisa: ${quotaCheckLimitin.remaining}/${quotaCheckLimitin.max}`,
+                    quota: { used: quotaCheckLimitin.used, max: quotaCheckLimitin.max, remaining: quotaCheckLimitin.remaining }
                 });
             }
 
@@ -458,4 +610,4 @@ function registerApiRoutes(app) {
     logger.add('SYSTEM', 'API routes registered: /api/docs, /api/generate-key, /api/revoke-key, /api/me, /api/sessions, /api/cek-bio, /api/detect, /api/limitin');
 }
 
-module.exports = { registerApiRoutes };
+module.exports = { registerApiRoutes, getApiPlans, invalidateApiPlansCache };

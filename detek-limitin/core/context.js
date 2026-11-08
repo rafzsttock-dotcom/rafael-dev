@@ -1288,6 +1288,9 @@ async function getMainOwnerMenuMessage() {
                     { text: "MAINTENANCE", callback_data: "owner_menu_maintenance", icon_custom_emoji_id: EMOJI_IDS.GEAR }
                 ],
                 [
+                    { text: "KELOLA API PLANS", callback_data: "owner_menu_api_plans", icon_custom_emoji_id: EMOJI_IDS.GEAR }
+                ],
+                [
                     { text: "BACKUP PROJECT", callback_data: "owner_backup", icon_custom_emoji_id: EMOJI_IDS.BACKUP },
                     { text: "RESTART BOT", callback_data: "restart_bot", icon_custom_emoji_id: EMOJI_IDS.REFRESH }
                 ],
@@ -1301,6 +1304,54 @@ async function getMainOwnerMenuMessage() {
     return { text, keyboard };
 }
 global.getMainOwnerMenuMessage = getMainOwnerMenuMessage;
+
+async function getOwnerApiPlansMenuMessage() {
+    let plans = [];
+    try {
+        const { getApiPlans } = require('./api');
+        plans = await getApiPlans();
+    } catch (_) {
+        const config = require('../config');
+        plans = config.apiPlans || [];
+    }
+
+    const planLines = plans.map((p, i) => {
+        const quota = [
+            p.maxCekBio === -1 ? 'Cek Bio: ∞' : `Cek Bio: ${p.maxCekBio}`,
+            p.maxDetect === -1 ? 'Detect: ∞' : `Detect: ${p.maxDetect}`,
+            p.maxLimitin === -1 ? 'Limitin: ∞' : `Limitin: ${p.maxLimitin}`,
+        ].join(' | ');
+        return `${i + 1}. <b>${p.name}</b> — Rp ${p.price.toLocaleString('id-ID')}\n   <code>${quota}</code> (${p.quotaPeriod}, ${p.days}d)`;
+    }).join('\n\n');
+
+    const text = `<b>${EMOJIS.GEAR} KELOLA API PLANS</b>
+
+<blockquote>Daftar paket API aktif:</blockquote>
+
+<blockquote expandable>${planLines || 'Belum ada paket.'}</blockquote>
+
+<blockquote>Pilih aksi di bawah:</blockquote>`.trim();
+
+    const buttons = plans.map((p, i) => ([{
+        text: `✏️ Edit: ${p.name}`,
+        callback_data: `owner_api_edit_${p.id}`,
+        icon_custom_emoji_id: EMOJI_IDS.GEAR
+    }]));
+
+    buttons.push([
+        { text: "TAMBAH PAKET BARU", callback_data: "owner_api_add", icon_custom_emoji_id: EMOJI_IDS.GIFT }
+    ]);
+    buttons.push([
+        { text: "BERI PAKET KE USER", callback_data: "owner_api_grant", icon_custom_emoji_id: EMOJI_IDS.USER }
+    ]);
+    buttons.push([
+        { text: "KEMBALI KE OWNER PANEL", callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.BACK }
+    ]);
+
+    const keyboard = { reply_markup: { inline_keyboard: buttons } };
+    return { text, keyboard };
+}
+global.getOwnerApiPlansMenuMessage = getOwnerApiPlansMenuMessage;
 
 function getOwnerBroadcastMenuMessage() {
     const text = `<b>${EMOJIS.BROADCAST} MENU BROADCAST PENGGUNA</b>

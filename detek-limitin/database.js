@@ -415,7 +415,10 @@ const userDefaults = {
     referralProgress: 0,
     referralBonusLimit: 0,
     apiKey: '',
-    apiKeyCreatedAt: null
+    apiKeyCreatedAt: null,
+    apiPlanId: '',
+    apiPlanExpiry: null,
+    apiUsage: null
 };
 
 // Setting Schema Defaults

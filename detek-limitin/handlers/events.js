@@ -573,6 +573,176 @@ bot.on("text", async (ctx) => {
             );
         }
 
+        if (state && state.status === "WAITING_OWNER_API_EDIT") {
+            const promptId = state.menuId;
+            const planId = state.planId;
+            delete userState[userId];
+            if (String(userId) !== String(config.ownerId)) return;
+
+            await ctx.deleteMessage().catch(() => {});
+            if (promptId) await ctx.telegram.deleteMessage(ctx.chat.id, promptId).catch(() => {});
+
+            const parts = ctx.message.text.trim().split('|');
+            if (parts.length < 7) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} Format salah. Butuh 7 kolom dipisah <code>|</code></b>`, {
+                    parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+                });
+            }
+
+            const [name, priceStr, daysStr, maxCekBioStr, maxDetectStr, maxLimitinStr, quotaPeriod] = parts;
+            const price = parseInt(priceStr);
+            const days = parseInt(daysStr);
+            const maxCekBio = parseInt(maxCekBioStr);
+            const maxDetect = parseInt(maxDetectStr);
+            const maxLimitin = parseInt(maxLimitinStr);
+            if ([price, days, maxCekBio, maxDetect, maxLimitin].some(isNaN)) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} Nilai numerik tidak valid.</b>`, {
+                    parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+                });
+            }
+            if (!['daily', 'monthly', 'lifetime'].includes(quotaPeriod.trim())) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} quotaPeriod harus: daily, monthly, atau lifetime.</b>`, {
+                    parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+                });
+            }
+
+            const { getApiPlans, invalidateApiPlansCache } = require('../core/api');
+            const { Setting } = require('../database');
+            let plans = await getApiPlans();
+            const idx = plans.findIndex(p => p.id === planId);
+            if (idx === -1) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} Paket tidak ditemukan.</b>`, {
+                    parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+                });
+            }
+            plans[idx] = { ...plans[idx], name: name.trim(), price, days, maxCekBio, maxDetect, maxLimitin, quotaPeriod: quotaPeriod.trim() };
+
+            await Setting.updateOne({ key: 'api_plans' }, { $set: { value: plans } }, { upsert: true });
+            invalidateApiPlansCache();
+
+            return ctx.reply(`<b>${EMOJIS.CHECK} Paket <code>${planId}</code> berhasil diperbarui!</b>`, {
+                parse_mode: 'HTML',
+                reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+            });
+        }
+
+        if (state && state.status === "WAITING_OWNER_API_ADD") {
+            const promptId = state.menuId;
+            delete userState[userId];
+            if (String(userId) !== String(config.ownerId)) return;
+
+            await ctx.deleteMessage().catch(() => {});
+            if (promptId) await ctx.telegram.deleteMessage(ctx.chat.id, promptId).catch(() => {});
+
+            const parts = ctx.message.text.trim().split('|');
+            if (parts.length < 8) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} Format salah. Butuh 8 kolom dipisah <code>|</code></b>`, {
+                    parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+                });
+            }
+
+            const [id, name, priceStr, daysStr, maxCekBioStr, maxDetectStr, maxLimitinStr, quotaPeriod] = parts;
+            const price = parseInt(priceStr);
+            const days = parseInt(daysStr);
+            const maxCekBio = parseInt(maxCekBioStr);
+            const maxDetect = parseInt(maxDetectStr);
+            const maxLimitin = parseInt(maxLimitinStr);
+            if ([price, days, maxCekBio, maxDetect, maxLimitin].some(isNaN)) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} Nilai numerik tidak valid.</b>`, {
+                    parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+                });
+            }
+            if (!['daily', 'monthly', 'lifetime'].includes(quotaPeriod.trim())) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} quotaPeriod harus: daily, monthly, atau lifetime.</b>`, {
+                    parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+                });
+            }
+
+            const { getApiPlans, invalidateApiPlansCache } = require('../core/api');
+            const { Setting } = require('../database');
+            const plans = await getApiPlans();
+            if (plans.find(p => p.id === id.trim())) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} ID paket <code>${id.trim()}</code> sudah ada.</b>`, {
+                    parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+                });
+            }
+
+            const newPlan = { id: id.trim(), name: name.trim(), price, days, desc: name.trim(), maxCekBio, maxDetect, maxLimitin, maxNumbers: 50, quotaPeriod: quotaPeriod.trim() };
+            plans.push(newPlan);
+            await Setting.updateOne({ key: 'api_plans' }, { $set: { value: plans } }, { upsert: true });
+            invalidateApiPlansCache();
+
+            return ctx.reply(`<b>${EMOJIS.CHECK} Paket baru <code>${id.trim()}</code> berhasil ditambahkan!</b>`, {
+                parse_mode: 'HTML',
+                reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+            });
+        }
+
+        if (state && state.status === "WAITING_OWNER_API_GRANT") {
+            const promptId = state.menuId;
+            delete userState[userId];
+            if (String(userId) !== String(config.ownerId)) return;
+
+            await ctx.deleteMessage().catch(() => {});
+            if (promptId) await ctx.telegram.deleteMessage(ctx.chat.id, promptId).catch(() => {});
+
+            const parts = ctx.message.text.trim().split(/\s+/);
+            if (parts.length < 2) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} Format salah. Contoh: <code>12345678 api_starter</code></b>`, {
+                    parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+                });
+            }
+
+            const targetId = parseInt(parts[0]);
+            const planIdInput = parts[1];
+            if (isNaN(targetId)) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} ID User tidak valid.</b>`, {
+                    parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+                });
+            }
+
+            const { getApiPlans } = require('../core/api');
+            const { User } = require('../database');
+            const plans = await getApiPlans();
+            const plan = plans.find(p => p.id === planIdInput);
+            if (!plan) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} Paket <code>${planIdInput}</code> tidak ditemukan.</b>`, {
+                    parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+                });
+            }
+
+            const target = await User.findOne({ userId: targetId });
+            if (!target) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} User <code>${targetId}</code> tidak ditemukan.</b>`, {
+                    parse_mode: 'HTML',
+                    reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] }
+                });
+            }
+
+            const expiry = Date.now() + plan.days * 86400000;
+            target.apiPlanId = plan.id;
+            target.apiPlanExpiry = expiry;
+            target.apiUsage = { cekBio: 0, detect: 0, limitin: 0, resetAt: null };
+            await target.save();
+            if (global.userCache) global.userCache.delete(targetId);
+
+            return ctx.reply(
+                `<b>${EMOJIS.CHECK} Paket <b>${plan.name}</b> berhasil diberikan ke user <code>${targetId}</code>!\nAktif hingga: <b>${new Date(expiry).toLocaleDateString('id-ID')}</b></b>`,
+                { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: 'KEMBALI', callback_data: 'owner_menu_api_plans', icon_custom_emoji_id: EMOJI_IDS.BACK }]] } }
+            );
+        }
+
         if (state && state.status === "WAITING_FSUB_ADD") {
             if (String(ctx.from.id) !== String(config.ownerId)) {
                 delete userState[userId];

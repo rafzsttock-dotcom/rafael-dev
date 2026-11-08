@@ -98,11 +98,12 @@ const config = {
     ],
 
     apiPlans: [
-        { id: 'api_1d', name: 'API 1 Hari', days: 1, price: 8000, desc: 'Akses API 1 Hari' },
-        { id: 'api_3d', name: 'API 3 Hari', days: 3, price: 20000, desc: 'Akses API 3 Hari' },
-        { id: 'api_7d', name: 'API 1 Minggu', days: 7, price: 50000, desc: 'Akses API 1 Minggu' },
-        { id: 'api_30d', name: 'API 1 Bulan', days: 30, price: 130000, desc: 'Akses API 1 Bulan' },
-        { id: 'api_90d', name: 'API 3 Bulan', days: 90, price: 300000, desc: 'Akses API 3 Bulan' }
+        { id: 'api_starter', name: 'Starter (30 Hari)', days: 30, price: 25000, desc: 'Paket Starter API',
+          maxCekBio: 1000, maxDetect: 500, maxLimitin: 100, maxNumbers: 50, quotaPeriod: 'monthly' },
+        { id: 'api_pro', name: 'Pro (30 Hari)', days: 30, price: 75000, desc: 'Paket Pro API',
+          maxCekBio: 5000, maxDetect: 2000, maxLimitin: 500, maxNumbers: 50, quotaPeriod: 'monthly' },
+        { id: 'api_unlimited', name: 'Unlimited (30 Hari)', days: 30, price: 150000, desc: 'Paket Unlimited API',
+          maxCekBio: -1, maxDetect: -1, maxLimitin: -1, maxNumbers: 50, quotaPeriod: 'monthly' }
     ]
 };
 
