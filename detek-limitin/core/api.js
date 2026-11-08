@@ -117,8 +117,14 @@ async function checkAndIncrementQuota(user, type, count = 1) {
     }
 
     const maxKey = type === 'cekBio' ? 'maxCekBio' : type === 'detect' ? 'maxDetect' : 'maxLimitin';
-    const max = plan[maxKey] ?? -1;
-    if (max === -1) return { allowed: true, remaining: null, used: 0, max: null }; // unlimited
+    const planMax = plan[maxKey] ?? -1;
+    if (planMax === -1) return { allowed: true, remaining: null, used: 0, max: null }; // unlimited
+
+    // User boleh set limit custom (lebih rendah dari plan max)
+    let customLimits = user.apiCustomLimits || {};
+    if (typeof customLimits === 'string') { try { customLimits = JSON.parse(customLimits); } catch (_) { customLimits = {}; } }
+    const customMax = customLimits[type];
+    const max = (typeof customMax === 'number' && customMax >= 0 && customMax < planMax) ? customMax : planMax;
 
     // Load / initialise usage
     let usage = user.apiUsage || {};
@@ -246,6 +252,7 @@ function registerApiRoutes(app) {
                 { method: 'POST',   path: '/api/generate-key',  auth: false, description: 'Generate API Key (wajib Premium)' },
                 { method: 'DELETE', path: '/api/revoke-key',    auth: true,  description: 'Revoke API Key aktif' },
                 { method: 'GET',    path: '/api/me',            auth: true,  description: 'Info akun & sisa limit' },
+                { method: 'PATCH',  path: '/api/quota',         auth: true,  description: 'Set/reset limit custom per fitur (cekBio/detect/limitin)' },
                 { method: 'GET',    path: '/api/sessions',      auth: true,  description: 'Status sesi WhatsApp' },
                 { method: 'POST',   path: '/api/cek-bio',       auth: true,  description: 'Cek bio massal (butuh sesi WA aktif)' },
                 { method: 'POST',   path: '/api/detect',        auth: true,  description: 'Cek status OTP / cooldown nomor' },
@@ -330,15 +337,24 @@ function registerApiRoutes(app) {
                 try { usage = JSON.parse(usage); } catch (_) { usage = {}; }
             }
 
+            let customLimits = u.apiCustomLimits || {};
+            if (typeof customLimits === 'string') { try { customLimits = JSON.parse(customLimits); } catch (_) { customLimits = {}; } }
+
+            const effectiveMax = (planMax, type) => {
+                if (planMax === -1) return null;
+                const c = customLimits[type];
+                return (typeof c === 'number' && c >= 0 && c < planMax) ? c : planMax;
+            };
+
             const quota = plan ? {
                 planId: plan.id,
                 planName: plan.name,
                 expiresAt: u.apiPlanExpiry ? new Date(u.apiPlanExpiry).toISOString() : null,
                 quotaPeriod: plan.quotaPeriod,
                 resetAt: usage.resetAt ? new Date(usage.resetAt).toISOString() : null,
-                cekBio: { used: Number(usage.cekBio || 0), max: plan.maxCekBio === -1 ? null : plan.maxCekBio },
-                detect: { used: Number(usage.detect || 0), max: plan.maxDetect === -1 ? null : plan.maxDetect },
-                limitin: { used: Number(usage.limitin || 0), max: plan.maxLimitin === -1 ? null : plan.maxLimitin }
+                cekBio: { used: Number(usage.cekBio || 0), max: effectiveMax(plan.maxCekBio, 'cekBio'), planMax: plan.maxCekBio === -1 ? null : plan.maxCekBio, custom: customLimits.cekBio ?? null },
+                detect: { used: Number(usage.detect || 0), max: effectiveMax(plan.maxDetect, 'detect'), planMax: plan.maxDetect === -1 ? null : plan.maxDetect, custom: customLimits.detect ?? null },
+                limitin: { used: Number(usage.limitin || 0), max: effectiveMax(plan.maxLimitin, 'limitin'), planMax: plan.maxLimitin === -1 ? null : plan.maxLimitin, custom: customLimits.limitin ?? null }
             } : null;
 
             res.json({
@@ -361,6 +377,61 @@ function registerApiRoutes(app) {
             });
         } catch (err) {
             logger.add('ERROR', `API me: ${err.message}`);
+            res.status(500).json({ success: false, error: 'Server error.' });
+        }
+    });
+
+    // ── Custom Quota ──────────────────────────────────────────────────────────
+    app.patch('/api/quota', apiAuth, async (req, res) => {
+        try {
+            const u = req.apiUser;
+            if (!isApiPlanActive(u) && !req.apiIsOwner) {
+                return res.status(403).json({ success: false, error: 'Tidak ada plan API aktif.' });
+            }
+
+            const plan = await getActivePlanConfig(u);
+            const { cekBio, detect, limitin } = req.body || {};
+
+            let customLimits = u.apiCustomLimits || {};
+            if (typeof customLimits === 'string') { try { customLimits = JSON.parse(customLimits); } catch (_) { customLimits = {}; } }
+
+            const validate = (val, planMax, field) => {
+                if (val === null || val === undefined) return { ok: true, v: undefined }; // skip
+                if (val === 'default' || val === -1) return { ok: true, v: null }; // reset ke default
+                const n = Number(val);
+                if (isNaN(n) || n < 0 || !Number.isInteger(n)) return { ok: false, msg: `${field} harus integer >= 0 atau "default"` };
+                if (planMax !== -1 && n > planMax) return { ok: false, msg: `${field} tidak boleh melebihi plan max (${planMax})` };
+                return { ok: true, v: n };
+            };
+
+            const planMax = plan ? { cekBio: plan.maxCekBio, detect: plan.maxDetect, limitin: plan.maxLimitin } : { cekBio: -1, detect: -1, limitin: -1 };
+            const checks = [
+                { key: 'cekBio', val: cekBio, planMax: planMax.cekBio },
+                { key: 'detect', val: detect, planMax: planMax.detect },
+                { key: 'limitin', val: limitin, planMax: planMax.limitin }
+            ];
+
+            for (const { key, val, planMax: pm } of checks) {
+                if (val === undefined) continue;
+                const r = validate(val, pm, key);
+                if (!r.ok) return res.status(400).json({ success: false, error: r.msg });
+                if (r.v === null) delete customLimits[key]; // reset ke default
+                else customLimits[key] = r.v;
+            }
+
+            await User.updateOne({ userId: u.userId }, { $set: { apiCustomLimits: customLimits } });
+
+            res.json({
+                success: true,
+                message: 'Custom limit berhasil diupdate.',
+                customLimits: {
+                    cekBio: customLimits.cekBio ?? null,
+                    detect: customLimits.detect ?? null,
+                    limitin: customLimits.limitin ?? null
+                }
+            });
+        } catch (err) {
+            logger.add('ERROR', `PATCH /api/quota: ${err.message}`);
             res.status(500).json({ success: false, error: 'Server error.' });
         }
     });
