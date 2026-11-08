@@ -1161,13 +1161,18 @@ async function showMainMenu(ctx) {
         statusLabel = `${EMOJIS.FREE} <b>FREE</b> — Limit: <b>${user?.limit ?? 5}/5</b>`;
     }
 
-    const textWelcome = `<b>${EMOJIS.BOT} DETEKLIMITIN</b>
+    const textWelcome = `<b>${EMOJIS.BOT} Whatsapp Tools Wspro Untility.</b>
 
-<blockquote>Halo, <b>${fullName}</b>!
-${EMOJIS.ID} <code>${ctx.from.id}</code>  ${EMOJIS.USER} ${username}
-${EMOJIS.STAR} ${statusLabel}</blockquote>
+Selamat datang, <b>${fullName}</b>.
 
-<blockquote>${EMOJIS.PHONE} <b>${activeSessionsCount}</b> WA Aktif  ·  ${EMOJIS.TIME} Uptime <b>${uptimeString}</b></blockquote>`
+${EMOJIS.ID} ID: <code>${ctx.from.id}</code>
+${EMOJIS.USER} Username: ${username}
+${EMOJIS.STAR} Status: ${statusLabel}
+
+${EMOJIS.PHONE} Sesi WA Aktif: <b>${activeSessionsCount}</b>
+${EMOJIS.TIME} Uptime: <b>${uptimeString}</b>
+
+Silakan pilih menu di bawah ini.`
 
     const keyboard = { reply_markup: { inline_keyboard: [
         [
