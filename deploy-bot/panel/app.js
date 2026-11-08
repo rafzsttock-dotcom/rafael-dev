@@ -74,8 +74,23 @@
     if (!r.ok) throw new Error(j.error || `Gagal (${r.status})`)
     return j
   }
-  async function apiStream(path, onEvent) {
-    const r = await fetch('/api' + path, { method: 'POST', headers: { 'content-type': 'application/json', 'x-init-data': INIT }, body: '{}' })
+  function uploadZip(path, file, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', '/api' + path)
+      xhr.setRequestHeader('content-type', 'application/zip')
+      xhr.setRequestHeader('x-init-data', INIT)
+      xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total) }
+      xhr.onload = () => {
+        let j = {}; try { j = JSON.parse(xhr.responseText) } catch {}
+        xhr.status >= 200 && xhr.status < 300 ? resolve(j) : reject(new Error(j.error || `Upload gagal (${xhr.status})`))
+      }
+      xhr.onerror = () => reject(new Error('Upload terputus. Cek koneksi internet.'))
+      xhr.send(file)
+    })
+  }
+  async function apiStream(path, body, onEvent) {
+    const r = await fetch('/api' + path, { method: 'POST', headers: { 'content-type': 'application/json', 'x-init-data': INIT }, body: JSON.stringify(body || {}) })
     if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || `Gagal (${r.status})`) }
     const reader = r.body.getReader(); const dec = new TextDecoder(); let buf = ''
     for (;;) {
@@ -315,6 +330,9 @@
     })
   }
 
+  let pendingZip = null // { pid, file } — dibawa dari form tambah project ke layar deploy
+  const MAX_ZIP = 100 * 1024 * 1024
+
   async function deployScreen(id, pid) {
     const vps = (await loadVps()).find((v) => v.id === id)
     const project = vps?.projects.find((p) => p.id === pid)
@@ -322,17 +340,60 @@
     setHeader(`Deploy ${project.name}`, vps.name)
     view.innerHTML = `<div class="screen">
       <div class="card"><div class="title">${esc(project.name)}</div><div class="path">${esc(project.path)}</div><div class="script">${esc(project.deployScript)}</div></div>
+      <label class="drop" id="drop">
+        <input type="file" id="zipInput" accept=".zip,application/zip,application/x-zip-compressed" hidden>
+        <span class="drop-ico"><svg><use href="#ic-up"/></svg></span>
+        <span class="drop-txt" id="dropTxt"><b>Pilih file ZIP</b><small>Opsional. Isinya diekstrak ke folder project sebelum script jalan. .env &amp; data/ tetap aman.</small></span>
+        <button type="button" class="drop-x" id="dropClear" hidden aria-label="Hapus file">✕</button>
+      </label>
+      <div class="upbar" id="upbar" hidden><div class="meter"><i id="upfill" style="width:0%"></i></div><span class="num" id="uptext">0%</span></div>
       <div class="label">Log deploy</div><div id="log"></div><div id="verdict"></div></div>`
-    const log = logBox($('#log'), `${vps.user}@${vps.host}`, 'Tekan "Deploy sekarang" buat mulai. Log muncul di sini secara live.')
+    const log = logBox($('#log'), `${vps.user}@${vps.host}`, 'Pilih ZIP (kalau ada), lalu tekan tombol deploy di bawah. Log muncul di sini secara live.')
+    let file = pendingZip?.pid === pid ? pendingZip.file : null
+    pendingZip = null
+    const label = () => (file ? 'Upload & deploy' : 'Deploy sekarang')
+    const showFile = () => {
+      $('#drop').classList.toggle('has', !!file)
+      $('#dropClear').hidden = !file
+      $('#dropTxt').innerHTML = file
+        ? `<b>${esc(file.name)}</b><small class="num">${fmtBytes(file.size)} · siap diupload</small>`
+        : '<b>Pilih file ZIP</b><small>Opsional. Isinya diekstrak ke folder project sebelum script jalan. .env &amp; data/ tetap aman.</small>'
+      if (!busy) mainButton(label(), start)
+    }
+    $('#zipInput').onchange = (e) => {
+      const f = e.target.files[0]; e.target.value = ''
+      if (!f) return
+      if (!/\.zip$/i.test(f.name)) { haptic.fail(); return toast('File harus berformat .zip') }
+      if (f.size > MAX_ZIP) { haptic.fail(); return toast('File terlalu besar (maks 100 MB)') }
+      haptic.pick(); file = f; showFile()
+    }
+    $('#dropClear').onclick = (e) => { e.preventDefault(); haptic.pick(); file = null; showFile() }
     let busy = false
     const start = async () => {
       if (busy) return
-      if (!(await confirmAsk(`Deploy ${project.name} ke ${vps.name} sekarang?`))) return
+      const ask = file ? `Upload ${file.name} dan deploy ${project.name} ke ${vps.name}?` : `Deploy ${project.name} ke ${vps.name} sekarang?`
+      if (!(await confirmAsk(ask))) return
       busy = true; mainBusy(true); haptic.tap(); $('#verdict').innerHTML = ''
       log.reset(); log.running(true)
       let result = { code: -1, ms: 0, error: 'Koneksi ke panel terputus' }
+      let body = {}
+      if (file) {
+        $('#upbar').hidden = false
+        log.line(`› Mengupload ${file.name} (${fmtBytes(file.size)})…`, 'dim')
+        try {
+          const up = await uploadZip(`/vps/${id}/projects/${pid}/upload`, file, (p) => {
+            $('#upfill').style.width = `${(p * 100).toFixed(0)}%`; $('#uptext').textContent = `${(p * 100).toFixed(0)}%`
+          })
+          body = { uploadId: up.uploadId }
+          log.line('› Upload selesai.', 'dim')
+        } catch (e) {
+          log.running(false); log.line('✗ ' + e.message, 'fail')
+          $('#verdict').innerHTML = `<div class="verdict bad">✗<div>Upload gagal<small>${esc(e.message)}</small></div></div>`
+          haptic.fail(); busy = false; mainBusy(false); $('#upbar').hidden = true; return
+        }
+      }
       try {
-        await apiStream(`/vps/${id}/projects/${pid}/deploy`, (ev) => {
+        await apiStream(`/vps/${id}/projects/${pid}/deploy`, body, (ev) => {
           if (ev.t === 'info') log.line('› ' + ev.d, 'dim')
           else if (ev.t === 'out') log.write(ev.d)
           else if (ev.t === 'err') log.write(ev.d, 'err')
@@ -346,9 +407,10 @@
       $('#verdict').innerHTML = `<div class="verdict ${ok ? 'good' : 'bad'}">${ok ? '✓' : '✗'}<div>${ok ? 'Deploy berhasil' : 'Deploy gagal'}<small>${ok ? fmtSec(result.ms) : esc(result.error || `exit code ${result.code}`)}</small></div></div>`
       ok ? haptic.ok() : haptic.fail()
       cache.vps = null; delete cache.status[id]
-      busy = false; mainBusy(false); mainButton('Deploy lagi', start)
+      file = null; $('#upbar').hidden = true
+      busy = false; mainBusy(false); showFile(); mainButton('Deploy lagi', start)
     }
-    mainButton('Deploy sekarang', start)
+    showFile()
   }
 
   async function logScreen(id, name) {
@@ -399,35 +461,74 @@
     })
   }
 
+  const slugify = (s) => String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40)
   const PRESETS = [
-    { label: 'Node + pm2', script: 'git pull && npm ci && pm2 restart NAMA_PROSES' },
-    { label: 'Build + pm2', script: 'git pull && npm ci && npm run build && pm2 restart NAMA_PROSES' },
-    { label: 'Docker Compose', script: 'git pull && docker compose up -d --build' },
-    { label: 'Static', script: 'git pull && npm ci && npm run build' }
+    { label: 'Docker Compose', script: () => 'docker compose up -d --build' },
+    { label: 'Node + pm2', script: (n) => `npm install --omit=dev && (pm2 restart ${n} || pm2 start npm --name ${n} -- start)` },
+    { label: 'Git + Docker', script: () => 'git pull && docker compose up -d --build' },
+    { label: 'Git + pm2', script: (n) => `git pull && npm ci && pm2 restart ${n}` }
   ]
   async function addProjectScreen(id) {
     const vps = (await loadVps()).find((v) => v.id === id)
     if (!vps) return go('#/')
     setHeader('Tambah project', vps.name)
     view.innerHTML = `<div class="screen"><div class="gap"></div>
-      <div class="form">
+      <label class="drop" id="drop">
+        <input type="file" id="zipInput" accept=".zip,application/zip,application/x-zip-compressed" hidden>
+        <span class="drop-ico"><svg><use href="#ic-up"/></svg></span>
+        <span class="drop-txt" id="dropTxt"><b>Pilih file ZIP project</b><small>Nama &amp; folder keisi otomatis dari nama file.</small></span>
+      </label>
+      <div class="form" style="margin-top:12px">
         <label class="field"><span>Nama project</span><input id="pName" placeholder="rewardex" maxlength="40"></label>
-        <label class="field"><span>Folder di server</span><input id="pPath" class="mono" placeholder="/root/rafael-dev/reward-promotion" autocapitalize="off" autocorrect="off"></label>
-        <label class="field"><span>Script deploy</span><textarea id="pScript" placeholder="git pull && npm ci && pm2 restart app" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea></label>
+        <label class="field"><span>Folder di server</span><input id="pPath" class="mono" placeholder="/root/apps/rewardex" autocapitalize="off" autocorrect="off"></label>
       </div>
-      <div class="presets">${PRESETS.map((p, i) => `<button data-preset="${i}">${esc(p.label)}</button>`).join('')}</div>
-      <p class="note">Script dijalankan di folder project lewat SSH, persis kayak kamu ngetik di terminal server.</p>
+      <div class="label">Cara menjalankan</div>
+      <div class="presets" id="presets">${PRESETS.map((p, i) => `<button data-preset="${i}">${esc(p.label)}</button>`).join('')}</div>
+      <div class="form" style="margin-top:10px">
+        <label class="field"><span>Script deploy</span><textarea id="pScript" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea></label>
+      </div>
+      <p class="note">Script dijalankan di folder project lewat SSH setiap kali deploy. Kalau project udah ada di server, isi folder-nya sesuai lokasi yang sekarang.</p>
       <div class="oops" id="oops" hidden></div></div>`
-    view.querySelectorAll('[data-preset]').forEach((b) => { b.onclick = () => { haptic.pick(); $('#pScript').value = PRESETS[Number(b.dataset.preset)].script } })
-    mainButton('Simpan project', async () => {
+    let file = null
+    let preset = 0
+    let pathTouched = false
+    let scriptTouched = false
+    const nameEl = $('#pName'); const pathEl = $('#pPath'); const scriptEl = $('#pScript')
+    const sync = () => {
+      const slug = slugify(nameEl.value) || 'app'
+      if (!pathTouched) pathEl.value = nameEl.value.trim() ? `/root/apps/${slug}` : ''
+      if (!scriptTouched) scriptEl.value = PRESETS[preset].script(slug)
+      view.querySelectorAll('[data-preset]').forEach((b) => b.classList.toggle('on', Number(b.dataset.preset) === preset))
+    }
+    nameEl.oninput = sync
+    pathEl.oninput = () => { pathTouched = true }
+    scriptEl.oninput = () => { scriptTouched = true }
+    view.querySelectorAll('[data-preset]').forEach((b) => {
+      b.onclick = () => { haptic.pick(); preset = Number(b.dataset.preset); scriptTouched = false; sync() }
+    })
+    $('#zipInput').onchange = (e) => {
+      const f = e.target.files[0]; e.target.value = ''
+      if (!f) return
+      if (!/\.zip$/i.test(f.name)) { haptic.fail(); return toast('File harus berformat .zip') }
+      if (f.size > MAX_ZIP) { haptic.fail(); return toast('File terlalu besar (maks 100 MB)') }
+      haptic.pick(); file = f
+      $('#drop').classList.add('has')
+      $('#dropTxt').innerHTML = `<b>${esc(f.name)}</b><small class="num">${fmtBytes(f.size)} · diupload pas deploy</small>`
+      if (!nameEl.value.trim()) nameEl.value = f.name.replace(/\.zip$/i, '').slice(0, 40)
+      sync()
+      mainButton('Simpan & lanjut deploy', save)
+    }
+    const save = async () => {
       const oops = $('#oops'); oops.hidden = true
       mainBusy(true)
       try {
-        await api(`/vps/${id}/projects`, { method: 'POST', body: { name: $('#pName').value, path: $('#pPath').value, deployScript: $('#pScript').value } })
-        haptic.ok(); toast('Project disimpan'); cache.vps = null; currentTab = 'project'
-        go(`#/vps/${id}`, true)
+        const { project } = await api(`/vps/${id}/projects`, { method: 'POST', body: { name: nameEl.value, path: pathEl.value, deployScript: scriptEl.value } })
+        haptic.ok(); cache.vps = null; currentTab = 'project'
+        if (file) { pendingZip = { pid: project.id, file }; go(`#/vps/${id}/deploy/${project.id}`, true) } else { toast('Project disimpan'); go(`#/vps/${id}`, true) }
       } catch (e) { haptic.fail(); oops.textContent = e.message; oops.hidden = false } finally { mainBusy(false) }
-    })
+    }
+    sync()
+    mainButton('Simpan project', save)
   }
 
   /* ---------- router ---------- */
