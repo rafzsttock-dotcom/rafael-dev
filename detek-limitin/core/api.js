@@ -129,6 +129,8 @@ function registerApiRoutes(app) {
         res.json({
             name: 'DetekLimitin API',
             version: '1.1',
+            bot_username: config.botUsername || '',
+            bot_url: config.botUsername ? `https://t.me/${config.botUsername}` : '',
             auth: 'Header X-API-Key atau query ?api_key=dl_xxx',
             rate_limit: `${RATE_LIMIT_MAX} request per menit`,
             note: 'API Key hanya bisa didapat setelah beli Premium.',
