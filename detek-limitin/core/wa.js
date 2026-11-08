@@ -3905,7 +3905,7 @@ const WaManager = {
         };
 
         const cancelKeyboard = [
-            [{ text: 'BATALKAN', callback_data: `cancel_lim_${taskId}`, icon_custom_emoji_id: EMOJI_IDS.CROSS }]
+            [{ text: 'BATALKAN', style: 'danger', callback_data: `cancel_lim_${taskId}`, icon_custom_emoji_id: EMOJI_IDS.CROSS }]
         ];
 
         const countdownWithTaskCheck = async (totalSec, renderTextFn) => {
@@ -3973,8 +3973,8 @@ const WaManager = {
                             {
                                 reply_markup: {
                                     inline_keyboard: [
-                                        [{ text: 'LIMITIN LAGI', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                        [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                        [{ text: 'LIMITIN LAGI', style: 'primary', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                        [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                     ]
                                 }
                             }
@@ -3988,9 +3988,9 @@ const WaManager = {
                             {
                                 reply_markup: {
                                     inline_keyboard: [
-                                        [{ text: 'LIMITIN (SMS)', callback_data: 'limitin_method_sms', icon_custom_emoji_id: EMOJI_IDS.SMS }],
-                                        [{ text: 'LIMITIN LAGI', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                        [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                        [{ text: 'LIMITIN (SMS)', style: 'primary', callback_data: 'limitin_method_sms', icon_custom_emoji_id: EMOJI_IDS.SMS }],
+                                        [{ text: 'LIMITIN LAGI', style: 'primary', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                        [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                     ]
                                 }
                             }
@@ -4015,8 +4015,8 @@ const WaManager = {
                             {
                                 reply_markup: {
                                     inline_keyboard: [
-                                        [{ text: 'LIMITIN LAGI', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                        [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                        [{ text: 'LIMITIN LAGI', style: 'primary', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                        [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                     ]
                                 }
                             }
@@ -4057,8 +4057,8 @@ const WaManager = {
                             {
                                 reply_markup: {
                                     inline_keyboard: [
-                                        [{ text: 'LIMITIN LAGI', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                        [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                        [{ text: 'LIMITIN LAGI', style: 'primary', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                        [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                     ]
                                 }
                             }
@@ -4083,8 +4083,8 @@ const WaManager = {
                             {
                                 reply_markup: {
                                     inline_keyboard: [
-                                        [{ text: 'LIMITIN LAGI', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                        [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                        [{ text: 'LIMITIN LAGI', style: 'primary', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                        [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                     ]
                                 }
                             }
@@ -4097,8 +4097,8 @@ const WaManager = {
                             {
                                 reply_markup: {
                                     inline_keyboard: [
-                                        [{ text: 'LIMITIN LAGI', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                        [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                        [{ text: 'LIMITIN LAGI', style: 'primary', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                        [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                     ]
                                 }
                             }
@@ -4128,8 +4128,8 @@ const WaManager = {
                             {
                                 reply_markup: {
                                     inline_keyboard: [
-                                        [{ text: 'LIMITIN LAGI', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                        [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                        [{ text: 'LIMITIN LAGI', style: 'primary', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                        [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                     ]
                                 }
                             }
@@ -4154,8 +4154,8 @@ const WaManager = {
                             {
                                 reply_markup: {
                                     inline_keyboard: [
-                                        [{ text: 'LIMITIN LAGI', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                        [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                        [{ text: 'LIMITIN LAGI', style: 'primary', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                        [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                     ]
                                 }
                             }
@@ -4171,8 +4171,8 @@ const WaManager = {
                             {
                                 reply_markup: {
                                     inline_keyboard: [
-                                        [{ text: 'LIMITIN LAGI', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                        [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                        [{ text: 'LIMITIN LAGI', style: 'primary', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                        [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                     ]
                                 }
                             }
@@ -4186,8 +4186,8 @@ const WaManager = {
                             {
                                 reply_markup: {
                                     inline_keyboard: [
-                                        [{ text: 'LIMITIN LAGI', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                        [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                        [{ text: 'LIMITIN LAGI', style: 'primary', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                        [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                     ]
                                 }
                             }
@@ -4210,8 +4210,8 @@ const WaManager = {
                                 {
                                     reply_markup: {
                                         inline_keyboard: [
-                                            [{ text: 'LIMITIN LAGI', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                            [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                            [{ text: 'LIMITIN LAGI', style: 'primary', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                            [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                         ]
                                     }
                                 }
@@ -4236,8 +4236,8 @@ const WaManager = {
                             {
                                 reply_markup: {
                                     inline_keyboard: [
-                                        [{ text: 'LIMITIN LAGI', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                        [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                        [{ text: 'LIMITIN LAGI', style: 'primary', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                        [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                     ]
                                 }
                             }
@@ -4261,8 +4261,8 @@ const WaManager = {
                             {
                                 reply_markup: {
                                     inline_keyboard: [
-                                        [{ text: 'LIMITIN LAGI', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                        [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                        [{ text: 'LIMITIN LAGI', style: 'primary', callback_data: 'menu_limitin', icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                        [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                     ]
                                 }
                             }

@@ -691,7 +691,7 @@ bot.command('addfsub', async (ctx) => {
             {
                 parse_mode: 'HTML',
                 reply_markup: {
-                    inline_keyboard: [[{ text: "BATAL", callback_data: "owner_fsub_cancel", icon_custom_emoji_id: EMOJI_IDS.CROSS }]]
+                    inline_keyboard: [[{ text: "BATAL", style: 'danger', callback_data: "owner_fsub_cancel", icon_custom_emoji_id: EMOJI_IDS.CROSS }]]
                 }
             }
         );
@@ -779,7 +779,7 @@ bot.command('addfsub', async (ctx) => {
             {
                 parse_mode: 'HTML',
                 reply_markup: {
-                    inline_keyboard: [[{ text: "MENU WAJIB JOIN", callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.GLOBE }]]
+                    inline_keyboard: [[{ text: "MENU WAJIB JOIN", style: 'primary', callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.GLOBE }]]
                 }
             }
         );
@@ -1147,7 +1147,7 @@ bot.command('redeem', async (ctx) => {
 
         return ctx.reply(
             `<b>${EMOJIS.CHECK} KODE REDEEM BERHASIL DIKLAIM!</b>\n\n<blockquote>Kode: <code>${escapeHTML(cleanCode)}</code>\nHadiah: <b>+${addAmt} Limit Cek</b>\nTotal Kuota Limit: <b>${newLim}</b></blockquote>`,
-            { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BOT }]] } }
+            { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BOT }]] } }
         );
     } else {
         const days = Number(item.amount) || 1;
@@ -1161,7 +1161,7 @@ bot.command('redeem', async (ctx) => {
 
         return ctx.reply(
             `<b>${EMOJIS.CHECK} KODE REDEEM BERHASIL DIKLAIM!</b>\n\n<blockquote>Kode: <code>${escapeHTML(cleanCode)}</code>\nHadiah: <b>Akun PREMIUM (${days >= 3650 ? 'Permanen' : days + ' Hari'})</b>\nStatus: <b>AKTIF SEKARANG</b></blockquote>`,
-            { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BOT }]] } }
+            { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BOT }]] } }
         );
     }
 });

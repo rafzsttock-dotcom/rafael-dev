@@ -288,7 +288,7 @@ ${priceNominal ? `${EMOJIS.KEY} Total Pembayaran: <b>${priceStr}</b>\n` : ''}${E
                 parse_mode: 'HTML',
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BOT }]
+                        [{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BOT }]
                     ]
                 }
             }).catch(() => {});
@@ -357,7 +357,7 @@ Sekarang kamu bisa generate API Key lewat menu <b>AMBIL APIKEY</b>.`.trim();
             global.bot.telegram.sendMessage(userId, successText, {
                 parse_mode: 'HTML',
                 reply_markup: {
-                    inline_keyboard: [[{ text: 'AMBIL API KEY', callback_data: 'menu_ambilapikey', icon_custom_emoji_id: EMOJI_IDS.KEY }]]
+                    inline_keyboard: [[{ text: 'AMBIL API KEY', style: 'primary', callback_data: 'menu_ambilapikey', icon_custom_emoji_id: EMOJI_IDS.KEY }]]
                 }
             }).catch(() => {});
 

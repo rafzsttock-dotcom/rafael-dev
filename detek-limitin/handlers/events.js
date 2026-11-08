@@ -12,7 +12,7 @@ async function executeCheckBioSession({ ctx, bot, userId, numbers, speedMode = "
         `<b>${frames[frameIdx]} CEK BIO (${modeLabel}): ${totalNum} NOMOR</b>\n\n<blockquote>Progress: 0 / ${totalNum}\nEstimasi: Menghitung...</blockquote>`,
         {
             parse_mode: "HTML",
-            reply_markup: { inline_keyboard: [[{ text: "BATALKAN", callback_data: "cancel_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
+            reply_markup: { inline_keyboard: [[{ text: "BATALKAN", style: 'danger', callback_data: "cancel_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
         }
     );
     delete userState[userId];
@@ -50,7 +50,7 @@ async function executeCheckBioSession({ ctx, bot, userId, numbers, speedMode = "
                 if (bot && bot.telegram) {
                     await bot.telegram.editMessageText(ctx.chat.id, msgProses.message_id, null, text, {
                         parse_mode: "HTML",
-                        reply_markup: { inline_keyboard: [[{ text: "BATALKAN", callback_data: "cancel_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
+                        reply_markup: { inline_keyboard: [[{ text: "BATALKAN", style: 'danger', callback_data: "cancel_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
                     });
                     lastAnimationText = text;
                     nextAnimationDelay = 2500;
@@ -121,7 +121,7 @@ async function executeCheckBioSession({ ctx, bot, userId, numbers, speedMode = "
                     parse_mode: "HTML",
                     reply_markup: {
                         inline_keyboard: [
-                            [{ text: "TAMBAH SENDER", callback_data: "wa_connect_menu", icon_custom_emoji_id: EMOJI_IDS.PLUS }, { text: "CEK BIO", callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.DOC }],
+                            [{ text: "TAMBAH SENDER", style: 'success', callback_data: "wa_connect_menu", icon_custom_emoji_id: EMOJI_IDS.PLUS }, { text: "CEK BIO", style: 'primary', callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.DOC }],
                             [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                         ]
                     }
@@ -141,8 +141,8 @@ async function executeCheckBioSession({ ctx, bot, userId, numbers, speedMode = "
                     parse_mode: "HTML",
                     reply_markup: {
                         inline_keyboard: [
-                            [{ text: "CEK LAGI", callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.DOC }],
-                            [{ text: "MENU UTAMA", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                            [{ text: "CEK LAGI", style: 'primary', callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.DOC }],
+                            [{ text: "MENU UTAMA", style: 'primary', callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                         ]
                     }
                 });
@@ -211,11 +211,11 @@ bot.on("document", async (ctx) => {
 
                 const buttons = [
                     [
-                        { text: "MODE SIMPEL", callback_data: "cekbio_mode_simpel", icon_custom_emoji_id: EMOJI_IDS.DOC },
-                        { text: "MODE DETAIL", callback_data: "cekbio_mode_detail", icon_custom_emoji_id: EMOJI_IDS.SEARCH }
+                        { text: "MODE SIMPEL", style: 'primary', callback_data: "cekbio_mode_simpel", icon_custom_emoji_id: EMOJI_IDS.DOC },
+                        { text: "MODE DETAIL", style: 'primary', callback_data: "cekbio_mode_detail", icon_custom_emoji_id: EMOJI_IDS.SEARCH }
                     ],
                     [
-                        { text: "BATAL", callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }
+                        { text: "BATAL", style: 'danger', callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }
                     ]
                 ]
 
@@ -345,7 +345,7 @@ bot.on("text", async (ctx) => {
 
                 return ctx.reply(
                     `<b>${EMOJIS.CHECK} KODE REDEEM BERHASIL DIKLAIM!</b>\n\n<blockquote>Kode: <code>${escapeHTML(cleanCode)}</code>\nHadiah: <b>+${addAmt} Limit Cek</b>\nTotal Kuota Limit: <b>${newLim}</b></blockquote>`,
-                    { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BOT }]] } }
+                    { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BOT }]] } }
                 );
             } else {
                 const days = Number(item.amount) || 1;
@@ -359,7 +359,7 @@ bot.on("text", async (ctx) => {
 
                 return ctx.reply(
                     `<b>${EMOJIS.CHECK} KODE REDEEM BERHASIL DIKLAIM!</b>\n\n<blockquote>Kode: <code>${escapeHTML(cleanCode)}</code>\nHadiah: <b>Akun PREMIUM (${days >= 3650 ? 'Permanen' : days + ' Hari'})</b>\nStatus: <b>AKTIF SEKARANG</b></blockquote>`,
-                    { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: 'MENU UTAMA', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BOT }]] } }
+                    { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: 'MENU UTAMA', style: 'primary', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BOT }]] } }
                 );
             }
         }
@@ -769,7 +769,7 @@ bot.on("text", async (ctx) => {
                             parse_mode: "HTML",
                             reply_markup: {
                                 inline_keyboard: [
-                                    [{ text: "COBA LAGI", callback_data: "owner_fsub_add", icon_custom_emoji_id: EMOJI_IDS.REFRESH }],
+                                    [{ text: "COBA LAGI", style: 'primary', callback_data: "owner_fsub_add", icon_custom_emoji_id: EMOJI_IDS.REFRESH }],
                                     [{ text: "KEMBALI", callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                 ]
                             }
@@ -824,8 +824,8 @@ bot.on("text", async (ctx) => {
                             parse_mode: "HTML",
                             reply_markup: {
                                 inline_keyboard: [
-                                    [{ text: "MENU WAJIB JOIN", callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.GLOBE }],
-                                    [{ text: "OWNER PANEL", callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                    [{ text: "MENU WAJIB JOIN", style: 'primary', callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.GLOBE }],
+                                    [{ text: "OWNER PANEL", style: 'danger', callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                 ]
                             }
                         }
@@ -868,8 +868,8 @@ bot.on("text", async (ctx) => {
                     parse_mode: "HTML",
                     reply_markup: {
                         inline_keyboard: [
-                            [{ text: "TAMBAH LAGI", callback_data: "owner_fsub_add", icon_custom_emoji_id: EMOJI_IDS.PLUS }, { text: "MENU WAJIB JOIN", callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.GLOBE }],
-                            [{ text: "OWNER PANEL", callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                            [{ text: "TAMBAH LAGI", style: 'success', callback_data: "owner_fsub_add", icon_custom_emoji_id: EMOJI_IDS.PLUS }, { text: "MENU WAJIB JOIN", style: 'primary', callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.GLOBE }],
+                            [{ text: "OWNER PANEL", style: 'danger', callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                         ]
                     }
                 });
@@ -888,8 +888,8 @@ bot.on("text", async (ctx) => {
                         parse_mode: "HTML",
                         reply_markup: {
                             inline_keyboard: [
-                                [{ text: "COBA LAGI", callback_data: "owner_fsub_add", icon_custom_emoji_id: EMOJI_IDS.REFRESH }],
-                                [{ text: "MENU WAJIB JOIN", callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                [{ text: "COBA LAGI", style: 'primary', callback_data: "owner_fsub_add", icon_custom_emoji_id: EMOJI_IDS.REFRESH }],
+                                [{ text: "MENU WAJIB JOIN", style: 'primary', callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                             ]
                         }
                     }
@@ -955,8 +955,8 @@ bot.on("text", async (ctx) => {
                         if (bot && bot.telegram) bot.telegram.sendMessage(uid, `<b>${EMOJIS.CHECK} WA TERHUBUNG (SESI ${sid || 1})</b>\n\n<blockquote>Nomor: <code>+${phone}</code>\nStatus: Siap Digunakan</blockquote>`, { 
                             parse_mode: "HTML",
                             reply_markup: { inline_keyboard: [
-                                [{ text: "MULAI CEK", callback_data: "wa_check", icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                                [{ text: "MENU UTAMA", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                                [{ text: "MULAI CEK", style: 'primary', callback_data: "wa_check", icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                [{ text: "MENU UTAMA", style: 'primary', callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                             ] }
                         }).catch(() => {})
                     }
@@ -1028,11 +1028,11 @@ bot.on("text", async (ctx) => {
 
             const buttons = [
                 [
-                    { text: "MODE SIMPEL", callback_data: "cekbio_mode_simpel", icon_custom_emoji_id: EMOJI_IDS.DOC },
-                    { text: "MODE DETAIL", callback_data: "cekbio_mode_detail", icon_custom_emoji_id: EMOJI_IDS.SEARCH }
+                    { text: "MODE SIMPEL", style: 'primary', callback_data: "cekbio_mode_simpel", icon_custom_emoji_id: EMOJI_IDS.DOC },
+                    { text: "MODE DETAIL", style: 'primary', callback_data: "cekbio_mode_detail", icon_custom_emoji_id: EMOJI_IDS.SEARCH }
                 ],
                 [
-                    { text: "BATAL", callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }
+                    { text: "BATAL", style: 'danger', callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }
                 ]
             ]
 
@@ -1073,8 +1073,8 @@ bot.on("text", async (ctx) => {
                         parse_mode: "HTML",
                         reply_markup: {
                             inline_keyboard: [
-                                [{ text: "BELI PREMIUM", callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
-                                [{ text: "COBA LAGI", callback_data: "menu_detect", icon_custom_emoji_id: EMOJI_IDS.SEARCH }],
+                                [{ text: "BELI PREMIUM", style: 'success', callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
+                                [{ text: "COBA LAGI", style: 'primary', callback_data: "menu_detect", icon_custom_emoji_id: EMOJI_IDS.SEARCH }],
                                 [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                             ]
                         }
@@ -1096,8 +1096,8 @@ bot.on("text", async (ctx) => {
                         parse_mode: "HTML",
                         reply_markup: {
                             inline_keyboard: [
-                                [{ text: "BELI PREMIUM", callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
-                                [{ text: "UNDANG TEMAN (+LIMIT)", callback_data: "menu_referral", icon_custom_emoji_id: EMOJI_IDS.USER }],
+                                [{ text: "BELI PREMIUM", style: 'success', callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
+                                [{ text: "UNDANG TEMAN (+LIMIT)", style: 'success', callback_data: "menu_referral", icon_custom_emoji_id: EMOJI_IDS.USER }],
                                 [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                             ]
                         }
@@ -1157,7 +1157,7 @@ bot.on("text", async (ctx) => {
                         {
                             parse_mode: "HTML",
                             reply_markup: { inline_keyboard: [
-                                [{ text: "CEK LAGI", callback_data: "menu_detect", icon_custom_emoji_id: EMOJI_IDS.SEARCH }],
+                                [{ text: "CEK LAGI", style: 'primary', callback_data: "menu_detect", icon_custom_emoji_id: EMOJI_IDS.SEARCH }],
                                 [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                             ] }
                         }
@@ -1180,7 +1180,7 @@ bot.on("text", async (ctx) => {
                     {
                         parse_mode: "HTML",
                         reply_markup: { inline_keyboard: [
-                            [{ text: "CEK LAGI", callback_data: "menu_detect", icon_custom_emoji_id: EMOJI_IDS.SEARCH }],
+                            [{ text: "CEK LAGI", style: 'primary', callback_data: "menu_detect", icon_custom_emoji_id: EMOJI_IDS.SEARCH }],
                             [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                         ] }
                     }
@@ -1218,8 +1218,8 @@ bot.on("text", async (ctx) => {
                         parse_mode: "HTML",
                         reply_markup: {
                             inline_keyboard: [
-                                [{ text: "BELI PREMIUM", callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
-                                [{ text: "COBA LAGI", callback_data: "menu_limitin", icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                                [{ text: "BELI PREMIUM", style: 'success', callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
+                                [{ text: "COBA LAGI", style: 'primary', callback_data: "menu_limitin", icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
                                 [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                             ]
                         }
@@ -1241,8 +1241,8 @@ bot.on("text", async (ctx) => {
                         parse_mode: "HTML",
                         reply_markup: {
                             inline_keyboard: [
-                                [{ text: "💎 BELI PREMIUM", callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
-                                [{ text: "👥 UNDANG TEMAN (+LIMIT)", callback_data: "menu_referral", icon_custom_emoji_id: EMOJI_IDS.USER }],
+                                [{ text: "💎 BELI PREMIUM", style: 'success', callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
+                                [{ text: "👥 UNDANG TEMAN (+LIMIT)", style: 'success', callback_data: "menu_referral", icon_custom_emoji_id: EMOJI_IDS.USER }],
                                 [{ text: "⬅️ KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                             ]
                         }
@@ -1441,11 +1441,11 @@ bot.on('new_chat_members', async (ctx) => {
             const keyboard = {
                 inline_keyboard: [
                     [
-                        { text: '🚀 BUKA BOT (CHAT PRIBADI)', url: `https://t.me/${botUser}?start=group` }
+                        { text: '🚀 BUKA BOT (CHAT PRIBADI)', style: 'primary', url: `https://t.me/${botUser}?start=group` }
                     ],
                     [
-                        { text: '📊 STATISTIK', callback_data: 'menu_stats', icon_custom_emoji_id: EMOJI_IDS.CHART },
-                        { text: '📖 PANDUAN', callback_data: 'menu_panduan', icon_custom_emoji_id: EMOJI_IDS.BOOK }
+                        { text: '📊 STATISTIK', style: 'primary', callback_data: 'menu_stats', icon_custom_emoji_id: EMOJI_IDS.CHART },
+                        { text: '📖 PANDUAN', style: 'primary', callback_data: 'menu_panduan', icon_custom_emoji_id: EMOJI_IDS.BOOK }
                     ]
                 ]
             };

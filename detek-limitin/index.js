@@ -221,7 +221,7 @@ async function initDatabaseAndSystem() {
                     let msgProses = await bot.telegram.sendMessage(
                         userId, 
                         `<b>${EMOJIS.REFRESH} MELANJUTKAN PENGECEKAN</b>\n\n<blockquote>Sisa: <b>${remaining}</b> dari <b>${originalTotal}</b> nomor.</blockquote>`,
-                        { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "BATALKAN", callback_data: "cancel_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] } }
+                        { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "BATALKAN", style: 'danger', callback_data: "cancel_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] } }
                     );
 
                     let waReady = false;
@@ -277,7 +277,7 @@ async function initDatabaseAndSystem() {
                         try {
                             await bot.telegram.editMessageText(userId, msgProses.message_id, null, text, {
                                 parse_mode: "HTML",
-                                reply_markup: { inline_keyboard: [[{ text: "BATALKAN", callback_data: "cancel_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
+                                reply_markup: { inline_keyboard: [[{ text: "BATALKAN", style: 'danger', callback_data: "cancel_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
                             });
                         } catch (e) {}
                         
@@ -347,7 +347,7 @@ async function initDatabaseAndSystem() {
                                     parse_mode: "HTML",
                                     reply_markup: {
                                         inline_keyboard: [
-                                            [{ text: "TAMBAH SENDER", callback_data: "wa_connect_menu", icon_custom_emoji_id: EMOJI_IDS.PLUS }, { text: "CEK BIO", callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.DOC }],
+                                            [{ text: "TAMBAH SENDER", style: 'success', callback_data: "wa_connect_menu", icon_custom_emoji_id: EMOJI_IDS.PLUS }, { text: "CEK BIO", style: 'primary', callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.DOC }],
                                             [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                         ]
                                     }
@@ -363,7 +363,7 @@ async function initDatabaseAndSystem() {
                                 caption: combinedCaption, 
                                 parse_mode: "HTML",
                                 reply_markup: { inline_keyboard: [
-                                    [{ text: "CEK BIO LAGI", callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.DOC }],
+                                    [{ text: "CEK BIO LAGI", style: 'primary', callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.DOC }],
                                     [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                                 ] }
                             });
@@ -660,7 +660,7 @@ Jika tidak diperpanjang, API Key otomatis nonaktif saat expired.</blockquote>`;
                         parse_mode: 'HTML',
                         reply_markup: {
                             inline_keyboard: [[
-                                { text: "🔄 PERPANJANG SEKARANG", callback_data: "menu_beli_api" }
+                                { text: "🔄 PERPANJANG SEKARANG", style: 'success', callback_data: "menu_beli_api" }
                             ]]
                         }
                     });

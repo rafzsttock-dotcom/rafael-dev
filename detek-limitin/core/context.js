@@ -274,7 +274,7 @@ ${detailsBlock}`.trim();
             inline_keyboard: [
                 [
                     {
-                        text: 'MENU BOT',
+                        text: 'MENU BOT', style: 'primary',
                         url: `https://t.me/${botUser}`,
                         icon_custom_emoji_id: EMOJI_IDS.BOT
                     }
@@ -302,7 +302,7 @@ ${detailsBlock}`.trim();
                     ...sendOptions,
                     reply_markup: {
                         inline_keyboard: [
-                            [{ text: '🤖 MENU BOT', url: `https://t.me/${botUser}` }]
+                            [{ text: '🤖 MENU BOT', style: 'primary', url: `https://t.me/${botUser}` }]
                         ]
                     }
                 });
@@ -556,8 +556,8 @@ Rank: <b>#${userRank.rank}</b> | Total Cek: <b>${userRank.totalChecked}</b> nomo
         reply_markup: {
             inline_keyboard: [
                 [
-                    { text: "REFRESH", callback_data: "refresh_leaderboard", icon_custom_emoji_id: EMOJI_IDS.REFRESH },
-                    { text: "STATISTIK", callback_data: "menu_stats", icon_custom_emoji_id: EMOJI_IDS.CHART }
+                    { text: "REFRESH", style: 'primary', callback_data: "refresh_leaderboard", icon_custom_emoji_id: EMOJI_IDS.REFRESH },
+                    { text: "STATISTIK", style: 'primary', callback_data: "menu_stats", icon_custom_emoji_id: EMOJI_IDS.CHART }
                 ],
                 [
                     { text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }
@@ -651,8 +651,8 @@ ${EMOJIS.KEY} Sisa Kuota: <b>${user?.limit ?? 5}</b> cek</blockquote>`.trim();
         reply_markup: {
             inline_keyboard: [
                 [
-                    { text: "REFRESH", callback_data: "refresh_stats", icon_custom_emoji_id: EMOJI_IDS.REFRESH },
-                    { text: "LEADERBOARD", callback_data: "menu_leaderboard", icon_custom_emoji_id: EMOJI_IDS.TROPHY }
+                    { text: "REFRESH", style: 'primary', callback_data: "refresh_stats", icon_custom_emoji_id: EMOJI_IDS.REFRESH },
+                    { text: "LEADERBOARD", style: 'primary', callback_data: "menu_leaderboard", icon_custom_emoji_id: EMOJI_IDS.TROPHY }
                 ],
                 [
                     { text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }
@@ -683,6 +683,7 @@ Owner: @${config.ownerContact?.telegram || 'owner'}</blockquote>`.trim();
 
     const buttons = plans.map(p => ([{
         text: `${p.name} — Rp${p.price.toLocaleString('id-ID')}`,
+        style: 'success',
         callback_data: `buy_plan_${p.id}`,
         icon_custom_emoji_id: EMOJI_IDS.PREMIUM
     }]));
@@ -734,10 +735,10 @@ function getReferralMenu(user) {
         reply_markup: {
             inline_keyboard: [
                 [
-                    { text: 'BAGIKAN KE TEMAN / GRUP', url: shareUrl, icon_custom_emoji_id: EMOJI_IDS.BROADCAST }
+                    { text: 'BAGIKAN KE TEMAN / GRUP', style: 'success', url: shareUrl, icon_custom_emoji_id: EMOJI_IDS.BROADCAST }
                 ],
                 [
-                    { text: 'REFRESH', callback_data: 'menu_referral', icon_custom_emoji_id: EMOJI_IDS.REFRESH },
+                    { text: 'REFRESH', style: 'primary', callback_data: 'menu_referral', icon_custom_emoji_id: EMOJI_IDS.REFRESH },
                     { text: 'KEMBALI', callback_data: 'back_home', icon_custom_emoji_id: EMOJI_IDS.BACK }
                 ]
             ]
@@ -770,7 +771,7 @@ ${EMOJIS.NUM_5} Tunggu hingga proses selesai. Bot akan mengirimkan file laporan 
         const keyboard = {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "MULAI CEK BIO", callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.DOC }],
+                    [{ text: "MULAI CEK BIO", style: 'primary', callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.DOC }],
                     [{ text: "KEMBALI", callback_data: "menu_panduan", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                 ]
             }
@@ -800,7 +801,7 @@ ${EMOJIS.NUM_3} Masukkan kode 8 digit yang diberikan bot ke notifikasi WhatsApp 
         const keyboard = {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "TAMBAH SENDER", callback_data: "wa_connect_menu", icon_custom_emoji_id: EMOJI_IDS.PLUS }],
+                    [{ text: "TAMBAH SENDER", style: 'success', callback_data: "wa_connect_menu", icon_custom_emoji_id: EMOJI_IDS.PLUS }],
                     [{ text: "KEMBALI", callback_data: "menu_panduan", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                 ]
             }
@@ -830,8 +831,8 @@ ${EMOJIS.NUM_3} Masukkan kode 8 digit yang diberikan bot ke notifikasi WhatsApp 
             reply_markup: {
                 inline_keyboard: [
                     [
-                        { text: "DETECT OTP", callback_data: "menu_detect", icon_custom_emoji_id: EMOJI_IDS.SEARCH },
-                        { text: "LIMITIN CODE", callback_data: "menu_limitin", icon_custom_emoji_id: EMOJI_IDS.ROCKET }
+                        { text: "DETECT OTP", style: 'primary', callback_data: "menu_detect", icon_custom_emoji_id: EMOJI_IDS.SEARCH },
+                        { text: "LIMITIN CODE", style: 'primary', callback_data: "menu_limitin", icon_custom_emoji_id: EMOJI_IDS.ROCKET }
                     ],
                     [{ text: "KEMBALI", callback_data: "menu_panduan", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                 ]
@@ -856,8 +857,8 @@ ${EMOJIS.NUM_3} Masukkan kode 8 digit yang diberikan bot ke notifikasi WhatsApp 
             reply_markup: {
                 inline_keyboard: [
                     [
-                        { text: "BELI PREMIUM", callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM },
-                        { text: "REFERRAL", callback_data: "menu_referral", icon_custom_emoji_id: EMOJI_IDS.USER }
+                        { text: "BELI PREMIUM", style: 'success', callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM },
+                        { text: "REFERRAL", style: 'primary', callback_data: "menu_referral", icon_custom_emoji_id: EMOJI_IDS.USER }
                     ],
                     [{ text: "KEMBALI", callback_data: "menu_panduan", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                 ]
@@ -885,7 +886,7 @@ ${EMOJIS.NUM_3} Masukkan kode 8 digit yang diberikan bot ke notifikasi WhatsApp 
         const keyboard = {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "MENU REFERRAL SAYA", callback_data: "menu_referral", icon_custom_emoji_id: EMOJI_IDS.USER }],
+                    [{ text: "MENU REFERRAL SAYA", style: 'primary', callback_data: "menu_referral", icon_custom_emoji_id: EMOJI_IDS.USER }],
                     [{ text: "KEMBALI", callback_data: "menu_panduan", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                 ]
             }
@@ -913,7 +914,7 @@ ${EMOJIS.NUM_3} Masukkan kode 8 digit yang diberikan bot ke notifikasi WhatsApp 
         const keyboard = {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "BELI SEKARANG", callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
+                    [{ text: "BELI SEKARANG", style: 'success', callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
                     [{ text: "KEMBALI", callback_data: "menu_panduan", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                 ]
             }
@@ -948,16 +949,16 @@ Otomasi request kode OTP berulang kali via WA Old, SMS, atau Voice Call untuk me
         reply_markup: {
             inline_keyboard: [
                 [
-                    { text: "ATURAN LIMIT", callback_data: "panduan_limit_rules", icon_custom_emoji_id: EMOJI_IDS.WARN },
-                    { text: "BELI PREMIUM", callback_data: "panduan_premium", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }
+                    { text: "ATURAN LIMIT", style: 'primary', callback_data: "panduan_limit_rules", icon_custom_emoji_id: EMOJI_IDS.WARN },
+                    { text: "BELI PREMIUM", style: 'success', callback_data: "panduan_premium", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }
                 ],
                 [
-                    { text: "PROGRAM REFERRAL", callback_data: "panduan_referral", icon_custom_emoji_id: EMOJI_IDS.USER },
-                    { text: "DETECT & LIMITIN", callback_data: "panduan_detect_limitin", icon_custom_emoji_id: EMOJI_IDS.ROCKET }
+                    { text: "PROGRAM REFERRAL", style: 'primary', callback_data: "panduan_referral", icon_custom_emoji_id: EMOJI_IDS.USER },
+                    { text: "DETECT & LIMITIN", style: 'primary', callback_data: "panduan_detect_limitin", icon_custom_emoji_id: EMOJI_IDS.ROCKET }
                 ],
                 [
-                    { text: "PANDUAN CEK BIO", callback_data: "panduan_cekbio", icon_custom_emoji_id: EMOJI_IDS.DOC },
-                    { text: "PANDUAN SENDER", callback_data: "panduan_sender", icon_custom_emoji_id: EMOJI_IDS.PHONE }
+                    { text: "PANDUAN CEK BIO", style: 'primary', callback_data: "panduan_cekbio", icon_custom_emoji_id: EMOJI_IDS.DOC },
+                    { text: "PANDUAN SENDER", style: 'primary', callback_data: "panduan_sender", icon_custom_emoji_id: EMOJI_IDS.PHONE }
                 ],
                 [
                     { text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }
@@ -1046,12 +1047,12 @@ Total Channel: <b>${channels.length} channel</b></blockquote>
                     { text: toggleText, callback_data: "owner_fsub_toggle", icon_custom_emoji_id: toggleIcon }
                 ],
                 [
-                    { text: "TAMBAH CHANNEL", callback_data: "owner_fsub_add", icon_custom_emoji_id: EMOJI_IDS.PLUS },
-                    { text: "HAPUS CHANNEL", callback_data: "owner_fsub_del_menu", icon_custom_emoji_id: EMOJI_IDS.CROSS }
+                    { text: "TAMBAH CHANNEL", style: 'success', callback_data: "owner_fsub_add", icon_custom_emoji_id: EMOJI_IDS.PLUS },
+                    { text: "HAPUS CHANNEL", style: 'danger', callback_data: "owner_fsub_del_menu", icon_custom_emoji_id: EMOJI_IDS.CROSS }
                 ],
                 [
-                    { text: "CEK STATUS BOT", callback_data: "owner_fsub_check_admin", icon_custom_emoji_id: EMOJI_IDS.SEARCH },
-                    { text: "REFRESH", callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.REFRESH }
+                    { text: "CEK STATUS BOT", style: 'primary', callback_data: "owner_fsub_check_admin", icon_custom_emoji_id: EMOJI_IDS.SEARCH },
+                    { text: "REFRESH", style: 'primary', callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.REFRESH }
                 ],
                 [
                     { text: "KEMBALI KE OWNER PANEL", callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.BACK }
@@ -1111,11 +1112,12 @@ async function showMainMenu(ctx) {
 
             buttons.push([{
                 text: `JOIN ${safeTitle}`,
+                style: 'primary',
                 url: url || (config.botUsername ? `https://t.me/${config.botUsername}` : 'https://t.me/'),
                 icon_custom_emoji_id: EMOJI_IDS.GLOBE
             }]);
         }
-        buttons.push([{ text: 'SAYA SUDAH JOIN', callback_data: 'cek_join_lagi', icon_custom_emoji_id: EMOJI_IDS.CHECK }]);
+        buttons.push([{ text: 'SAYA SUDAH JOIN', style: 'success', callback_data: 'cek_join_lagi', icon_custom_emoji_id: EMOJI_IDS.CHECK }]);
         const keyboardJoin = { reply_markup: { inline_keyboard: buttons } };
 
         if (!fileIdCache.menuImage && uploadLocks.menuImage) {
@@ -1192,18 +1194,18 @@ Silakan pilih menu di bawah ini.`
             { text: 'REDEEM CODE', callback_data: 'menu_redeem', icon_custom_emoji_id: EMOJI_IDS.GIFT, style: 'success' }
         ],
         [
-            { text: 'REFERRAL', callback_data: 'menu_referral', icon_custom_emoji_id: EMOJI_IDS.USER },
-            { text: 'LEADERBOARD', callback_data: 'menu_leaderboard', icon_custom_emoji_id: EMOJI_IDS.TROPHY }
+            { text: 'REFERRAL', style: 'primary', callback_data: 'menu_referral', icon_custom_emoji_id: EMOJI_IDS.USER },
+            { text: 'LEADERBOARD', style: 'primary', callback_data: 'menu_leaderboard', icon_custom_emoji_id: EMOJI_IDS.TROPHY }
         ],
         [
-            { text: 'STATISTIK', callback_data: 'menu_stats', icon_custom_emoji_id: EMOJI_IDS.CHART },
-            { text: 'PANDUAN BOT', callback_data: 'menu_panduan', icon_custom_emoji_id: EMOJI_IDS.BOOK }
+            { text: 'STATISTIK', style: 'primary', callback_data: 'menu_stats', icon_custom_emoji_id: EMOJI_IDS.CHART },
+            { text: 'PANDUAN BOT', style: 'primary', callback_data: 'menu_panduan', icon_custom_emoji_id: EMOJI_IDS.BOOK }
         ],
         [
-            { text: 'API DOCS', callback_data: 'menu_apidocs', icon_custom_emoji_id: EMOJI_IDS.DOC }
+            { text: 'API DOCS', style: 'primary', callback_data: 'menu_apidocs', icon_custom_emoji_id: EMOJI_IDS.DOC }
         ],
         [
-            { text: 'AMBIL APIKEY', callback_data: 'menu_ambilapikey', icon_custom_emoji_id: EMOJI_IDS.KEY }
+            { text: 'AMBIL APIKEY', style: 'primary', callback_data: 'menu_ambilapikey', icon_custom_emoji_id: EMOJI_IDS.KEY }
         ]
     ] } }
 
@@ -1286,23 +1288,23 @@ async function getMainOwnerMenuMessage() {
         reply_markup: {
             inline_keyboard: [
                 [
-                    { text: "BROADCAST", callback_data: "owner_menu_broadcast", icon_custom_emoji_id: EMOJI_IDS.BROADCAST },
-                    { text: "KELOLA REDEEM", callback_data: "owner_menu_redeem", icon_custom_emoji_id: EMOJI_IDS.GIFT }
+                    { text: "BROADCAST", style: 'danger', callback_data: "owner_menu_broadcast", icon_custom_emoji_id: EMOJI_IDS.BROADCAST },
+                    { text: "KELOLA REDEEM", style: 'primary', callback_data: "owner_menu_redeem", icon_custom_emoji_id: EMOJI_IDS.GIFT }
                 ],
                 [
-                    { text: "KELOLA PREMIUM", callback_data: "owner_menu_premium", icon_custom_emoji_id: EMOJI_IDS.PREMIUM },
-                    { text: "KELOLA USER", callback_data: "owner_menu_users", icon_custom_emoji_id: EMOJI_IDS.USER }
+                    { text: "KELOLA PREMIUM", style: 'primary', callback_data: "owner_menu_premium", icon_custom_emoji_id: EMOJI_IDS.PREMIUM },
+                    { text: "KELOLA USER", style: 'primary', callback_data: "owner_menu_users", icon_custom_emoji_id: EMOJI_IDS.USER }
                 ],
                 [
-                    { text: "WAJIB JOIN (FSUB)", callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.GLOBE },
-                    { text: "MAINTENANCE", callback_data: "owner_menu_maintenance", icon_custom_emoji_id: EMOJI_IDS.GEAR }
+                    { text: "WAJIB JOIN (FSUB)", style: 'primary', callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.GLOBE },
+                    { text: "MAINTENANCE", style: 'primary', callback_data: "owner_menu_maintenance", icon_custom_emoji_id: EMOJI_IDS.GEAR }
                 ],
                 [
-                    { text: "KELOLA API PLANS", callback_data: "owner_menu_api_plans", icon_custom_emoji_id: EMOJI_IDS.GEAR }
+                    { text: "KELOLA API PLANS", style: 'primary', callback_data: "owner_menu_api_plans", icon_custom_emoji_id: EMOJI_IDS.GEAR }
                 ],
                 [
-                    { text: "BACKUP PROJECT", callback_data: "owner_backup", icon_custom_emoji_id: EMOJI_IDS.BACKUP },
-                    { text: "RESTART BOT", callback_data: "restart_bot", icon_custom_emoji_id: EMOJI_IDS.REFRESH }
+                    { text: "BACKUP PROJECT", style: 'primary', callback_data: "owner_backup", icon_custom_emoji_id: EMOJI_IDS.BACKUP },
+                    { text: "RESTART BOT", style: 'danger', callback_data: "restart_bot", icon_custom_emoji_id: EMOJI_IDS.REFRESH }
                 ],
                 [
                     { text: "KEMBALI KE MENU UTAMA", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }
@@ -1344,15 +1346,16 @@ async function getOwnerApiPlansMenuMessage() {
 
     const buttons = plans.map((p, i) => ([{
         text: `✏️ Edit: ${p.name}`,
+        style: 'primary',
         callback_data: `owner_api_edit_${p.id}`,
         icon_custom_emoji_id: EMOJI_IDS.GEAR
     }]));
 
     buttons.push([
-        { text: "TAMBAH PAKET BARU", callback_data: "owner_api_add", icon_custom_emoji_id: EMOJI_IDS.GIFT }
+        { text: "TAMBAH PAKET BARU", style: 'success', callback_data: "owner_api_add", icon_custom_emoji_id: EMOJI_IDS.GIFT }
     ]);
     buttons.push([
-        { text: "BERI PAKET KE USER", callback_data: "owner_api_grant", icon_custom_emoji_id: EMOJI_IDS.USER }
+        { text: "BERI PAKET KE USER", style: 'success', callback_data: "owner_api_grant", icon_custom_emoji_id: EMOJI_IDS.USER }
     ]);
     buttons.push([
         { text: "KEMBALI KE OWNER PANEL", callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.BACK }
@@ -1378,8 +1381,8 @@ function getOwnerBroadcastMenuMessage() {
     const keyboard = {
         reply_markup: {
             inline_keyboard: [
-                [{ text: "KIRIM BROADCAST TEKS", callback_data: "owner_prompt_bc", icon_custom_emoji_id: EMOJI_IDS.BROADCAST }],
-                [{ text: "LEPAS SEMUA PIN", callback_data: "owner_unpin_all", icon_custom_emoji_id: EMOJI_IDS.CROSS }],
+                [{ text: "KIRIM BROADCAST TEKS", style: 'danger', callback_data: "owner_prompt_bc", icon_custom_emoji_id: EMOJI_IDS.BROADCAST }],
+                [{ text: "LEPAS SEMUA PIN", style: 'danger', callback_data: "owner_unpin_all", icon_custom_emoji_id: EMOJI_IDS.CROSS }],
                 [{ text: "KEMBALI KE OWNER PANEL", callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.BACK }]
             ]
         }
@@ -1409,11 +1412,11 @@ async function getOwnerRedeemMenuMessage() {
         reply_markup: {
             inline_keyboard: [
                 [
-                    { text: "BUAT KODE LIMIT", callback_data: "owner_create_code_limit", icon_custom_emoji_id: EMOJI_IDS.PLUS },
-                    { text: "BUAT KODE PREM", callback_data: "owner_create_code_prem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }
+                    { text: "BUAT KODE LIMIT", style: 'success', callback_data: "owner_create_code_limit", icon_custom_emoji_id: EMOJI_IDS.PLUS },
+                    { text: "BUAT KODE PREM", style: 'success', callback_data: "owner_create_code_prem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }
                 ],
                 [
-                    { text: "DAFTAR KODE AKTIF", callback_data: "owner_list_codes", icon_custom_emoji_id: EMOJI_IDS.DOC }
+                    { text: "DAFTAR KODE AKTIF", style: 'primary', callback_data: "owner_list_codes", icon_custom_emoji_id: EMOJI_IDS.DOC }
                 ],
                 [
                     { text: "KEMBALI KE OWNER PANEL", callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.BACK }
@@ -1441,8 +1444,8 @@ function getOwnerPremiumMenuMessage() {
         reply_markup: {
             inline_keyboard: [
                 [
-                    { text: "TAMBAH PREMIUM", callback_data: "owner_prompt_setprem", icon_custom_emoji_id: EMOJI_IDS.PLUS },
-                    { text: "CABUT PREMIUM", callback_data: "owner_prompt_delprem", icon_custom_emoji_id: EMOJI_IDS.CROSS }
+                    { text: "TAMBAH PREMIUM", style: 'success', callback_data: "owner_prompt_setprem", icon_custom_emoji_id: EMOJI_IDS.PLUS },
+                    { text: "CABUT PREMIUM", style: 'danger', callback_data: "owner_prompt_delprem", icon_custom_emoji_id: EMOJI_IDS.CROSS }
                 ],
                 [
                     { text: "KEMBALI KE OWNER PANEL", callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.BACK }
@@ -1515,7 +1518,7 @@ async function getOwnerPremiumLogsMessage() {
         reply_markup: {
             inline_keyboard: [
                 [
-                    { text: "REFRESH LOG", callback_data: "owner_log_premium", icon_custom_emoji_id: EMOJI_IDS.REFRESH }
+                    { text: "REFRESH LOG", style: 'primary', callback_data: "owner_log_premium", icon_custom_emoji_id: EMOJI_IDS.REFRESH }
                 ],
                 [
                     { text: "KEMBALI KE KELOLA PREMIUM", callback_data: "owner_menu_premium", icon_custom_emoji_id: EMOJI_IDS.BACK }
@@ -1545,8 +1548,8 @@ function getOwnerUsersMenuMessage() {
         reply_markup: {
             inline_keyboard: [
                 [
-                    { text: "CEK INFO USER", callback_data: "owner_prompt_cekuser", icon_custom_emoji_id: EMOJI_IDS.SEARCH },
-                    { text: "TAMBAH LIMIT", callback_data: "owner_prompt_addlimit", icon_custom_emoji_id: EMOJI_IDS.PLUS }
+                    { text: "CEK INFO USER", style: 'primary', callback_data: "owner_prompt_cekuser", icon_custom_emoji_id: EMOJI_IDS.SEARCH },
+                    { text: "TAMBAH LIMIT", style: 'success', callback_data: "owner_prompt_addlimit", icon_custom_emoji_id: EMOJI_IDS.PLUS }
                 ],
                 [
                     { text: "KEMBALI KE OWNER PANEL", callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.BACK }
@@ -1590,7 +1593,7 @@ async function getOwnerMaintenanceMenuMessage() {
     const keyboard = {
         reply_markup: {
             inline_keyboard: [
-                [{ text: toggleText, callback_data: "owner_toggle_maintenance", icon_custom_emoji_id: toggleIcon }],
+                [{ text: toggleText, callback_data: "owner_toggle_maintenance", style: 'danger', icon_custom_emoji_id: toggleIcon }],
                 [{ text: "KEMBALI KE OWNER PANEL", callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.BACK }]
             ]
         }

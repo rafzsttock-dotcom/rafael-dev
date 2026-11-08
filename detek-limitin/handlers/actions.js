@@ -67,11 +67,11 @@ bot.action("menu_cekbio", async (ctx) => {
 
         const buttons = [
             [
-                { text: "TAMBAH SENDER", callback_data: "wa_connect_menu", icon_custom_emoji_id: EMOJI_IDS.PLUS },
-                { text: "MULAI CEK", callback_data: "wa_check", icon_custom_emoji_id: EMOJI_IDS.ROCKET }
+                { text: "TAMBAH SENDER", style: 'success', callback_data: "wa_connect_menu", icon_custom_emoji_id: EMOJI_IDS.PLUS },
+                { text: "MULAI CEK", style: 'primary', callback_data: "wa_check", icon_custom_emoji_id: EMOJI_IDS.ROCKET }
             ],
             [
-                { text: "LOGOUT SESI", callback_data: "wa_logout_menu", icon_custom_emoji_id: EMOJI_IDS.DOOR },
+                { text: "LOGOUT SESI", style: 'danger', callback_data: "wa_logout_menu", icon_custom_emoji_id: EMOJI_IDS.DOOR },
                 { text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }
             ]
         ]
@@ -135,8 +135,8 @@ ${EMOJIS.QR} <b>Scan QR</b> — Buka WA &gt; Perangkat Tertaut &gt; Scan
 ${EMOJIS.KEY} <b>Pairing Code</b> — Masukkan kode 8 digit di WA kamu</blockquote>`
 
         const buttons = [
-            [{ text: "SCAN QR CODE", callback_data: `wa_connect_qr_${newSessionId}`, icon_custom_emoji_id: EMOJI_IDS.QR }],
-            [{ text: "PAIRING CODE", callback_data: `wa_connect_pairing_${newSessionId}`, icon_custom_emoji_id: EMOJI_IDS.KEY }],
+            [{ text: "SCAN QR CODE", style: 'primary', callback_data: `wa_connect_qr_${newSessionId}`, icon_custom_emoji_id: EMOJI_IDS.QR }],
+            [{ text: "PAIRING CODE", style: 'primary', callback_data: `wa_connect_pairing_${newSessionId}`, icon_custom_emoji_id: EMOJI_IDS.KEY }],
             [{ text: "KEMBALI", callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.BACK }]
         ]
 
@@ -203,7 +203,7 @@ Format: <code>628xxx</code> (tanpa tanda +)</blockquote>
 3. Perangkat Tertaut &gt; Tautkan Perangkat
 4. Pilih <b>Tautkan dengan nomor telepon</b>
 5. Masukkan kode 8 digit</blockquote>`,
-            { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "wa_connect_menu", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] } }
+            { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "BATAL", style: 'danger', callback_data: "wa_connect_menu", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] } }
         )
     } finally {
         userLocks.delete(lockKey)
@@ -308,7 +308,7 @@ bot.action([/^wa_connect_qr(?:_(\d+))?$/, /^wa_qr_refresh_(\d+)$/], async (ctx) 
             const expiredKeyboard = {
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: "BUAT QR BARU", callback_data: `wa_connect_qr_${sid}`, icon_custom_emoji_id: EMOJI_IDS.REFRESH }],
+                        [{ text: "BUAT QR BARU", style: 'success', callback_data: `wa_connect_qr_${sid}`, icon_custom_emoji_id: EMOJI_IDS.REFRESH }],
                         [{ text: "KEMBALI", callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                     ]
                 }
@@ -355,8 +355,8 @@ Buka WhatsApp > Perangkat Tertaut > Scan QR.</blockquote>`
                     const qrKeyboard = {
                         reply_markup: {
                             inline_keyboard: [
-                                [{ text: "REFRESH QR", callback_data: `wa_qr_refresh_${sid}`, icon_custom_emoji_id: EMOJI_IDS.REFRESH }],
-                                [{ text: "BATAL", callback_data: `wa_qr_cancel_${sid}`, icon_custom_emoji_id: EMOJI_IDS.CROSS }]
+                                [{ text: "REFRESH QR", style: 'primary', callback_data: `wa_qr_refresh_${sid}`, icon_custom_emoji_id: EMOJI_IDS.REFRESH }],
+                                [{ text: "BATAL", style: 'danger', callback_data: `wa_qr_cancel_${sid}`, icon_custom_emoji_id: EMOJI_IDS.CROSS }]
                             ]
                         }
                     }
@@ -398,8 +398,8 @@ Buka WhatsApp > Perangkat Tertaut > Scan QR.</blockquote>`
                     parse_mode: "HTML",
                     reply_markup: {
                         inline_keyboard: [
-                            [{ text: "MULAI CEK", callback_data: "wa_check", icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                            [{ text: "MENU UTAMA", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                            [{ text: "MULAI CEK", style: 'primary', callback_data: "wa_check", icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                            [{ text: "MENU UTAMA", style: 'primary', callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                         ]
                     }
                 }).catch(() => { })
@@ -491,7 +491,7 @@ bot.action("wa_check", async (ctx) => {
 
         const sent = await ctx.reply(
             `<b>${EMOJIS.FOLDER} KIRIM DATA NOMOR</b>\n\n<blockquote>Kirim file (<code>.xlsx</code> / <code>.csv</code> / <code>.txt</code>) atau list nomor (1 per baris, maks <b>50 nomor</b>).\nFormat: <code>628xxx</code></blockquote>`,
-            { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] } }
+            { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "BATAL", style: 'danger', callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] } }
         )
 
         userState[userId] = { status: "WAITING_CHECK_BIO", speedMode: "brutal", menuId: sent.message_id }
@@ -533,8 +533,8 @@ bot.action("wa_logout_menu", async (ctx) => {
         activeSessions.forEach(s => {
             buttons.push([{ text: `LOGOUT SESI ${s.sessionId} (${s.phoneNumber})`, callback_data: `wa_logout_${s.sessionId}`, icon_custom_emoji_id: EMOJI_IDS.CROSS }])
         })
-        buttons.push([{ text: "LOGOUT SEMUA", callback_data: "wa_logout_all", icon_custom_emoji_id: EMOJI_IDS.CROSS }])
-        buttons.push([{ text: "BATAL", callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }])
+        buttons.push([{ text: "LOGOUT SEMUA", style: 'danger', callback_data: "wa_logout_all", icon_custom_emoji_id: EMOJI_IDS.CROSS }])
+        buttons.push([{ text: "BATAL", style: 'danger', callback_data: "menu_cekbio", icon_custom_emoji_id: EMOJI_IDS.CROSS }])
 
         await ctx.reply(text, { parse_mode: "HTML", reply_markup: { inline_keyboard: buttons } })
     } finally {
@@ -708,9 +708,9 @@ ${EMOJIS.SMS} <b>SMS</b> — Request via kode pesan teks
 ${EMOJIS.PHONE_VOICE} <b>PANGGILAN</b> — Request via telepon otomatis</blockquote>`
 
         const buttons = [
-            [{ text: "WA OLD / PERANGKAT", callback_data: "limitin_method_wa_old", icon_custom_emoji_id: EMOJI_IDS.DEVICE }],
-            [{ text: "SMS", callback_data: "limitin_method_sms", icon_custom_emoji_id: EMOJI_IDS.SMS }],
-            [{ text: "PANGGILAN", callback_data: "limitin_method_voice", icon_custom_emoji_id: EMOJI_IDS.PHONE_VOICE }],
+            [{ text: "WA OLD / PERANGKAT", style: 'primary', callback_data: "limitin_method_wa_old", icon_custom_emoji_id: EMOJI_IDS.DEVICE }],
+            [{ text: "SMS", style: 'primary', callback_data: "limitin_method_sms", icon_custom_emoji_id: EMOJI_IDS.SMS }],
+            [{ text: "PANGGILAN", style: 'primary', callback_data: "limitin_method_voice", icon_custom_emoji_id: EMOJI_IDS.PHONE_VOICE }],
             [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
         ]
 
@@ -749,7 +749,7 @@ Format: <code>628xxx</code></blockquote>
 ▸ Sistem request OTP hingga <b>5x percobaan</b>
 ▸ Proses berjalan di <b>background</b> otomatis
 ▸ Laporan dikirim setelah tiap nomor selesai</blockquote>`,
-            { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "menu_limitin", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] } }
+            { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "BATAL", style: 'danger', callback_data: "menu_limitin", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] } }
         )
         userState[userId] = { status: "WAITING_LIMITIN", method: method, methodName: methodName, menuId: sent.message_id }
     } finally {
@@ -780,8 +780,8 @@ bot.action(/^cancel_lim_(.+)$/, async (ctx) => {
                     parse_mode: "HTML",
                     reply_markup: {
                         inline_keyboard: [
-                            [{ text: "LIMITIN LAGI", callback_data: "menu_limitin", icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
-                            [{ text: "MENU UTAMA", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
+                            [{ text: "LIMITIN LAGI", style: 'primary', callback_data: "menu_limitin", icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+                            [{ text: "MENU UTAMA", style: 'primary', callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                         ]
                     }
                 }
@@ -806,8 +806,8 @@ bot.action("restart_bot", async (ctx) => {
             parse_mode: "HTML",
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "YA, RESTART", callback_data: "confirm_restart", icon_custom_emoji_id: EMOJI_IDS.CHECK }],
-                    [{ text: "BATAL", callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.CROSS }]
+                    [{ text: "YA, RESTART", style: 'danger', callback_data: "confirm_restart", icon_custom_emoji_id: EMOJI_IDS.CHECK }],
+                    [{ text: "BATAL", style: 'danger', callback_data: "action_ownermenu", icon_custom_emoji_id: EMOJI_IDS.CROSS }]
                 ]
             }
         }
@@ -914,7 +914,7 @@ quotaPeriod: <code>daily</code> / <code>monthly</code> / <code>lifetime</code></
 
     const sent = await ctx.reply(promptText, {
         parse_mode: "HTML",
-        reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "owner_menu_api_plans", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
+        reply_markup: { inline_keyboard: [[{ text: "BATAL", style: 'danger', callback_data: "owner_menu_api_plans", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
     });
     userState[ctx.from.id].menuId = sent.message_id;
 });
@@ -940,7 +940,7 @@ quotaPeriod: <code>daily</code> / <code>monthly</code> / <code>lifetime</code></
 
     const sent = await ctx.reply(promptText, {
         parse_mode: "HTML",
-        reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "owner_menu_api_plans", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
+        reply_markup: { inline_keyboard: [[{ text: "BATAL", style: 'danger', callback_data: "owner_menu_api_plans", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
     });
     userState[ctx.from.id].menuId = sent.message_id;
 });
@@ -967,7 +967,7 @@ Contoh: <code>12345678 api_starter</code></blockquote>`;
 
     const sent = await ctx.reply(promptText, {
         parse_mode: "HTML",
-        reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "owner_menu_api_plans", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
+        reply_markup: { inline_keyboard: [[{ text: "BATAL", style: 'danger', callback_data: "owner_menu_api_plans", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
     });
     userState[ctx.from.id].menuId = sent.message_id;
 });
@@ -1050,7 +1050,7 @@ bot.action("owner_prompt_bc", async (ctx) => {
     const keyboard = {
         reply_markup: {
             inline_keyboard: [
-                [{ text: "BATAL", callback_data: "owner_menu_broadcast", icon_custom_emoji_id: EMOJI_IDS.CROSS }]
+                [{ text: "BATAL", style: 'danger', callback_data: "owner_menu_broadcast", icon_custom_emoji_id: EMOJI_IDS.CROSS }]
             ]
         }
     };
@@ -1092,7 +1092,7 @@ bot.action("owner_create_code_limit", async (ctx) => {
     const sent = await ctx.reply(promptText, {
         parse_mode: "HTML",
         reply_markup: {
-            inline_keyboard: [[{ text: "BATAL", callback_data: "owner_menu_redeem", icon_custom_emoji_id: EMOJI_IDS.CROSS }]]
+            inline_keyboard: [[{ text: "BATAL", style: 'danger', callback_data: "owner_menu_redeem", icon_custom_emoji_id: EMOJI_IDS.CROSS }]]
         }
     });
     userState[ctx.from.id].menuId = sent.message_id;
@@ -1109,7 +1109,7 @@ bot.action("owner_create_code_prem", async (ctx) => {
     const sent = await ctx.reply(promptText, {
         parse_mode: "HTML",
         reply_markup: {
-            inline_keyboard: [[{ text: "BATAL", callback_data: "owner_menu_redeem", icon_custom_emoji_id: EMOJI_IDS.CROSS }]]
+            inline_keyboard: [[{ text: "BATAL", style: 'danger', callback_data: "owner_menu_redeem", icon_custom_emoji_id: EMOJI_IDS.CROSS }]]
         }
     });
     userState[ctx.from.id].menuId = sent.message_id;
@@ -1154,7 +1154,7 @@ bot.action("owner_prompt_setprem", async (ctx) => {
     const promptText = `<b>${EMOJIS.PREMIUM} TAMBAH PREMIUM USER</b>\n\n<blockquote>Kirim format: <code>ID_USER JUMLAH_HARI</code>\nContoh: <code>12345678 30</code> atau <code>12345678 lifetime</code></blockquote>`;
     const sent = await ctx.reply(promptText, {
         parse_mode: "HTML",
-        reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "owner_menu_premium", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
+        reply_markup: { inline_keyboard: [[{ text: "BATAL", style: 'danger', callback_data: "owner_menu_premium", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
     });
     userState[ctx.from.id].menuId = sent.message_id;
 });
@@ -1169,7 +1169,7 @@ bot.action("owner_prompt_delprem", async (ctx) => {
     const promptText = `<b>${EMOJIS.CROSS} CABUT PREMIUM USER</b>\n\n<blockquote>Kirim <code>ID_USER</code> yang ingin dicabut status Premiumnya:</blockquote>`;
     const sent = await ctx.reply(promptText, {
         parse_mode: "HTML",
-        reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "owner_menu_premium", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
+        reply_markup: { inline_keyboard: [[{ text: "BATAL", style: 'danger', callback_data: "owner_menu_premium", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
     });
     userState[ctx.from.id].menuId = sent.message_id;
 });
@@ -1184,7 +1184,7 @@ bot.action("owner_prompt_cekuser", async (ctx) => {
     const promptText = `<b>${EMOJIS.SEARCH} CEK DETAIL USER</b>\n\n<blockquote>Kirim <code>ID_USER</code> yang ingin diperiksa:</blockquote>`;
     const sent = await ctx.reply(promptText, {
         parse_mode: "HTML",
-        reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "owner_menu_users", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
+        reply_markup: { inline_keyboard: [[{ text: "BATAL", style: 'danger', callback_data: "owner_menu_users", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
     });
     userState[ctx.from.id].menuId = sent.message_id;
 });
@@ -1199,7 +1199,7 @@ bot.action("owner_prompt_addlimit", async (ctx) => {
     const promptText = `<b>${EMOJIS.PLUS} TAMBAH LIMIT USER</b>\n\n<blockquote>Kirim format: <code>ID_USER JUMLAH_LIMIT</code>\nContoh: <code>12345678 20</code></blockquote>`;
     const sent = await ctx.reply(promptText, {
         parse_mode: "HTML",
-        reply_markup: { inline_keyboard: [[{ text: "BATAL", callback_data: "owner_menu_users", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
+        reply_markup: { inline_keyboard: [[{ text: "BATAL", style: 'danger', callback_data: "owner_menu_users", icon_custom_emoji_id: EMOJI_IDS.CROSS }]] }
     });
     userState[ctx.from.id].menuId = sent.message_id;
 });
@@ -1260,7 +1260,7 @@ bot.action("owner_fsub_add", async (ctx) => {
         parse_mode: "HTML",
         reply_markup: {
             inline_keyboard: [
-                [{ text: "BATAL", callback_data: "owner_fsub_cancel", icon_custom_emoji_id: EMOJI_IDS.CROSS }]
+                [{ text: "BATAL", style: 'danger', callback_data: "owner_fsub_cancel", icon_custom_emoji_id: EMOJI_IDS.CROSS }]
             ]
         }
     });
@@ -1303,13 +1303,14 @@ bot.action("owner_fsub_del_menu", async (ctx) => {
         const title = c.title || c.username || c.id || `Channel ${idx + 1}`;
         return [{
             text: `HAPUS: ${title}`,
+            style: 'danger',
             callback_data: `owner_fsub_del_${idx}`,
             icon_custom_emoji_id: EMOJI_IDS.CROSS
         }];
     });
 
     buttons.push([
-        { text: "HAPUS SEMUA CHANNEL", callback_data: "owner_fsub_del_all", icon_custom_emoji_id: EMOJI_IDS.CROSS }
+        { text: "HAPUS SEMUA CHANNEL", style: 'danger', callback_data: "owner_fsub_del_all", icon_custom_emoji_id: EMOJI_IDS.CROSS }
     ]);
     buttons.push([
         { text: "KEMBALI", callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.BACK }
@@ -1356,12 +1357,13 @@ bot.action(/^owner_fsub_del_(\d+)$/, async (ctx) => {
             const title = c.title || c.username || c.id || `Channel ${i + 1}`;
             return [{
                 text: `HAPUS: ${title}`,
+                style: 'danger',
                 callback_data: `owner_fsub_del_${i}`,
                 icon_custom_emoji_id: EMOJI_IDS.CROSS
             }];
         });
         buttons.push([
-            { text: "HAPUS SEMUA CHANNEL", callback_data: "owner_fsub_del_all", icon_custom_emoji_id: EMOJI_IDS.CROSS }
+            { text: "HAPUS SEMUA CHANNEL", style: 'danger', callback_data: "owner_fsub_del_all", icon_custom_emoji_id: EMOJI_IDS.CROSS }
         ]);
         buttons.push([
             { text: "KEMBALI", callback_data: "owner_fsub_menu", icon_custom_emoji_id: EMOJI_IDS.BACK }
@@ -1608,8 +1610,8 @@ Telegram ID kamu: <code>${userId}</code>`;
         const keyboard = {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "Link Documentasi", url: "https://docs.wspro.dev" }],
-                    [{ text: "Beli Akses Apikey", callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
+                    [{ text: "Link Documentasi", style: 'primary', url: "https://docs.wspro.dev" }],
+                    [{ text: "Beli Akses Apikey", style: 'success', callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
                     [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                 ]
             }
@@ -1644,8 +1646,8 @@ ${EMOJIS.WARN} Key lama akan <b>langsung tidak berlaku</b> setelah generate baru
             const keyboard = {
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: "Generate API Key", callback_data: "generate_apikey", icon_custom_emoji_id: EMOJI_IDS.KEY }],
-                        [{ text: "Lihat Dokumentasi", callback_data: "menu_apidocs", icon_custom_emoji_id: EMOJI_IDS.DOC }],
+                        [{ text: "Generate API Key", style: 'success', callback_data: "generate_apikey", icon_custom_emoji_id: EMOJI_IDS.KEY }],
+                        [{ text: "Lihat Dokumentasi", style: 'primary', callback_data: "menu_apidocs", icon_custom_emoji_id: EMOJI_IDS.DOC }],
                         [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                     ]
                 }
@@ -1669,7 +1671,7 @@ Beli <b>Akses API</b> terlebih dahulu untuk bisa generate API Key.</blockquote>
             const keyboard = {
                 reply_markup: {
                     inline_keyboard: [
-                        [{ text: "Beli Akses Apikey", callback_data: "menu_beli_api", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
+                        [{ text: "Beli Akses Apikey", style: 'success', callback_data: "menu_beli_api", icon_custom_emoji_id: EMOJI_IDS.PREMIUM }],
                         [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                     ]
                 }
@@ -1723,7 +1725,7 @@ Docs: <code>https://docs.wspro.dev</code></blockquote>`;
         const keyboard = {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "Lihat Dokumentasi", callback_data: "menu_apidocs", icon_custom_emoji_id: EMOJI_IDS.DOC }],
+                    [{ text: "Lihat Dokumentasi", style: 'primary', callback_data: "menu_apidocs", icon_custom_emoji_id: EMOJI_IDS.DOC }],
                     [{ text: "KEMBALI", callback_data: "menu_ambilapikey", icon_custom_emoji_id: EMOJI_IDS.BACK }]
                 ]
             }
@@ -1770,6 +1772,7 @@ ${planLines}</blockquote>`;
 
         const buttons = plans.map(p => ([{
             text: `${p.name} — Rp${p.price.toLocaleString('id-ID')}`,
+            style: 'success',
             callback_data: `buy_api_${p.id}`,
             icon_custom_emoji_id: EMOJI_IDS.PREMIUM
         }]));
@@ -1823,12 +1826,12 @@ ${EMOJIS.TIME} Batas Waktu: <b>15 Menit</b></blockquote>
 4. Klik tombol <b>CEK STATUS PEMBAYARAN</b> setelah transfer, atau tunggu beberapa saat hingga terdeteksi otomatis.</blockquote>`.trim();
 
             const buttons = [
-                [{ text: "CEK STATUS PEMBAYARAN", callback_data: `check_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CHECK }],
-                [{ text: "BATALKAN PEMBAYARAN", callback_data: `cancel_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CROSS }]
+                [{ text: "CEK STATUS PEMBAYARAN", style: 'success', callback_data: `check_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CHECK }],
+                [{ text: "BATALKAN PEMBAYARAN", style: 'danger', callback_data: `cancel_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CROSS }]
             ];
 
             if (invoice.checkoutUrl) {
-                buttons.splice(1, 0, [{ text: "LINK PEMBAYARAN (WEB)", url: invoice.checkoutUrl, icon_custom_emoji_id: EMOJI_IDS.GLOBE }]);
+                buttons.splice(1, 0, [{ text: "LINK PEMBAYARAN (WEB)", style: 'primary', url: invoice.checkoutUrl, icon_custom_emoji_id: EMOJI_IDS.GLOBE }]);
             }
 
             if (qrBuffer) {
@@ -1853,7 +1856,7 @@ ${EMOJIS.TIME} Batas Waktu: <b>15 Menit</b></blockquote>
             await bot.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id).catch(() => {});
             await ctx.reply(`<b>${EMOJIS.CROSS} Gagal membuat tagihan: ${escapeHTML(err.message)}</b>`, {
                 parse_mode: "HTML",
-                reply_markup: { inline_keyboard: [[{ text: "COBA LAGI", callback_data: "menu_beli_api", icon_custom_emoji_id: EMOJI_IDS.REFRESH }]] }
+                reply_markup: { inline_keyboard: [[{ text: "COBA LAGI", style: 'primary', callback_data: "menu_beli_api", icon_custom_emoji_id: EMOJI_IDS.REFRESH }]] }
             });
         }
     } finally {
@@ -1938,12 +1941,12 @@ ${EMOJIS.TIME} Batas Waktu: <b>15 Menit</b></blockquote>
 4. Klik tombol <b>CEK STATUS PEMBAYARAN</b> setelah transfer, atau tunggu beberapa saat hingga terdeteksi otomatis.</blockquote>`.trim();
 
             const buttons = [
-                [{ text: "CEK STATUS PEMBAYARAN", callback_data: `check_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CHECK }],
-                [{ text: "BATALKAN PEMBAYARAN", callback_data: `cancel_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CROSS }]
+                [{ text: "CEK STATUS PEMBAYARAN", style: 'success', callback_data: `check_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CHECK }],
+                [{ text: "BATALKAN PEMBAYARAN", style: 'danger', callback_data: `cancel_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CROSS }]
             ];
 
             if (invoice.checkoutUrl) {
-                buttons.splice(1, 0, [{ text: "LINK PEMBAYARAN (WEB)", url: invoice.checkoutUrl, icon_custom_emoji_id: EMOJI_IDS.GLOBE }]);
+                buttons.splice(1, 0, [{ text: "LINK PEMBAYARAN (WEB)", style: 'primary', url: invoice.checkoutUrl, icon_custom_emoji_id: EMOJI_IDS.GLOBE }]);
             }
 
             if (qrBuffer) {
@@ -1968,7 +1971,7 @@ ${EMOJIS.TIME} Batas Waktu: <b>15 Menit</b></blockquote>
             await bot.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id).catch(() => {});
             await ctx.reply(`<b>${EMOJIS.CROSS} Gagal membuat tagihan: ${escapeHTML(err.message)}</b>`, {
                 parse_mode: "HTML",
-                reply_markup: { inline_keyboard: [[{ text: "COBA LAGI", callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.REFRESH }]] }
+                reply_markup: { inline_keyboard: [[{ text: "COBA LAGI", style: 'primary', callback_data: "menu_buyprem", icon_custom_emoji_id: EMOJI_IDS.REFRESH }]] }
             });
         }
     } finally {
