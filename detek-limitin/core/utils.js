@@ -349,7 +349,11 @@ function buildDetectBulkSummary(results) {
     const section = (title, dot, arr, withTime) => {
         if (arr.length === 0) return '';
         let s = `╭─── ${dot} ${title}\n`;
-        s += arr.map(r => `│ <code>+${r.number}</code>${withTime ? ` • ${compactDuration(r.waitSec)}` : ''}`).join('\n');
+        s += arr.map(r => {
+            if (!withTime) return `│ <code>+${r.number}</code>`;
+            const detail = String(r.cooldownFmt || '').replace(/^COOLDOWN\s*/i, '') || compactDuration(r.waitSec);
+            return `│ <code>+${r.number}</code> • ${detail}`;
+        }).join('\n');
         s += `\n╰────────────────\n\n`;
         return s;
     };
