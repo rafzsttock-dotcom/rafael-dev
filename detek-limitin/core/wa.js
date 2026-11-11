@@ -3437,6 +3437,7 @@ const WaManager = {
                 waitSec: 0,
                 cooldownFmt: 'INVALID',
                 sms: { status: 'invalid', waitSec: 0, cooldownFmt: 'INVALID' },
+                voice: { status: 'invalid', waitSec: 0, cooldownFmt: 'INVALID' },
                 wa_old: { available: false, status: 'invalid', waitSec: 0, cooldownFmt: 'INVALID' },
                 isWaOldAvailable: false,
                 raw: null
@@ -3469,6 +3470,7 @@ const WaManager = {
                 waitSec: 0,
                 cooldownFmt: 'ERROR',
                 sms: { status: 'error', waitSec: 0, cooldownFmt: 'ERROR' },
+                voice: { status: 'error', waitSec: 0, cooldownFmt: 'ERROR' },
                 wa_old: { available: false, status: 'error', waitSec: 0, cooldownFmt: 'ERROR' },
                 isWaOldAvailable: false,
                 raw: null
@@ -3490,6 +3492,7 @@ const WaManager = {
                 waitSec: 0,
                 cooldownFmt: 'BANNED',
                 sms: { status: 'banned', waitSec: 0, cooldownFmt: 'BANNED' },
+                voice: { status: 'banned', waitSec: 0, cooldownFmt: 'BANNED' },
                 wa_old: { available: false, status: 'banned', waitSec: 0, cooldownFmt: 'BANNED' },
                 isWaOldAvailable: false,
                 raw: banNode
@@ -3515,6 +3518,7 @@ const WaManager = {
                 waitSec: 0,
                 cooldownFmt: 'BLOCKED',
                 sms: { status: 'blocked', waitSec: 0, cooldownFmt: 'BLOCKED' },
+                voice: { status: 'blocked', waitSec: 0, cooldownFmt: 'BLOCKED' },
                 wa_old: { available: false, status: 'blocked', waitSec: 0, cooldownFmt: 'BLOCKED' },
                 isWaOldAvailable: false,
                 raw: cbsNode
@@ -3522,28 +3526,21 @@ const WaManager = {
         }
 
         // 3. Status SMS Real-time (Kombinasi /v2/exist dan /v2/code)
-        // /v2/exist memberikan status akurat tanpa terkena limitasi request code ("too_many").
+        // /v2/exist memberikan status akurat tanpa terkena limitasi request code ("too_many"),
+        // tapi /v2/code kadang balikin angka sms_wait lebih baru/akurat (account-level field,
+        // bukan cuma soal wa_old). Jangan cuma "upgrade" saat status/reason cocok persis —
+        // itu bikin cooldown asli (misal 1 jam) keabaian kalau API balikin status lain,
+        // jatuh ke angka /v2/exist yang lebih rendah/basi. Selalu ambil MAX dari kedua sumber.
         const existSmsWait = Math.max(0, Number(existRes?.sms_wait || existRes?.send_sms_wait || 0));
         const codeSmsWait = Math.max(0, Number(codeRes?.sms_wait || codeRes?.send_sms_wait || 0));
         const codeRetryAfter = Math.max(0, Number(codeRes?.retry_after || 0));
+        // retry_after cuma dipakai sebagai sinyal SMS kalau codeRes memang soal SMS (too_recent/no_routes),
+        // bukan retry khusus request wa_old-nya sendiri.
+        const codeRetryAsSms = (codeRes?.reason === 'too_recent' || codeRes?.reason === 'no_routes') ? codeRetryAfter : 0;
 
-        let smsWait = 0;
+        let smsWait = Math.max(existSmsWait, codeSmsWait, codeRetryAsSms);
         let smsStatus = 'ready';
         let smsCooldownFmt = 'READY';
-
-        if (existRes && typeof existRes === 'object' && existRes.status !== 'error') {
-            smsWait = existSmsWait;
-            // Jika codeRes berhasil sent atau too_recent aktif dengan timer lebih tinggi
-            if (codeRes && (codeRes.status === 'sent' || codeRes.reason === 'too_recent')) {
-                const cWait = Math.max(codeSmsWait, codeRetryAfter);
-                if (cWait > smsWait) smsWait = cWait;
-            }
-        } else if (codeRes && typeof codeRes === 'object' && codeRes.status !== 'error') {
-            smsWait = codeSmsWait;
-            if (codeRes.reason === 'too_recent' || (codeRes.reason === 'no_routes' && codeRetryAfter > 0)) {
-                smsWait = Math.max(smsWait, codeRetryAfter);
-            }
-        }
 
         if (smsWait > 0) {
             smsStatus = 'cooldown';
@@ -3553,7 +3550,12 @@ const WaManager = {
             smsCooldownFmt = 'READY';
         }
 
-        // 4. Status WA OLD / Perangkat (Kombinasi /v2/exist dan /v2/code)
+        // 4. Status Telpon/Voice (Kombinasi /v2/exist dan /v2/code)
+        const voiceWait = Math.max(0, Number(existRes?.voice_wait || 0), Number(codeRes?.voice_wait || 0));
+        const voiceStatus = voiceWait > 0 ? 'cooldown' : 'ready';
+        const voiceCooldownFmt = voiceWait > 0 ? `COOLDOWN ${formatDuration(voiceWait)}` : 'READY';
+
+        // 5. Status WA OLD / Perangkat Lain (Kombinasi /v2/exist dan /v2/code)
         const isWaOldEligible = Boolean(
             (existRes?.wa_old_eligible && Number(existRes.wa_old_eligible) > 0) ||
             (Array.isArray(existRes?.recommended_method) && existRes.recommended_method.includes('wa_old')) ||
@@ -3584,12 +3586,10 @@ const WaManager = {
             }
         }
 
-        // 5. Susun teks format (Hanya opsi SMS dan WA OLD jika tersedia)
-        let formatted = '';
+        // 6. Susun teks format — SMS & TELPON selalu tampil, PERANGKAT LAIN cuma kalau tersedia
+        let formatted = `${cleanNum} — SMS: ${smsCooldownFmt} | TELPON: ${voiceCooldownFmt}`;
         if (isWaOldEligible) {
-            formatted = `${cleanNum} — SMS: ${smsCooldownFmt} | WA OLD: ${waOldCooldownFmt}`;
-        } else {
-            formatted = `${cleanNum} — SMS: ${smsCooldownFmt}`;
+            formatted += ` | PERANGKAT LAIN: ${waOldCooldownFmt}`;
         }
 
         const overallStatus = (smsStatus === 'cooldown' || (isWaOldEligible && waOldStatus === 'cooldown'))
@@ -3609,6 +3609,11 @@ const WaManager = {
                 waitSec: smsWait,
                 cooldownFmt: smsCooldownFmt
             },
+            voice: {
+                status: voiceStatus,
+                waitSec: voiceWait,
+                cooldownFmt: voiceCooldownFmt
+            },
             wa_old: {
                 available: isWaOldEligible,
                 status: waOldStatus,
@@ -3621,7 +3626,7 @@ const WaManager = {
             waits: {
                 sms: smsWait,
                 wa_old: isWaOldEligible ? waOldWait : 0,
-                voice: Math.max(0, Number(existRes?.voice_wait || 0), Number(codeRes?.voice_wait || 0)),
+                voice: voiceWait,
                 flash: Math.max(0, Number(existRes?.flash_wait || 0), Number(codeRes?.flash_wait || 0)),
                 email_otp: Math.max(0, Number(existRes?.email_otp_wait || 0), Number(codeRes?.email_otp_wait || 0)),
                 retry_after: codeRetryAfter

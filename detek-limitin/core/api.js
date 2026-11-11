@@ -600,6 +600,7 @@ function registerApiRoutes(app) {
                 status: result.status,
                 formatted: result.formatted,
                 sms: result.sms,
+                voice: result.voice,
                 wa_old: result.wa_old,
                 isWaOldAvailable: result.isWaOldAvailable
             });
