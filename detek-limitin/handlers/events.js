@@ -1175,7 +1175,7 @@ bot.on("text", async (ctx) => {
                 const results = await WaManager.detectBulkRealtime(numbers)
                 await bot.telegram.deleteMessage(ctx.chat.id, waitMsg.message_id).catch(() => {})
                 await ctx.reply(
-                    `<b>${EMOJIS.CHECK} HASIL DETECT (${results.length} NOMOR)</b>\n\n${buildDetectBulkSummary(results)}`,
+                    buildDetectBulkSummary(results),
                     {
                         parse_mode: "HTML",
                         reply_markup: { inline_keyboard: [

@@ -69,7 +69,16 @@ const EMOJI_IDS = {
     NUM_8: '6206050326210942294',        // Earning_ON 8️⃣
     NUM_9: '6205978299609388443',        // Earning_ON 9️⃣
     NUM_0: '6206095818504540991',        // Earning_ON 0️⃣
-    FIRE: '6174589037932712505'          // DSPSIR 🔥
+    FIRE: '6174589037932712505',         // DSPSIR 🔥
+
+    // Detect report
+    DETECT_CHART_TITLE: '5472252840112037845', // 📊 (judul report)
+    DETECT_CHART_STAT: '6059654836918423763',  // 📊 (baris Total Numbers)
+    DETECT_DOT_GREEN: '5325945307454789973',   // 🟢 (Ready / Available)
+    DETECT_DOT_YELLOW: '6156694258557389464',  // 🟡 (Cooldown)
+    DETECT_DOT_RED: '5188218389310500613',     // 🔴 (Blocked)
+    DETECT_DOT_GREY: '5321166817035573333',    // ⚪ (Unclassified)
+    DETECT_DONE: '6240257219577782589'         // ✅ (Scan completed)
 };
 
 const tgEmoji = (id, fallback = '✨') => `<tg-emoji emoji-id="${id}">${fallback}</tg-emoji>`;
@@ -145,7 +154,15 @@ const EMOJIS = {
     NUM_8: tgEmoji(EMOJI_IDS.NUM_8, '8️⃣'),
     NUM_9: tgEmoji(EMOJI_IDS.NUM_9, '9️⃣'),
     NUM_0: tgEmoji(EMOJI_IDS.NUM_0, '0️⃣'),
-    FIRE: tgEmoji(EMOJI_IDS.FIRE, '🔥')
+    FIRE: tgEmoji(EMOJI_IDS.FIRE, '🔥'),
+
+    DETECT_CHART_TITLE: tgEmoji(EMOJI_IDS.DETECT_CHART_TITLE, '📊'),
+    DETECT_CHART_STAT: tgEmoji(EMOJI_IDS.DETECT_CHART_STAT, '📊'),
+    DETECT_DOT_GREEN: tgEmoji(EMOJI_IDS.DETECT_DOT_GREEN, '🟢'),
+    DETECT_DOT_YELLOW: tgEmoji(EMOJI_IDS.DETECT_DOT_YELLOW, '🟡'),
+    DETECT_DOT_RED: tgEmoji(EMOJI_IDS.DETECT_DOT_RED, '🔴'),
+    DETECT_DOT_GREY: tgEmoji(EMOJI_IDS.DETECT_DOT_GREY, '⚪'),
+    DETECT_DONE: tgEmoji(EMOJI_IDS.DETECT_DONE, '✅')
 };
 
 module.exports = {

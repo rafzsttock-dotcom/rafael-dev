@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 const logger = require('./logger');
+const { EMOJIS } = require('./emojis');
 let AdmZip = null; try { AdmZip = require('adm-zip'); } catch(e) {}
 
 const getTodayDate = () => {
@@ -314,6 +315,13 @@ function buildDetectDetailCard(r) {
     return `<blockquote>📱 Nomor: <code>+${r.number}</code>\n${overallIcon} Status: <b>${overallLabel}</b></blockquote>\n\n<blockquote expandable><b>Detail Channel:</b>\n${channelLines}</blockquote>`;
 }
 
+function compactDuration(sec) {
+    sec = Number(sec) || 0;
+    if (sec >= 3600) return `${Math.round(sec / 3600)}h`;
+    if (sec >= 60) return `${Math.round(sec / 60)}m`;
+    return `${sec}s`;
+}
+
 function buildDetectBulkSummary(results) {
     const groups = { banned: [], ready: [], cooldown: [], other: [] };
     for (const r of results) {
@@ -323,21 +331,31 @@ function buildDetectBulkSummary(results) {
         else groups.other.push(r);
     }
 
-    let out = `<blockquote>📊 Total: <b>${results.length}</b> nomor
-🟢 Siap OTP: <b>${groups.ready.length}</b>
-🟡 Cooldown: <b>${groups.cooldown.length}</b>
-🔴 Banned/Blocked: <b>${groups.banned.length}</b></blockquote>\n\n`;
+    const pad = (n) => String(n).padStart(2, '0');
 
-    const section = (title, icon, arr) => {
+    let out = `${EMOJIS.DETECT_CHART_TITLE} <b>NUMBER CHECKER | REPORT</b>\n\n`;
+    out += `╭─── STATISTICS\n`;
+    out += `│ ${EMOJIS.DETECT_CHART_STAT} Total Numbers : ${pad(results.length)}\n`;
+    out += `│ ${EMOJIS.DETECT_DOT_GREEN} Ready OTP    : ${pad(groups.ready.length)}\n`;
+    out += `│ ${EMOJIS.DETECT_DOT_YELLOW} Cooldown     : ${pad(groups.cooldown.length)}\n`;
+    out += `│ ${EMOJIS.DETECT_DOT_RED} Blocked      : ${pad(groups.banned.length)}\n`;
+    out += `│ ${EMOJIS.DETECT_DOT_GREY} Unclassified : ${pad(groups.other.length)}\n`;
+    out += `╰────────────────\n\n`;
+
+    const section = (title, dot, arr, withTime) => {
         if (arr.length === 0) return '';
-        const lines = arr.map((r, i) => `${i + 1}. <code>+${r.number}</code>${r.status === 'cooldown' ? ` — ${r.cooldownFmt}` : ''}`).join('\n');
-        return `<blockquote expandable>${icon} <b>${title} (${arr.length})</b>\n${lines}</blockquote>\n\n`;
+        let s = `╭─── ${dot} ${title}\n`;
+        s += arr.map(r => `│ <code>+${r.number}</code>${withTime ? ` • ${compactDuration(r.waitSec)}` : ''}`).join('\n');
+        s += `\n╰────────────────\n\n`;
+        return s;
     };
 
-    out += section('Siap OTP', '🟢', groups.ready);
-    out += section('Cooldown', '🟡', groups.cooldown);
-    out += section('Banned / Blocked', '🔴', groups.banned);
-    out += section('Lainnya', '⚪', groups.other);
+    out += section('AVAILABLE', EMOJIS.DETECT_DOT_GREEN, groups.ready, false);
+    out += section('COOLDOWN', EMOJIS.DETECT_DOT_YELLOW, groups.cooldown, true);
+    out += section('BLOCKED', EMOJIS.DETECT_DOT_RED, groups.banned, false);
+    out += section('UNCLASSIFIED', EMOJIS.DETECT_DOT_GREY, groups.other, false);
+
+    out += `${EMOJIS.DETECT_DONE} Scan completed successfully.`;
 
     return out.trim();
 }
