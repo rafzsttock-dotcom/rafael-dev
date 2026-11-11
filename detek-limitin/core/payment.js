@@ -38,8 +38,21 @@ class PaymentManager {
             const { getApiPlans } = require('./api');
             const apiPlansList = await getApiPlans();
             plan = apiPlansList.find(p => p.id === planId) || null;
-        } else if (planType === 'clone') {
-            plan = (config.clonePlans || []).find(p => p.id === planId) || null;
+        } else if (planType === 'clone_api') {
+            // Paket 1: harga = harga paket API asli + surcharge clone, durasi ngikut paket API-nya
+            const { getApiPlans } = require('./api');
+            const apiPlansList = await getApiPlans();
+            const basePlan = apiPlansList.find(p => p.id === planId) || null;
+            if (basePlan) {
+                plan = {
+                    id: basePlan.id,
+                    name: `${basePlan.name} + Clone Bot`,
+                    days: basePlan.days,
+                    price: basePlan.price + (config.clonePlanApiSurcharge || 0)
+                };
+            }
+        } else if (planType === 'clone_noapi') {
+            plan = (config.clonePlansNoApi || []).find(p => p.id === planId) || null;
         } else {
             plan = this.getPlan(planId);
         }
@@ -183,8 +196,13 @@ class PaymentManager {
         if (status === 'PAID' && inv) {
             if (inv.planType === 'api') {
                 await this.activateApiPlan(inv.userId, inv.planId, inv.invoiceId, inv.planName, inv.days);
-            } else if (inv.planType === 'clone') {
-                await this.activateCloneOrder(inv.userId, inv.planId, inv.planName, inv.invoiceId);
+            } else if (inv.planType === 'clone_api') {
+                // Paket 1: aktifin API plan asli dulu (biar user beneran punya akses API & bisa generate API Key),
+                // baru lanjut bikin pesanan clone bot-nya.
+                await this.activateApiPlan(inv.userId, inv.planId, inv.invoiceId, inv.planName, inv.days);
+                await this.activateCloneOrder(inv.userId, inv.invoiceId, inv.planName, inv.days, true);
+            } else if (inv.planType === 'clone_noapi') {
+                await this.activateCloneOrder(inv.userId, inv.invoiceId, inv.planName, inv.days, false);
             } else {
                 await this.activatePremium(inv.userId, inv.days, inv.invoiceId, inv.planName);
             }
@@ -383,9 +401,7 @@ Sekarang kamu bisa generate API Key lewat menu <b>AMBIL APIKEY</b>.`.trim();
         return true;
     }
 
-    async activateCloneOrder(userId, planId, planName, invoiceId = '') {
-        const plan = (config.clonePlans || []).find(p => p.id === planId) || null;
-
+    async activateCloneOrder(userId, invoiceId, planName, days, requiresApiKey) {
         let user = await User.findOne({ userId });
         if (!user && typeof global.checkUser === 'function') {
             user = await global.checkUser(userId);
@@ -397,9 +413,9 @@ Sekarang kamu bisa generate API Key lewat menu <b>AMBIL APIKEY</b>.`.trim();
             requestId,
             userId,
             username: user?.username || '',
-            planId,
+            planId: invoiceId,
             planName,
-            requiresApiKey: Boolean(plan?.requiresApiKey),
+            requiresApiKey: Boolean(requiresApiKey),
             invoiceId,
             status: 'PENDING_SETUP',
             createdAt: new Date()
@@ -410,12 +426,12 @@ Sekarang kamu bisa generate API Key lewat menu <b>AMBIL APIKEY</b>.`.trim();
             await Invoice.updateOne({ invoiceId }, { $set: { status: 'PAID', paidAt: new Date() } });
         }
 
-        logger.add('PAYMENT', `[CLONE BOT] User ${userId} beli paket "${planName}" (${requestId}) — nunggu data setup.`);
+        logger.add('PAYMENT', `[CLONE BOT] User ${userId} beli paket "${planName}" (${requestId}, ${days} hari) — nunggu data setup.`);
 
         if (global.bot && global.bot.telegram) {
-            const needList = plan?.requiresApiKey
-                ? `1. <b>Bot Token</b> dari @BotFather\n2. <b>API Key</b> pribadi kamu (dari menu AMBIL APIKEY)\n3. <b>API Key</b> & <b>API Secret</b> AustinPay kamu sendiri`
-                : `1. <b>Bot Token</b> dari @BotFather\n2. <b>API Key</b> & <b>API Secret</b> AustinPay kamu sendiri`;
+            const needList = requiresApiKey
+                ? `1. <b>Bot Token</b> dari @BotFather\n2. <b>API Key</b> pribadi kamu (dari menu AMBIL APIKEY)\n3. <b>API Key</b> & <b>API Secret</b> AustinPay kamu sendiri\n4. <b>Foto</b> buat menu utama bot kamu`
+                : `1. <b>Bot Token</b> dari @BotFather\n2. <b>API Key</b> & <b>API Secret</b> AustinPay kamu sendiri\n3. <b>Foto</b> buat menu utama bot kamu`;
 
             const successText = `<b>${EMOJIS.CHECK} PEMBAYARAN BERHASIL!</b>
 

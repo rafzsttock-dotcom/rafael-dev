@@ -112,11 +112,15 @@ const config = {
           maxCekBio: -1, maxDetect: -1, maxLimitin: -1, maxNumbers: 50, quotaPeriod: 'lifetime' }
     ],
 
-    clonePlans: [
-        { id: 'clone_api', name: 'Paket API Key', days: 30, price: 150000,
-          desc: 'Buat Bot Detect sendiri pakai API Key pribadi', requiresApiKey: true },
-        { id: 'clone_noapi', name: 'Paket Tanpa API Key', days: 30, price: 250000,
-          desc: 'Buat Bot Detect sendiri tanpa perlu API Key terpisah', requiresApiKey: false }
+    // Paket 1 (API Key): harga = harga paket API biasa (lihat apiPlans) + clonePlanApiSurcharge,
+    // durasi hidup bot clone ngikut durasi paket API yang dipilih.
+    clonePlanApiSurcharge: 50000,
+
+    // Paket 2 (Tanpa API Key): tier harga & durasi sendiri, gak terikat ke apiPlans.
+    clonePlansNoApi: [
+        { id: 'clone_noapi_7d', name: '1 Minggu', days: 7, price: 100000 },
+        { id: 'clone_noapi_30d', name: '1 Bulan', days: 30, price: 170000 },
+        { id: 'clone_noapi_90d', name: '3 Bulan', days: 90, price: 380000 }
     ]
 };
 

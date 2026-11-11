@@ -1893,14 +1893,11 @@ Belum memiliki API Key? Pilih Paket 2 (Tanpa API Key) agar kamu bisa langsung me
 
 Silakan pilih paket untuk melanjutkan proses pembuatan bot! ${EMOJIS.ROCKET}`;
 
-        const clonePlans = config.clonePlans || [];
-        const buttons = clonePlans.map(p => ([{
-            text: `Beli ${p.name} — Rp${p.price.toLocaleString('id-ID')}`,
-            style: 'success',
-            callback_data: `buy_clone_${p.id}`,
-            icon_custom_emoji_id: EMOJI_IDS.ROCKET
-        }]));
-        buttons.push([{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]);
+        const buttons = [
+            [{ text: "PAKET 1 — API KEY", style: 'success', callback_data: "menu_clonebot_api", icon_custom_emoji_id: EMOJI_IDS.KEY }],
+            [{ text: "PAKET 2 — TANPA API KEY", style: 'success', callback_data: "menu_clonebot_noapi", icon_custom_emoji_id: EMOJI_IDS.ROCKET }],
+            [{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]
+        ];
 
         const keyboard = { reply_markup: { inline_keyboard: buttons } };
 
@@ -1913,7 +1910,89 @@ Silakan pilih paket untuk melanjutkan proses pembuatan bot! ${EMOJIS.ROCKET}`;
     }
 });
 
-bot.action(/^buy_clone_(.+)$/, async (ctx) => {
+bot.action("menu_clonebot_api", async (ctx) => {
+    if (!ctx) return;
+    lastBotActivity = Date.now();
+    const userId = ctx.from.id;
+    const lockKey = "user_" + userId;
+    if (userLocks.get(lockKey)) return ctx.answerCbQuery("Mohon tunggu...", { show_alert: true });
+    userLocks.set(lockKey, true);
+    try {
+        const { getApiPlans } = require('../core/api');
+        const apiPlansList = await getApiPlans();
+        const surcharge = config.clonePlanApiSurcharge || 0;
+
+        const planLines = apiPlansList.map(p =>
+            `• <b>${p.name}</b> — Rp ${(p.price + surcharge).toLocaleString('id-ID')} <i>(${p.days} hari)</i>`
+        ).join('\n');
+
+        const text = `<b>${EMOJIS.KEY} PAKET 1 — API KEY</b>
+
+<blockquote>Harga = harga paket API biasa + Rp${surcharge.toLocaleString('id-ID')} (biaya setup bot clone).
+Masa aktif bot clone kamu ngikut durasi paket API yang dipilih — kalau paket API habis, bot clone otomatis nonaktif sampai kamu perpanjang.</blockquote>
+
+<blockquote expandable><b>Pilihan Paket:</b>
+${planLines}</blockquote>
+
+Pilih paket di bawah buat lanjut bayar:`;
+
+        const buttons = apiPlansList.map(p => ([{
+            text: `${p.name} — Rp${(p.price + surcharge).toLocaleString('id-ID')}`,
+            style: 'success',
+            callback_data: `buy_cloneapi_${p.id}`,
+            icon_custom_emoji_id: EMOJI_IDS.KEY
+        }]));
+        buttons.push([{ text: "KEMBALI", callback_data: "menu_clonebot", icon_custom_emoji_id: EMOJI_IDS.BACK }]);
+
+        const keyboard = { reply_markup: { inline_keyboard: buttons } };
+        await ctx.editMessageText(text, { parse_mode: "HTML", ...keyboard }).catch(async () => {
+            await ctx.deleteMessage().catch(() => {});
+            await ctx.reply(text, { parse_mode: "HTML", ...keyboard });
+        });
+    } finally {
+        userLocks.delete(lockKey);
+    }
+});
+
+bot.action("menu_clonebot_noapi", async (ctx) => {
+    if (!ctx) return;
+    lastBotActivity = Date.now();
+    const userId = ctx.from.id;
+    const lockKey = "user_" + userId;
+    if (userLocks.get(lockKey)) return ctx.answerCbQuery("Mohon tunggu...", { show_alert: true });
+    userLocks.set(lockKey, true);
+    try {
+        const plans = config.clonePlansNoApi || [];
+        const planLines = plans.map(p => `• <b>${p.name}</b> — Rp ${p.price.toLocaleString('id-ID')}`).join('\n');
+
+        const text = `<b>${EMOJIS.ROCKET} PAKET 2 — TANPA API KEY</b>
+
+<blockquote>Gak perlu beli API Key terpisah. Masa aktif bot clone ngikut durasi paket yang dipilih — kalau habis, bot clone otomatis nonaktif sampai kamu perpanjang.</blockquote>
+
+<blockquote expandable><b>Pilihan Durasi:</b>
+${planLines}</blockquote>
+
+Pilih durasi di bawah buat lanjut bayar:`;
+
+        const buttons = plans.map(p => ([{
+            text: `${p.name} — Rp${p.price.toLocaleString('id-ID')}`,
+            style: 'success',
+            callback_data: `buy_clonenoapi_${p.id}`,
+            icon_custom_emoji_id: EMOJI_IDS.ROCKET
+        }]));
+        buttons.push([{ text: "KEMBALI", callback_data: "menu_clonebot", icon_custom_emoji_id: EMOJI_IDS.BACK }]);
+
+        const keyboard = { reply_markup: { inline_keyboard: buttons } };
+        await ctx.editMessageText(text, { parse_mode: "HTML", ...keyboard }).catch(async () => {
+            await ctx.deleteMessage().catch(() => {});
+            await ctx.reply(text, { parse_mode: "HTML", ...keyboard });
+        });
+    } finally {
+        userLocks.delete(lockKey);
+    }
+});
+
+bot.action(/^buy_cloneapi_(.+)$/, async (ctx) => {
     if (!ctx) return;
     lastBotActivity = Date.now();
     const userId = ctx.from.id;
@@ -1928,7 +2007,67 @@ bot.action(/^buy_clone_(.+)$/, async (ctx) => {
         const loadingMsg = await ctx.reply(`<b>${EMOJIS.REFRESH} Menyiapkan tagihan QRIS...</b>`, { parse_mode: "HTML" });
 
         try {
-            const { invoice, qrBuffer } = await PaymentManager.createInvoice(userId, planId, ctx, 'clone');
+            const { invoice, qrBuffer } = await PaymentManager.createInvoice(userId, planId, ctx, 'clone_api');
+            await bot.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id).catch(() => {});
+
+            const caption = `<b>${EMOJIS.ROCKET} TAGIHAN BUAT BOT SENDIRI (PAYQRIS)</b>
+
+<blockquote>${EMOJIS.TAG} Paket: <b>${invoice.planName}</b>
+${EMOJIS.STAR} Total Bayar: <code>Rp ${invoice.payAmount.toLocaleString('id-ID')}</code>
+${EMOJIS.KEY} Kode Unik: <b>${invoice.uniqueCode}</b>
+${EMOJIS.ID} Invoice ID: <code>${invoice.invoiceId}</code>
+${EMOJIS.TIME} Batas Waktu: <b>15 Menit</b></blockquote>
+
+<blockquote expandable><b>${EMOJIS.WARN} PENTING & INSTRUKSI:</b>
+1. Buka aplikasi M-Banking atau E-Wallet apa saja (BCA, Mandiri, BRI, BNI, Dana, OVO, GoPay, ShopeePay).
+2. Scan QRIS di atas.
+3. <b>PASTIKAN TRANSFER TEPAT Rp ${invoice.payAmount.toLocaleString('id-ID')}</b> (termasuk kode unik agar otomatis terverifikasi).
+4. Klik tombol <b>CEK STATUS PEMBAYARAN</b> setelah transfer, atau tunggu beberapa saat hingga terdeteksi otomatis.</blockquote>`.trim();
+
+            const buttons = [
+                [{ text: "CEK STATUS PEMBAYARAN", style: 'success', callback_data: `check_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CHECK }],
+                [{ text: "BATALKAN PEMBAYARAN", style: 'danger', callback_data: `cancel_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CROSS }]
+            ];
+
+            if (invoice.checkoutUrl) {
+                buttons.splice(1, 0, [{ text: "LINK PEMBAYARAN (WEB)", url: invoice.checkoutUrl, icon_custom_emoji_id: EMOJI_IDS.GLOBE }]);
+            }
+
+            if (qrBuffer) {
+                await ctx.replyWithPhoto({ source: qrBuffer }, { caption, parse_mode: "HTML", reply_markup: { inline_keyboard: buttons } });
+            } else if (invoice.qrisUrl) {
+                await ctx.replyWithPhoto(invoice.qrisUrl, { caption, parse_mode: "HTML", reply_markup: { inline_keyboard: buttons } });
+            } else {
+                await ctx.reply(caption, { parse_mode: "HTML", reply_markup: { inline_keyboard: buttons } });
+            }
+        } catch (err) {
+            await bot.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id).catch(() => {});
+            await ctx.reply(`<b>${EMOJIS.CROSS} Gagal membuat tagihan: ${escapeHTML(err.message)}</b>`, {
+                parse_mode: "HTML",
+                reply_markup: { inline_keyboard: [[{ text: "COBA LAGI", style: 'primary', callback_data: "menu_clonebot", icon_custom_emoji_id: EMOJI_IDS.REFRESH }]] }
+            });
+        }
+    } finally {
+        userLocks.delete(lockKey);
+    }
+});
+
+bot.action(/^buy_clonenoapi_(.+)$/, async (ctx) => {
+    if (!ctx) return;
+    lastBotActivity = Date.now();
+    const userId = ctx.from.id;
+    const planId = ctx.match[1];
+    const lockKey = "user_" + userId;
+    if (userLocks.get(lockKey)) return ctx.answerCbQuery("Mohon tunggu...", { show_alert: true });
+    userLocks.set(lockKey, true);
+    try {
+        await ctx.answerCbQuery("Membuat tagihan QRIS...", { show_alert: false });
+        await ctx.deleteMessage().catch(() => {});
+
+        const loadingMsg = await ctx.reply(`<b>${EMOJIS.REFRESH} Menyiapkan tagihan QRIS...</b>`, { parse_mode: "HTML" });
+
+        try {
+            const { invoice, qrBuffer } = await PaymentManager.createInvoice(userId, planId, ctx, 'clone_noapi');
             await bot.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id).catch(() => {});
 
             const caption = `<b>${EMOJIS.ROCKET} TAGIHAN BUAT BOT SENDIRI (PAYQRIS)</b>
@@ -1989,7 +2128,7 @@ bot.action(/^clone_submit_(.+)$/, async (ctx) => {
 
         userState[userId] = { status: "WAITING_CLONE_BOT_TOKEN", requestId };
 
-        const promptText = `<b>${EMOJIS.ROCKET} SETUP BOT DETECT — Langkah 1/${reqDoc.requiresApiKey ? '3' : '2'}</b>
+        const promptText = `<b>${EMOJIS.ROCKET} SETUP BOT DETECT — Langkah 1/${reqDoc.requiresApiKey ? '5' : '4'}</b>
 
 <blockquote>Kirimkan <b>Bot Token</b> kamu (dari @BotFather).
 Contoh format: <code>123456789:AAExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></blockquote>`;
