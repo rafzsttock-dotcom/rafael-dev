@@ -3466,15 +3466,22 @@ const WaManager = {
 
         let codeRes = firstCodeRes;
 
-        // Kadang WhatsApp balikin "fail" generik tanpa data wait sama sekali
-        // (reason kayak "temporarily_unavailable") — ini biasanya throttle sesaat
-        // di server-nya, bukan status asli nomor. Retry sekali setelah jeda
-        // daripada langsung anggap "ready" cuma karena data wait-nya kosong.
+        // Kadang WhatsApp balikin "fail" generik yang BUKAN data cooldown asli:
+        // 1. Tanpa field wait sama sekali (reason "temporarily_unavailable") — throttle sesaat.
+        // 2. reason "no_routes" dengan SEMUA field wait persis sama rata (sms/voice/flash/
+        //    email_otp/wa_old identik) — ini placeholder "gak ada rute verifikasi", bukan
+        //    cooldown per-channel beneran (cooldown asli pasti beda-beda tiap channel).
+        // Kedua kasus ini jangan ditelen mentah-mentah, retry sekali dulu.
+        const noWaitDataAtAll = codeRes?.sms_wait === undefined && codeRes?.voice_wait === undefined
+            && codeRes?.wa_old_wait === undefined && codeRes?.email_otp_wait === undefined
+            && codeRes?.flash_wait === undefined && codeRes?.retry_after === undefined;
+
+        const allWaitsIdentical = codeRes && [codeRes.sms_wait, codeRes.voice_wait, codeRes.wa_old_wait, codeRes.email_otp_wait, codeRes.flash_wait]
+            .every(v => v !== undefined && Number(v) === Number(codeRes.sms_wait));
+
         const isAmbiguousCodeFail = codeRes && codeRes.status === 'fail'
             && !['old_version', 'bad_token', 'blocked', 'banned'].includes(codeRes.reason)
-            && codeRes.sms_wait === undefined && codeRes.voice_wait === undefined
-            && codeRes.wa_old_wait === undefined && codeRes.email_otp_wait === undefined
-            && codeRes.flash_wait === undefined && codeRes.retry_after === undefined;
+            && (noWaitDataAtAll || (codeRes.reason === 'no_routes' && allWaitsIdentical));
 
         if (isAmbiguousCodeFail) {
             logger.add('DETECT', `[DETECT] +${cleanNum} codeRes ambigu (reason: "${codeRes.reason}", tanpa data wait) — retry sekali...`);
