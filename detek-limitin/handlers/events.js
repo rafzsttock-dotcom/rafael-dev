@@ -451,7 +451,11 @@ bot.on("text", async (ctx) => {
             delete userState[userId];
             if (String(userId) !== String(config.ownerId)) return;
 
-            await ctx.deleteMessage().catch(() => {});
+            // Simpan message_id dulu SEBELUM dihapus — copyMessage butuh pesan ini
+            // masih ada di Telegram, kalau dihapus duluan semua copy bakal gagal.
+            const broadcastSourceChatId = ctx.chat.id;
+            const broadcastSourceMsgId = ctx.message.message_id;
+
             if (promptId) await ctx.telegram.deleteMessage(ctx.chat.id, promptId).catch(() => {});
 
             const allUsers = await User.find({ isBanned: { $ne: true } }).select('userId').lean();
@@ -466,7 +470,7 @@ bot.on("text", async (ctx) => {
             for (let i = 0; i < total; i++) {
                 const u = allUsers[i];
                 try {
-                    await bot.telegram.copyMessage(u.userId, ctx.chat.id, ctx.message.message_id);
+                    await bot.telegram.copyMessage(u.userId, broadcastSourceChatId, broadcastSourceMsgId);
                     sukses++;
                 } catch (err) {
                     gagal++;
@@ -476,6 +480,7 @@ bot.on("text", async (ctx) => {
 
             const elapsedSec = Math.round((Date.now() - startTime) / 1000);
             await bot.telegram.deleteMessage(ctx.chat.id, sentStatusMsg.message_id).catch(() => {});
+            await ctx.deleteMessage().catch(() => {});
 
             return ctx.reply(
                 `<b>${EMOJIS.CHECK} BROADCAST SELESAI!</b>\n\n<blockquote>Total Target: <b>${total}</b>\nSukses: <b>${sukses}</b>\nGagal: <b>${gagal}</b>\nDurasi: <b>${elapsedSec}s</b></blockquote>`,
