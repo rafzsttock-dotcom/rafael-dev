@@ -430,8 +430,8 @@ Sekarang kamu bisa generate API Key lewat menu <b>AMBIL APIKEY</b>.`.trim();
 
         if (global.bot && global.bot.telegram) {
             const needList = requiresApiKey
-                ? `1. <b>Bot Token</b> dari @BotFather\n2. <b>API Key</b> pribadi kamu (dari menu AMBIL APIKEY)\n3. <b>API Key</b> & <b>API Secret</b> AustinPay kamu sendiri\n4. <b>Foto</b> buat menu utama bot kamu`
-                : `1. <b>Bot Token</b> dari @BotFather\n2. <b>API Key</b> & <b>API Secret</b> AustinPay kamu sendiri\n3. <b>Foto</b> buat menu utama bot kamu`;
+                ? `1. <b>Bot Token</b> dari @BotFather\n2. <b>Telegram ID</b> kamu (jadi owner bot clone)\n3. <b>API Key</b> pribadi kamu (dari menu AMBIL APIKEY)\n4. <b>API Key</b> & <b>API Secret</b> AustinPay kamu sendiri\n5. <b>Foto</b> buat menu utama bot kamu`
+                : `1. <b>Bot Token</b> dari @BotFather\n2. <b>Telegram ID</b> kamu (jadi owner bot clone)\n3. <b>API Key</b> & <b>API Secret</b> AustinPay kamu sendiri\n4. <b>Foto</b> buat menu utama bot kamu`;
 
             const successText = `<b>${EMOJIS.CHECK} PEMBAYARAN BERHASIL!</b>
 

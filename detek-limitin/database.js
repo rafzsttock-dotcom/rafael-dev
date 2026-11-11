@@ -478,6 +478,7 @@ const cloneRequestDefaults = {
     status: 'PENDING_SETUP',
     botToken: '',
     botUsername: '',
+    cloneOwnerId: 0,      // Telegram user ID yang jadi owner di bot clone (akses Owner Panel di instance dia sendiri)
     apiKey: '',           // cuma diisi kalau requiresApiKey true
     austinApiKey: '',
     austinApiSecret: '',

@@ -2128,7 +2128,7 @@ bot.action(/^clone_submit_(.+)$/, async (ctx) => {
 
         userState[userId] = { status: "WAITING_CLONE_BOT_TOKEN", requestId };
 
-        const promptText = `<b>${EMOJIS.ROCKET} SETUP BOT DETECT — Langkah 1/${reqDoc.requiresApiKey ? '5' : '4'}</b>
+        const promptText = `<b>${EMOJIS.ROCKET} SETUP BOT DETECT — Langkah 1/${reqDoc.requiresApiKey ? '6' : '5'}</b>
 
 <blockquote>Kirimkan <b>Bot Token</b> kamu (dari @BotFather).
 Contoh format: <code>123456789:AAExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></blockquote>`;

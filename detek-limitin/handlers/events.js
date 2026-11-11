@@ -271,7 +271,7 @@ async function finishCloneSetup(ctx, requestId, userId) {
 
     if (global.bot && config.ownerId) {
         const photoNote = reqDoc?.menuPhotoPath ? `${EMOJIS.CHECK} Foto custom tersimpan` : `${EMOJIS.WARN} Tidak ada foto custom (pakai default)`;
-        global.bot.telegram.sendMessage(config.ownerId, `<b>${EMOJIS.WARN} PESANAN CLONE BOT SIAP DI-SETUP</b>\n\n<blockquote>${EMOJIS.ID} Kode: <code>${requestId}</code>\n${EMOJIS.USER} User: <code>${userId}</code> (@${ctx.from.username || '-'})\n${EMOJIS.TAG} Paket: <b>${reqDoc?.planName || '-'}</b>\n${EMOJIS.DOC} Bot: @${reqDoc?.botUsername || '-'}\n${photoNote}</blockquote>\n\nSemua data (Bot Token${reqDoc?.requiresApiKey ? ', API Key' : ''}, AustinPay Key/Secret) udah lengkap di database CloneBotRequest — siap diproses manual.`, {
+        global.bot.telegram.sendMessage(config.ownerId, `<b>${EMOJIS.WARN} PESANAN CLONE BOT SIAP DI-SETUP</b>\n\n<blockquote>${EMOJIS.ID} Kode: <code>${requestId}</code>\n${EMOJIS.USER} Pembeli: <code>${userId}</code> (@${ctx.from.username || '-'})\n${EMOJIS.TAG} Paket: <b>${reqDoc?.planName || '-'}</b>\n${EMOJIS.DOC} Bot: @${reqDoc?.botUsername || '-'}\n${EMOJIS.OWNER} Owner Bot Clone: <code>${reqDoc?.cloneOwnerId || '-'}</code>\n${photoNote}</blockquote>\n\nSemua data (Bot Token, Owner ID${reqDoc?.requiresApiKey ? ', API Key' : ''}, AustinPay Key/Secret) udah lengkap di database CloneBotRequest — siap diproses manual.`, {
             parse_mode: 'HTML'
         }).catch(() => {});
     }
@@ -529,14 +529,30 @@ bot.on("text", async (ctx) => {
 
             await CloneBotRequest.updateOne({ requestId }, { $set: { botToken: token, botUsername } });
 
-            const totalSteps = reqDoc.requiresApiKey ? 5 : 4;
+            const totalSteps = reqDoc.requiresApiKey ? 6 : 5;
 
-            if (reqDoc.requiresApiKey) {
+            userState[userId] = { status: "WAITING_CLONE_OWNER_ID", requestId };
+            return ctx.reply(`<b>${EMOJIS.CHECK} Bot Token OK!</b> (@${botUsername})\n\n<b>${EMOJIS.ROCKET} Langkah 2/${totalSteps}</b>\n<blockquote>Kirimkan <b>Telegram ID</b> kamu yang bakal jadi <b>owner</b> di bot clone ini (dapat akses Owner Panel).\n\nGak tau ID kamu? Cek di menu <code>/start</code> bot ini, ada di bagian "ID:".</blockquote>`, { parse_mode: 'HTML' });
+        }
+
+        if (state && state.status === "WAITING_CLONE_OWNER_ID") {
+            const { requestId } = state;
+            const ownerIdInput = (ctx.message.text || '').trim();
+            if (!/^\d{5,15}$/.test(ownerIdInput)) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} Telegram ID tidak valid.</b>\n\nHarus angka saja (contoh: <code>${userId}</code>), bukan username. Kirim ulang.`, { parse_mode: 'HTML' });
+            }
+
+            const reqDoc = await CloneBotRequest.findOne({ requestId });
+            const totalSteps = reqDoc?.requiresApiKey ? 6 : 5;
+
+            await CloneBotRequest.updateOne({ requestId }, { $set: { cloneOwnerId: Number(ownerIdInput) } });
+
+            if (reqDoc?.requiresApiKey) {
                 userState[userId] = { status: "WAITING_CLONE_API_KEY", requestId };
-                return ctx.reply(`<b>${EMOJIS.CHECK} Bot Token OK!</b> (@${botUsername})\n\n<b>${EMOJIS.ROCKET} Langkah 2/${totalSteps}</b>\n<blockquote>Kirimkan <b>API Key</b> pribadi kamu (dari menu AMBIL APIKEY).</blockquote>`, { parse_mode: 'HTML' });
+                return ctx.reply(`<b>${EMOJIS.CHECK} Owner ID tersimpan!</b>\n\n<b>${EMOJIS.ROCKET} Langkah 3/${totalSteps}</b>\n<blockquote>Kirimkan <b>API Key</b> pribadi kamu (dari menu AMBIL APIKEY).</blockquote>`, { parse_mode: 'HTML' });
             } else {
                 userState[userId] = { status: "WAITING_CLONE_AUSTIN_KEY", requestId };
-                return ctx.reply(`<b>${EMOJIS.CHECK} Bot Token OK!</b> (@${botUsername})\n\n<b>${EMOJIS.ROCKET} Langkah 2/${totalSteps}</b>\n<blockquote>Kirimkan <b>API Key</b> AustinPay kamu (buat payment gateway QRIS otomatis punya kamu sendiri).</blockquote>`, { parse_mode: 'HTML' });
+                return ctx.reply(`<b>${EMOJIS.CHECK} Owner ID tersimpan!</b>\n\n<b>${EMOJIS.ROCKET} Langkah 3/${totalSteps}</b>\n<blockquote>Kirimkan <b>API Key</b> AustinPay kamu (buat payment gateway QRIS otomatis punya kamu sendiri).</blockquote>`, { parse_mode: 'HTML' });
             }
         }
 
@@ -549,7 +565,7 @@ bot.on("text", async (ctx) => {
 
             await CloneBotRequest.updateOne({ requestId }, { $set: { apiKey } });
             userState[userId] = { status: "WAITING_CLONE_AUSTIN_KEY", requestId };
-            return ctx.reply(`<b>${EMOJIS.CHECK} API Key tersimpan!</b>\n\n<b>${EMOJIS.ROCKET} Langkah 3/5</b>\n<blockquote>Kirimkan <b>API Key</b> AustinPay kamu (buat payment gateway QRIS otomatis punya kamu sendiri).</blockquote>`, { parse_mode: 'HTML' });
+            return ctx.reply(`<b>${EMOJIS.CHECK} API Key tersimpan!</b>\n\n<b>${EMOJIS.ROCKET} Langkah 4/6</b>\n<blockquote>Kirimkan <b>API Key</b> AustinPay kamu (buat payment gateway QRIS otomatis punya kamu sendiri).</blockquote>`, { parse_mode: 'HTML' });
         }
 
         if (state && state.status === "WAITING_CLONE_AUSTIN_KEY") {
@@ -558,8 +574,8 @@ bot.on("text", async (ctx) => {
             if (!austinApiKey) return ctx.reply(`<b>${EMOJIS.CROSS} API Key AustinPay tidak boleh kosong.</b>`, { parse_mode: 'HTML' });
 
             const reqDoc = await CloneBotRequest.findOne({ requestId });
-            const totalSteps = reqDoc?.requiresApiKey ? 5 : 4;
-            const curStep = reqDoc?.requiresApiKey ? 4 : 3;
+            const totalSteps = reqDoc?.requiresApiKey ? 6 : 5;
+            const curStep = reqDoc?.requiresApiKey ? 5 : 4;
 
             await CloneBotRequest.updateOne({ requestId }, { $set: { austinApiKey } });
             userState[userId] = { status: "WAITING_CLONE_AUSTIN_SECRET", requestId };
@@ -572,7 +588,7 @@ bot.on("text", async (ctx) => {
             if (!austinApiSecret) return ctx.reply(`<b>${EMOJIS.CROSS} API Secret AustinPay tidak boleh kosong.</b>`, { parse_mode: 'HTML' });
 
             const reqDoc = await CloneBotRequest.findOne({ requestId });
-            const totalSteps = reqDoc?.requiresApiKey ? 5 : 4;
+            const totalSteps = reqDoc?.requiresApiKey ? 6 : 5;
 
             await CloneBotRequest.updateOne({ requestId }, { $set: { austinApiSecret } });
             userState[userId] = { status: "WAITING_CLONE_PHOTO", requestId };
