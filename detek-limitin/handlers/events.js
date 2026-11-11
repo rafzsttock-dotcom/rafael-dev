@@ -1153,7 +1153,7 @@ bot.on("text", async (ctx) => {
                     const r = await WaManager.detectRealtimeStatus(numbers[0])
                     await bot.telegram.deleteMessage(ctx.chat.id, waitMsg.message_id).catch(() => {})
                     await ctx.reply(
-                        `<b>${EMOJIS.CHECK} HASIL DETECT</b>\n\n<blockquote><code>${r.formatted}</code></blockquote>`,
+                        `<b>${EMOJIS.CHECK} HASIL DETECT</b>\n\n${buildDetectDetailCard(r)}`,
                         {
                             parse_mode: "HTML",
                             reply_markup: { inline_keyboard: [
@@ -1174,9 +1174,8 @@ bot.on("text", async (ctx) => {
             try {
                 const results = await WaManager.detectBulkRealtime(numbers)
                 await bot.telegram.deleteMessage(ctx.chat.id, waitMsg.message_id).catch(() => {})
-                const lines = results.map((r, i) => `${i + 1}. <code>${r.formatted}</code>`).join("\n")
                 await ctx.reply(
-                    `<b>${EMOJIS.CHECK} HASIL DETECT (${results.length} NOMOR)</b>\n\n<blockquote>${lines}</blockquote>`,
+                    `<b>${EMOJIS.CHECK} HASIL DETECT (${results.length} NOMOR)</b>\n\n${buildDetectBulkSummary(results)}`,
                     {
                         parse_mode: "HTML",
                         reply_markup: { inline_keyboard: [

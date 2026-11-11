@@ -280,6 +280,68 @@ async function createProjectBackup(baseDir = path.join(__dirname, '..')) {
     };
 }
 
+function detectStatusIcon(status) {
+    switch (status) {
+        case 'ready': return '🟢';
+        case 'cooldown': return '🟡';
+        case 'banned':
+        case 'blocked': return '🔴';
+        case 'invalid':
+        case 'error': return '⚫';
+        default: return '⚪';
+    }
+}
+
+const DETECT_STATUS_LABEL = {
+    ready: 'SIAP OTP',
+    cooldown: 'COOLDOWN',
+    banned: 'BANNED',
+    blocked: 'BLOCKED',
+    invalid: 'NOMOR TIDAK VALID',
+    error: 'GAGAL VERIFIKASI'
+};
+
+function buildDetectDetailCard(r) {
+    const overallIcon = detectStatusIcon(r.status);
+    const overallLabel = DETECT_STATUS_LABEL[r.status] || String(r.status || '-').toUpperCase();
+
+    let channelLines = `${detectStatusIcon(r.sms?.status)} SMS      : <b>${r.sms?.cooldownFmt || '-'}</b>\n`;
+    channelLines += `${detectStatusIcon(r.voice?.status)} TELPON   : <b>${r.voice?.cooldownFmt || '-'}</b>`;
+    if (r.wa_old?.available) {
+        channelLines += `\n${detectStatusIcon(r.wa_old.status)} PERANGKAT: <b>${r.wa_old.cooldownFmt}</b>`;
+    }
+
+    return `<blockquote>📱 Nomor: <code>+${r.number}</code>\n${overallIcon} Status: <b>${overallLabel}</b></blockquote>\n\n<blockquote expandable><b>Detail Channel:</b>\n${channelLines}</blockquote>`;
+}
+
+function buildDetectBulkSummary(results) {
+    const groups = { banned: [], ready: [], cooldown: [], other: [] };
+    for (const r of results) {
+        if (r.status === 'banned' || r.status === 'blocked') groups.banned.push(r);
+        else if (r.status === 'ready') groups.ready.push(r);
+        else if (r.status === 'cooldown') groups.cooldown.push(r);
+        else groups.other.push(r);
+    }
+
+    let out = `<blockquote>📊 Total: <b>${results.length}</b> nomor
+🟢 Siap OTP: <b>${groups.ready.length}</b>
+🟡 Cooldown: <b>${groups.cooldown.length}</b>
+🔴 Banned/Blocked: <b>${groups.banned.length}</b></blockquote>\n\n`;
+
+    const section = (title, icon, arr) => {
+        if (arr.length === 0) return '';
+        const lines = arr.map((r, i) => `${i + 1}. <code>+${r.number}</code>${r.status === 'cooldown' ? ` — ${r.cooldownFmt}` : ''}`).join('\n');
+        return `<blockquote expandable>${icon} <b>${title} (${arr.length})</b>\n${lines}</blockquote>\n\n`;
+    };
+
+    out += section('Siap OTP', '🟢', groups.ready);
+    out += section('Cooldown', '🟡', groups.cooldown);
+    out += section('Banned / Blocked', '🔴', groups.banned);
+    out += section('Lainnya', '⚪', groups.other);
+
+    return out.trim();
+}
+
 module.exports = {
     getTodayDate,
     getWaktuLengkap,
@@ -288,5 +350,8 @@ module.exports = {
     getCountryName,
     isJoined,
     clearJoinCache,
-    createProjectBackup
+    createProjectBackup,
+    detectStatusIcon,
+    buildDetectDetailCard,
+    buildDetectBulkSummary
 };

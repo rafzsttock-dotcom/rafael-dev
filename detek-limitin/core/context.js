@@ -10,7 +10,7 @@ const { User, Setting, Invoice, RedeemCode } = require('../database')
 const logger = require('./logger')
 const WaManager = require('./wa')
 const PaymentManager = require('./payment')
-const { getTodayDate, getWaktuLengkap, getCountryName, formatNomor, isJoined, clearJoinCache, formatWaktuGaul, createProjectBackup } = require('./utils')
+const { getTodayDate, getWaktuLengkap, getCountryName, formatNomor, isJoined, clearJoinCache, formatWaktuGaul, createProjectBackup, buildDetectDetailCard, buildDetectBulkSummary } = require('./utils')
 const { EMOJI_IDS, EMOJIS, tgEmoji } = require('./emojis')
 
 global.Telegraf = Telegraf;
@@ -36,6 +36,8 @@ global.clearJoinCache = clearJoinCache;
 global.formatWaktuGaul = formatWaktuGaul;
 global.formatWaktu = (d) => typeof global.formatWaktuGaul === 'function' ? global.formatWaktuGaul(d) : new Date(d).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
 global.createProjectBackup = createProjectBackup;
+global.buildDetectDetailCard = buildDetectDetailCard;
+global.buildDetectBulkSummary = buildDetectBulkSummary;
 global.EMOJI_IDS = EMOJI_IDS;
 global.EMOJIS = EMOJIS;
 global.tgEmoji = tgEmoji;
