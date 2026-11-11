@@ -481,6 +481,7 @@ const cloneRequestDefaults = {
     apiKey: '',           // cuma diisi kalau requiresApiKey true
     austinApiKey: '',
     austinApiSecret: '',
+    menuPhotoPath: '',    // path lokal file foto menu utama bot clone (bukan file_id Telegram — gak portable antar bot token)
     createdAt: null,
     activatedAt: null
 };

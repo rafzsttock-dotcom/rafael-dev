@@ -17,6 +17,10 @@ data/invoices.json
 data/redeems.json
 # settings.json di-track karena berisi konfigurasi default
 
+# Data pesanan clone bot — berisi Bot Token, API Key, AustinPay secret (SANGAT sensitif)
+data/clone_requests.json
+data/clone_photos/
+
 # Log files
 *.log
 logs/
