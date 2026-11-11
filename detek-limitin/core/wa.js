@@ -3464,10 +3464,6 @@ const WaManager = {
             })
         ]);
 
-        // DEBUG SEMENTARA: dump raw response buat investigasi kasus banned yang gak kebaca
-        logger.add('DEBUG', `[DETECT-RAW] +${cleanNum} existRes: ${JSON.stringify(existRes)}`);
-        logger.add('DEBUG', `[DETECT-RAW] +${cleanNum} codeRes: ${JSON.stringify(codeRes)}`);
-
         if ((!existRes || typeof existRes !== 'object') && (!codeRes || typeof codeRes !== 'object')) {
             logger.add('WARN', `[DETECT] Response kosong dari server untuk +${cleanNum}`);
             return {
