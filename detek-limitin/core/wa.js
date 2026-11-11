@@ -3525,6 +3525,29 @@ const WaManager = {
             };
         }
 
+        // 2b. Fallback: reason "blocked"/"banned" tanpa field appeal/CBS spesifik —
+        // tetap anggap BANNED, jangan diam-diam lanjut ke cek SMS biasa (ini celah yang
+        // bikin nomor banned asli malah kebaca "ready"/"cooldown" karena field tambahan
+        // appeal_token/violation_type/in_app_ban_appeal/custom_block_screen gak selalu ada).
+        const genericBlockedNode = (existRes?.reason === 'blocked' || existRes?.reason === 'banned') ? existRes
+            : ((codeRes?.reason === 'blocked' || codeRes?.reason === 'banned') ? codeRes : null);
+
+        if (genericBlockedNode) {
+            logger.add('DETECT', `[DETECT] +${cleanNum} fallback BANNED (reason="${genericBlockedNode.reason}", raw: ${JSON.stringify(genericBlockedNode).slice(0, 300)})`);
+            return {
+                number: cleanNum,
+                status: 'banned',
+                formatted: `${cleanNum} — BANNED`,
+                waitSec: 0,
+                cooldownFmt: 'BANNED',
+                sms: { status: 'banned', waitSec: 0, cooldownFmt: 'BANNED' },
+                voice: { status: 'banned', waitSec: 0, cooldownFmt: 'BANNED' },
+                wa_old: { available: false, status: 'banned', waitSec: 0, cooldownFmt: 'BANNED' },
+                isWaOldAvailable: false,
+                raw: genericBlockedNode
+            };
+        }
+
         // 3. Status SMS Real-time (Kombinasi /v2/exist dan /v2/code)
         // /v2/exist memberikan status akurat tanpa terkena limitasi request code ("too_many"),
         // tapi /v2/code kadang balikin angka sms_wait lebih baru/akurat (account-level field,
