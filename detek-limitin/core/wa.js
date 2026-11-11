@@ -875,10 +875,13 @@ function interpretCustomBlockScreen(cbs) {
 }
 
 const WA_CANDIDATE_VERSIONS = [
+    { ver: '26.21.74', ua: 'WhatsApp/26.21.74 iOS/17.6 Device/Apple-iPhone_15' },
+    { ver: '2.26.42.9', ua: 'WhatsApp/2.26.42.9 Android/14 Device/Google_Pixel_8' },
+    { ver: '2.26.41.77', ua: 'WhatsApp/2.26.41.77 Android/14 Device/Samsung_Galaxy_S24' },
+    { ver: '26.1.74', ua: 'WhatsApp/26.1.74 iOS/17.5 Device/Apple-iPhone_13' },
+    // Fallback versi lama kalau semua versi baru ditolak (jaga-jaga)
     { ver: '2.26.26.73', ua: 'WhatsApp/2.26.26.73 iOS/17.5 Device/Apple-iPhone_15' },
     { ver: '2.26.20.83', ua: 'WhatsApp/2.26.20.83 Android/14 Device/Google_Pixel_8' },
-    { ver: '2.26.15.82', ua: 'WhatsApp/2.26.15.82 Android/13 Device/Samsung_Galaxy_S23' },
-    { ver: '2.26.12.71', ua: 'WhatsApp/2.26.12.71 iOS/16.6 Device/Apple-iPhone_13' },
 ];
 
 function formatDuration(sec) {
