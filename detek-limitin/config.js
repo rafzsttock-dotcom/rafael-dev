@@ -110,6 +110,13 @@ const config = {
           maxCekBio: -1, maxDetect: 50000, maxLimitin: 5000, maxNumbers: 50, quotaPeriod: 'daily' },
         { id: 'api_promax', name: 'ProMax (3 Bulan)', days: 90, price: 355000, desc: 'Paket ProMax API',
           maxCekBio: -1, maxDetect: -1, maxLimitin: -1, maxNumbers: 50, quotaPeriod: 'lifetime' }
+    ],
+
+    clonePlans: [
+        { id: 'clone_api', name: 'Paket API Key', days: 30, price: 150000,
+          desc: 'Buat Bot Detect sendiri pakai API Key pribadi', requiresApiKey: true },
+        { id: 'clone_noapi', name: 'Paket Tanpa API Key', days: 30, price: 250000,
+          desc: 'Buat Bot Detect sendiri tanpa perlu API Key terpisah', requiresApiKey: false }
     ]
 };
 

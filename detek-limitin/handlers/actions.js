@@ -1864,6 +1864,144 @@ ${EMOJIS.TIME} Batas Waktu: <b>15 Menit</b></blockquote>
     }
 });
 
+bot.action("menu_clonebot", async (ctx) => {
+    if (!ctx) return;
+    lastBotActivity = Date.now();
+    const userId = ctx.from.id;
+    const lockKey = "user_" + userId;
+    if (userLocks.get(lockKey)) return ctx.answerCbQuery("Mohon tunggu...", { show_alert: true });
+    userLocks.set(lockKey, true);
+    try {
+        const text = `Sekarang kamu bisa membuat Bot Detect milikmu sendiri dengan mudah. Cukup 5 Detik saja!, dan sistem kami akan memproses serta menyiapkan bot secara otomatis hingga siap digunakan.
+
+Sebelum melanjutkan, silakan pilih metode pembuatan bot yang sesuai dengan kebutuhanmu:
+
+<b>1. PAKET API KEY</b>
+Untuk pengguna yang sudah memiliki/membeli Akses API Key.
+
+• Memerlukan API Key pribadi & Api Payment Gateway Qris Otomatis.
+
+<b>2. PAKET TANPA API KEY</b>
+Untuk pengguna yang ingin membuat bot tanpa perlu menyediakan API Key sendiri.
+
+• Hanya memerlukan Bot Token & Api untuk payment gateway Qris otomatis.
+• Tidak perlu membeli API Key secara terpisah.
+• Lebih praktis dan ekonomis.
+
+${EMOJIS.BULB} <b>REKOMENDASI</b>
+Belum memiliki API Key? Pilih Paket 2 (Tanpa API Key) agar kamu bisa langsung membuat bot tanpa biaya pembelian API Key tambahan.
+
+Silakan pilih paket untuk melanjutkan proses pembuatan bot! ${EMOJIS.ROCKET}`;
+
+        const clonePlans = config.clonePlans || [];
+        const buttons = clonePlans.map(p => ([{
+            text: `Beli ${p.name} — Rp${p.price.toLocaleString('id-ID')}`,
+            style: 'success',
+            callback_data: `buy_clone_${p.id}`,
+            icon_custom_emoji_id: EMOJI_IDS.ROCKET
+        }]));
+        buttons.push([{ text: "KEMBALI", callback_data: "back_home", icon_custom_emoji_id: EMOJI_IDS.BACK }]);
+
+        const keyboard = { reply_markup: { inline_keyboard: buttons } };
+
+        await ctx.editMessageText(text, { parse_mode: "HTML", ...keyboard }).catch(async () => {
+            await ctx.deleteMessage().catch(() => {});
+            await ctx.reply(text, { parse_mode: "HTML", ...keyboard });
+        });
+    } finally {
+        userLocks.delete(lockKey);
+    }
+});
+
+bot.action(/^buy_clone_(.+)$/, async (ctx) => {
+    if (!ctx) return;
+    lastBotActivity = Date.now();
+    const userId = ctx.from.id;
+    const planId = ctx.match[1];
+    const lockKey = "user_" + userId;
+    if (userLocks.get(lockKey)) return ctx.answerCbQuery("Mohon tunggu...", { show_alert: true });
+    userLocks.set(lockKey, true);
+    try {
+        await ctx.answerCbQuery("Membuat tagihan QRIS...", { show_alert: false });
+        await ctx.deleteMessage().catch(() => {});
+
+        const loadingMsg = await ctx.reply(`<b>${EMOJIS.REFRESH} Menyiapkan tagihan QRIS...</b>`, { parse_mode: "HTML" });
+
+        try {
+            const { invoice, qrBuffer } = await PaymentManager.createInvoice(userId, planId, ctx, 'clone');
+            await bot.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id).catch(() => {});
+
+            const caption = `<b>${EMOJIS.ROCKET} TAGIHAN BUAT BOT SENDIRI (PAYQRIS)</b>
+
+<blockquote>${EMOJIS.TAG} Paket: <b>${invoice.planName}</b>
+${EMOJIS.STAR} Total Bayar: <code>Rp ${invoice.payAmount.toLocaleString('id-ID')}</code>
+${EMOJIS.KEY} Kode Unik: <b>${invoice.uniqueCode}</b>
+${EMOJIS.ID} Invoice ID: <code>${invoice.invoiceId}</code>
+${EMOJIS.TIME} Batas Waktu: <b>15 Menit</b></blockquote>
+
+<blockquote expandable><b>${EMOJIS.WARN} PENTING & INSTRUKSI:</b>
+1. Buka aplikasi M-Banking atau E-Wallet apa saja (BCA, Mandiri, BRI, BNI, Dana, OVO, GoPay, ShopeePay).
+2. Scan QRIS di atas.
+3. <b>PASTIKAN TRANSFER TEPAT Rp ${invoice.payAmount.toLocaleString('id-ID')}</b> (termasuk kode unik agar otomatis terverifikasi).
+4. Klik tombol <b>CEK STATUS PEMBAYARAN</b> setelah transfer, atau tunggu beberapa saat hingga terdeteksi otomatis.</blockquote>`.trim();
+
+            const buttons = [
+                [{ text: "CEK STATUS PEMBAYARAN", style: 'success', callback_data: `check_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CHECK }],
+                [{ text: "BATALKAN PEMBAYARAN", style: 'danger', callback_data: `cancel_pay_${invoice.invoiceId}`, icon_custom_emoji_id: EMOJI_IDS.CROSS }]
+            ];
+
+            if (invoice.checkoutUrl) {
+                buttons.splice(1, 0, [{ text: "LINK PEMBAYARAN (WEB)", url: invoice.checkoutUrl, icon_custom_emoji_id: EMOJI_IDS.GLOBE }]);
+            }
+
+            if (qrBuffer) {
+                await ctx.replyWithPhoto({ source: qrBuffer }, { caption, parse_mode: "HTML", reply_markup: { inline_keyboard: buttons } });
+            } else if (invoice.qrisUrl) {
+                await ctx.replyWithPhoto(invoice.qrisUrl, { caption, parse_mode: "HTML", reply_markup: { inline_keyboard: buttons } });
+            } else {
+                await ctx.reply(caption, { parse_mode: "HTML", reply_markup: { inline_keyboard: buttons } });
+            }
+        } catch (err) {
+            await bot.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id).catch(() => {});
+            await ctx.reply(`<b>${EMOJIS.CROSS} Gagal membuat tagihan: ${escapeHTML(err.message)}</b>`, {
+                parse_mode: "HTML",
+                reply_markup: { inline_keyboard: [[{ text: "COBA LAGI", style: 'primary', callback_data: "menu_clonebot", icon_custom_emoji_id: EMOJI_IDS.REFRESH }]] }
+            });
+        }
+    } finally {
+        userLocks.delete(lockKey);
+    }
+});
+
+bot.action(/^clone_submit_(.+)$/, async (ctx) => {
+    if (!ctx) return;
+    lastBotActivity = Date.now();
+    const userId = ctx.from.id;
+    const requestId = ctx.match[1];
+    const lockKey = "user_" + userId;
+    if (userLocks.get(lockKey)) return ctx.answerCbQuery("Mohon tunggu...", { show_alert: true });
+    userLocks.set(lockKey, true);
+    try {
+        const reqDoc = await CloneBotRequest.findOne({ requestId });
+        if (!reqDoc || String(reqDoc.userId) !== String(userId)) {
+            return ctx.answerCbQuery("Pesanan tidak ditemukan.", { show_alert: true });
+        }
+
+        userState[userId] = { status: "WAITING_CLONE_BOT_TOKEN", requestId };
+
+        const promptText = `<b>${EMOJIS.ROCKET} SETUP BOT DETECT — Langkah 1/${reqDoc.requiresApiKey ? '3' : '2'}</b>
+
+<blockquote>Kirimkan <b>Bot Token</b> kamu (dari @BotFather).
+Contoh format: <code>123456789:AAExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></blockquote>`;
+
+        await ctx.answerCbQuery();
+        await ctx.deleteMessage().catch(() => {});
+        await ctx.reply(promptText, { parse_mode: "HTML" });
+    } finally {
+        userLocks.delete(lockKey);
+    }
+});
+
 bot.action(/^panduan_(cekbio|sender|detect_limitin|limit_rules|referral|premium)$/, async (ctx) => {
     if (!ctx) return;
     lastBotActivity = Date.now();

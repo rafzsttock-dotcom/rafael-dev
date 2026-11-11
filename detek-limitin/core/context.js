@@ -6,7 +6,7 @@ const https = require('https')
 const os = require('os')
 
 const config = require('../config')
-const { User, Setting, Invoice, RedeemCode } = require('../database')
+const { User, Setting, Invoice, RedeemCode, CloneBotRequest } = require('../database')
 const logger = require('./logger')
 const WaManager = require('./wa')
 const PaymentManager = require('./payment')
@@ -24,6 +24,7 @@ global.User = User;
 global.Setting = Setting;
 global.Invoice = Invoice;
 global.RedeemCode = RedeemCode;
+global.CloneBotRequest = CloneBotRequest;
 global.PaymentManager = PaymentManager;
 global.logger = logger;
 global.WaManager = WaManager;
@@ -1208,6 +1209,9 @@ Silakan pilih menu di bawah ini.`
         ],
         [
             { text: 'AMBIL APIKEY', style: 'primary', callback_data: 'menu_ambilapikey', icon_custom_emoji_id: EMOJI_IDS.KEY }
+        ],
+        [
+            { text: 'BUAT BOT DETECT SENDIRI', style: 'success', callback_data: 'menu_clonebot', icon_custom_emoji_id: EMOJI_IDS.ROCKET }
         ]
     ] } }
 

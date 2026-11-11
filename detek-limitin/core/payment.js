@@ -2,7 +2,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 const QRCode = require('qrcode');
 const config = require('../config');
-const { User, Invoice } = require('../database');
+const { User, Invoice, CloneBotRequest } = require('../database');
 const logger = require('./logger');
 const { EMOJIS, EMOJI_IDS } = require('./emojis');
 
@@ -38,6 +38,8 @@ class PaymentManager {
             const { getApiPlans } = require('./api');
             const apiPlansList = await getApiPlans();
             plan = apiPlansList.find(p => p.id === planId) || null;
+        } else if (planType === 'clone') {
+            plan = (config.clonePlans || []).find(p => p.id === planId) || null;
         } else {
             plan = this.getPlan(planId);
         }
@@ -181,6 +183,8 @@ class PaymentManager {
         if (status === 'PAID' && inv) {
             if (inv.planType === 'api') {
                 await this.activateApiPlan(inv.userId, inv.planId, inv.invoiceId, inv.planName, inv.days);
+            } else if (inv.planType === 'clone') {
+                await this.activateCloneOrder(inv.userId, inv.planId, inv.planName, inv.invoiceId);
             } else {
                 await this.activatePremium(inv.userId, inv.days, inv.invoiceId, inv.planName);
             }
@@ -377,6 +381,74 @@ Sekarang kamu bisa generate API Key lewat menu <b>AMBIL APIKEY</b>.`.trim();
         }
 
         return true;
+    }
+
+    async activateCloneOrder(userId, planId, planName, invoiceId = '') {
+        const plan = (config.clonePlans || []).find(p => p.id === planId) || null;
+
+        let user = await User.findOne({ userId });
+        if (!user && typeof global.checkUser === 'function') {
+            user = await global.checkUser(userId);
+        }
+
+        const requestId = `CLN-${userId}-${Date.now().toString().slice(-7)}`;
+
+        const reqDoc = new CloneBotRequest({
+            requestId,
+            userId,
+            username: user?.username || '',
+            planId,
+            planName,
+            requiresApiKey: Boolean(plan?.requiresApiKey),
+            invoiceId,
+            status: 'PENDING_SETUP',
+            createdAt: new Date()
+        });
+        await reqDoc.save();
+
+        if (invoiceId) {
+            await Invoice.updateOne({ invoiceId }, { $set: { status: 'PAID', paidAt: new Date() } });
+        }
+
+        logger.add('PAYMENT', `[CLONE BOT] User ${userId} beli paket "${planName}" (${requestId}) — nunggu data setup.`);
+
+        if (global.bot && global.bot.telegram) {
+            const needList = plan?.requiresApiKey
+                ? `1. <b>Bot Token</b> dari @BotFather\n2. <b>API Key</b> pribadi kamu (dari menu AMBIL APIKEY)\n3. <b>API Key</b> & <b>API Secret</b> AustinPay kamu sendiri`
+                : `1. <b>Bot Token</b> dari @BotFather\n2. <b>API Key</b> & <b>API Secret</b> AustinPay kamu sendiri`;
+
+            const successText = `<b>${EMOJIS.CHECK} PEMBAYARAN BERHASIL!</b>
+
+<blockquote>${EMOJIS.ROCKET} Paket: <b>${planName}</b>
+${EMOJIS.ID} Kode Pesanan: <code>${requestId}</code></blockquote>
+
+<blockquote expandable><b>Langkah Selanjutnya:</b>
+Kirimkan data berikut (bisa dicicil, satu per satu) ke chat ini:
+${needList}
+
+Setelah semua data lengkap, tim kami akan proses setup bot kamu secara manual.</blockquote>`.trim();
+
+            global.bot.telegram.sendMessage(userId, successText, {
+                parse_mode: 'HTML',
+                reply_markup: {
+                    inline_keyboard: [[{ text: 'MULAI KIRIM DATA', callback_data: `clone_submit_${requestId}`, icon_custom_emoji_id: EMOJI_IDS.ROCKET, style: 'success' }]]
+                }
+            }).catch(() => {});
+
+            if (typeof global.sendChannelReport === 'function') {
+                global.sendChannelReport({
+                    type: 'API_PLAN',
+                    user: { id: userId, username: user?.username, firstName: user?.firstName },
+                    meta: {
+                        planName: `[CLONE BOT] ${planName}`,
+                        invoiceId,
+                        method: 'AustinPay (QRIS Otomatis)'
+                    }
+                }).catch(() => {});
+            }
+        }
+
+        return reqDoc;
     }
 
     startPoller() {

@@ -488,6 +488,82 @@ bot.on("text", async (ctx) => {
             );
         }
 
+        if (state && state.status === "WAITING_CLONE_BOT_TOKEN") {
+            const { requestId } = state;
+            const token = (ctx.message.text || '').trim();
+
+            if (!/^\d{6,12}:[A-Za-z0-9_-]{30,45}$/.test(token)) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} Format Bot Token tidak valid.</b>\n\nKirim ulang format yang benar dari @BotFather (contoh: <code>123456789:AAExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>).`, { parse_mode: 'HTML' });
+            }
+
+            const reqDoc = await CloneBotRequest.findOne({ requestId });
+            if (!reqDoc || String(reqDoc.userId) !== String(userId)) {
+                delete userState[userId];
+                return ctx.reply(`<b>${EMOJIS.CROSS} Pesanan tidak ditemukan.</b>`, { parse_mode: 'HTML' });
+            }
+
+            let botUsername = '';
+            try {
+                const { Telegraf: TelegrafCheck } = require('telegraf');
+                const tmpBot = new TelegrafCheck(token);
+                const me = await tmpBot.telegram.getMe();
+                botUsername = me.username || '';
+            } catch (e) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} Bot Token tidak valid atau gagal diverifikasi.</b>\n\nPastikan token benar dan belum di-revoke, lalu kirim ulang.`, { parse_mode: 'HTML' });
+            }
+
+            await CloneBotRequest.updateOne({ requestId }, { $set: { botToken: token, botUsername } });
+
+            if (reqDoc.requiresApiKey) {
+                userState[userId] = { status: "WAITING_CLONE_API_KEY", requestId };
+                return ctx.reply(`<b>${EMOJIS.CHECK} Bot Token OK!</b> (@${botUsername})\n\n<b>${EMOJIS.ROCKET} Langkah 2/3</b>\n<blockquote>Kirimkan <b>API Key</b> pribadi kamu (dari menu AMBIL APIKEY).</blockquote>`, { parse_mode: 'HTML' });
+            } else {
+                userState[userId] = { status: "WAITING_CLONE_AUSTIN_KEY", requestId };
+                return ctx.reply(`<b>${EMOJIS.CHECK} Bot Token OK!</b> (@${botUsername})\n\n<b>${EMOJIS.ROCKET} Langkah 2/2</b>\n<blockquote>Kirimkan <b>API Key</b> AustinPay kamu (buat payment gateway QRIS otomatis punya kamu sendiri).</blockquote>`, { parse_mode: 'HTML' });
+            }
+        }
+
+        if (state && state.status === "WAITING_CLONE_API_KEY") {
+            const { requestId } = state;
+            const apiKey = (ctx.message.text || '').trim();
+            if (!apiKey.startsWith('dl_')) {
+                return ctx.reply(`<b>${EMOJIS.CROSS} API Key tidak valid.</b>\n\nFormat API Key diawali <code>dl_</code>. Ambil dari menu AMBIL APIKEY, lalu kirim ulang.`, { parse_mode: 'HTML' });
+            }
+
+            await CloneBotRequest.updateOne({ requestId }, { $set: { apiKey } });
+            userState[userId] = { status: "WAITING_CLONE_AUSTIN_KEY", requestId };
+            return ctx.reply(`<b>${EMOJIS.CHECK} API Key tersimpan!</b>\n\n<b>${EMOJIS.ROCKET} Langkah 3/3</b>\n<blockquote>Kirimkan <b>API Key</b> AustinPay kamu (buat payment gateway QRIS otomatis punya kamu sendiri).</blockquote>`, { parse_mode: 'HTML' });
+        }
+
+        if (state && state.status === "WAITING_CLONE_AUSTIN_KEY") {
+            const { requestId } = state;
+            const austinApiKey = (ctx.message.text || '').trim();
+            if (!austinApiKey) return ctx.reply(`<b>${EMOJIS.CROSS} API Key AustinPay tidak boleh kosong.</b>`, { parse_mode: 'HTML' });
+
+            await CloneBotRequest.updateOne({ requestId }, { $set: { austinApiKey } });
+            userState[userId] = { status: "WAITING_CLONE_AUSTIN_SECRET", requestId };
+            return ctx.reply(`<b>${EMOJIS.CHECK} API Key AustinPay tersimpan!</b>\n\nTerakhir, kirimkan <b>API Secret</b> AustinPay kamu.`, { parse_mode: 'HTML' });
+        }
+
+        if (state && state.status === "WAITING_CLONE_AUSTIN_SECRET") {
+            const { requestId } = state;
+            const austinApiSecret = (ctx.message.text || '').trim();
+            if (!austinApiSecret) return ctx.reply(`<b>${EMOJIS.CROSS} API Secret AustinPay tidak boleh kosong.</b>`, { parse_mode: 'HTML' });
+
+            delete userState[userId];
+            const reqDoc = await CloneBotRequest.findOne({ requestId });
+            await CloneBotRequest.updateOne({ requestId }, { $set: { austinApiSecret, status: 'IN_REVIEW' } });
+
+            await ctx.reply(`<b>${EMOJIS.CHECK} SEMUA DATA LENGKAP!</b>\n\n<blockquote>Pesanan <code>${requestId}</code> sudah masuk antrian setup.\nTim kami akan proses bot kamu secara manual dan menghubungi kamu kalau sudah siap digunakan.</blockquote>`, { parse_mode: 'HTML' });
+
+            if (global.bot && config.ownerId) {
+                global.bot.telegram.sendMessage(config.ownerId, `<b>${EMOJIS.WARN} PESANAN CLONE BOT SIAP DI-SETUP</b>\n\n<blockquote>${EMOJIS.ID} Kode: <code>${requestId}</code>\n${EMOJIS.USER} User: <code>${userId}</code> (@${ctx.from.username || '-'})\n${EMOJIS.TAG} Paket: <b>${reqDoc?.planName || '-'}</b>\n${EMOJIS.DOC} Bot: @${reqDoc?.botUsername || '-'}</blockquote>\n\nSemua data (Bot Token${reqDoc?.requiresApiKey ? ', API Key' : ''}, AustinPay Key/Secret) udah lengkap di database CloneBotRequest — siap diproses manual.`, {
+                    parse_mode: 'HTML'
+                }).catch(() => {});
+            }
+            return;
+        }
+
         if (state && state.status === "WAITING_OWNER_SETPREM") {
             const promptId = state.menuId || state.menuMsgId;
             delete userState[userId];

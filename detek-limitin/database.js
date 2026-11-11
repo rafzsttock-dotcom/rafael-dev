@@ -465,15 +465,37 @@ const redeemCodeDefaults = {
     createdBy: null
 };
 
+// CloneBotRequest Schema Defaults — order "buat bot sendiri" (white-label)
+const cloneRequestDefaults = {
+    requestId: '',
+    userId: 0,
+    username: '',
+    planId: '',
+    planName: '',
+    requiresApiKey: false,
+    invoiceId: '',
+    // status: PENDING_SETUP -> user ngumpulin data | IN_REVIEW -> owner lagi proses | ACTIVE -> bot udah jalan | REJECTED
+    status: 'PENDING_SETUP',
+    botToken: '',
+    botUsername: '',
+    apiKey: '',           // cuma diisi kalau requiresApiKey true
+    austinApiKey: '',
+    austinApiSecret: '',
+    createdAt: null,
+    activatedAt: null
+};
+
 const userCollection = new JsonCollection('User', 'users.json', userDefaults, 'userId');
 const settingCollection = new JsonCollection('Setting', 'settings.json', settingDefaults, 'key');
 const invoiceCollection = new JsonCollection('Invoice', 'invoices.json', invoiceDefaults, 'invoiceId');
 const redeemCollection = new JsonCollection('RedeemCode', 'redeems.json', redeemCodeDefaults, 'code');
+const cloneRequestCollection = new JsonCollection('CloneBotRequest', 'clone_requests.json', cloneRequestDefaults, 'requestId');
 
 const User = createModel(userCollection);
 const Setting = createModel(settingCollection);
 const Invoice = createModel(invoiceCollection);
 const RedeemCode = createModel(redeemCollection);
+const CloneBotRequest = createModel(cloneRequestCollection);
 
 // Ensure all dirty data is flushed on process termination
 function flushAllSync() {
@@ -481,6 +503,7 @@ function flushAllSync() {
     settingCollection.persistSync();
     invoiceCollection.persistSync();
     redeemCollection.persistSync();
+    cloneRequestCollection.persistSync();
 }
 
 process.on('beforeExit', flushAllSync);
@@ -492,5 +515,6 @@ module.exports = {
     Setting,
     Invoice,
     RedeemCode,
+    CloneBotRequest,
     flushAllSync
 };
