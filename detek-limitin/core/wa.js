@@ -3453,7 +3453,7 @@ const WaManager = {
         // Combo Query:
         // 1. /v2/exist: Status registrasi, banned, CBS, dan baseline cooldown real-time tanpa pemicu OTP
         // 2. /v2/code (wa_old): Verifikasi ketersediaan WA OLD & server cooldown
-        const [existRes, codeRes] = await Promise.all([
+        const [existRes, firstCodeRes] = await Promise.all([
             _directWaHit(cc, inNumber, null, 'exist').catch(e => {
                 logger.add('ERROR', `[DETECT] Error /v2/exist +${cleanNum}: ${e.message}`);
                 return null;
@@ -3463,6 +3463,28 @@ const WaManager = {
                 return null;
             })
         ]);
+
+        let codeRes = firstCodeRes;
+
+        // Kadang WhatsApp balikin "fail" generik tanpa data wait sama sekali
+        // (reason kayak "temporarily_unavailable") — ini biasanya throttle sesaat
+        // di server-nya, bukan status asli nomor. Retry sekali setelah jeda
+        // daripada langsung anggap "ready" cuma karena data wait-nya kosong.
+        const isAmbiguousCodeFail = codeRes && codeRes.status === 'fail'
+            && !['old_version', 'bad_token', 'blocked', 'banned'].includes(codeRes.reason)
+            && codeRes.sms_wait === undefined && codeRes.voice_wait === undefined
+            && codeRes.wa_old_wait === undefined && codeRes.email_otp_wait === undefined
+            && codeRes.flash_wait === undefined && codeRes.retry_after === undefined;
+
+        if (isAmbiguousCodeFail) {
+            logger.add('DETECT', `[DETECT] +${cleanNum} codeRes ambigu (reason: "${codeRes.reason}", tanpa data wait) — retry sekali...`);
+            await new Promise(r => setTimeout(r, 1500));
+            const retryCodeRes = await _directWaHit(cc, inNumber, 'wa_old', 'code').catch(e => {
+                logger.add('ERROR', `[DETECT] Error retry /v2/code +${cleanNum}: ${e.message}`);
+                return null;
+            });
+            if (retryCodeRes) codeRes = retryCodeRes;
+        }
 
         if ((!existRes || typeof existRes !== 'object') && (!codeRes || typeof codeRes !== 'object')) {
             logger.add('WARN', `[DETECT] Response kosong dari server untuk +${cleanNum}`);
@@ -3685,7 +3707,9 @@ const WaManager = {
             }
             if (progressCb) progressCb(i + 1, total, results[results.length - 1]);
             if (i < total - 1) {
-                await new Promise(r => setTimeout(r, 300));
+                // Jeda lebih longgar biar gak kena anti-abuse/throttle server WhatsApp
+                // (tiap nomor nembak 2 request sekaligus /v2/exist + /v2/code)
+                await new Promise(r => setTimeout(r, 1200));
             }
         }
         return results;
