@@ -316,10 +316,14 @@ function buildDetectDetailCard(r) {
 }
 
 function compactDuration(sec) {
-    sec = Number(sec) || 0;
-    if (sec >= 3600) return `${Math.round(sec / 3600)}h`;
-    if (sec >= 60) return `${Math.round(sec / 60)}m`;
-    return `${sec}s`;
+    sec = Math.max(0, Math.round(Number(sec) || 0));
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+
+    if (h > 0) return m > 0 ? `${h}h ${m}m` : `${h}h`;
+    if (m > 0) return s > 0 ? `${m}m ${s}s` : `${m}m`;
+    return `${s}s`;
 }
 
 function buildDetectBulkSummary(results) {
